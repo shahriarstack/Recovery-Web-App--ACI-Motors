@@ -1,0 +1,506 @@
+<h3 class="text-3xl font-bold text-slate-800 dark:text-white">${countType('Credit Note')}</h3>
+</div>
+</div>
+
+<!-- Main Table -->
+<div
+    class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-purple-100 dark:border-purple-900/30">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+            <thead class="bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400 uppercase font-bold">
+                <tr>
+                    <th class="px-6 py-3">Date</th>
+                    <th class="px-6 py-3">Territory</th>
+                    <th class="px-6 py-3">Type</th>
+                    <th class="px-6 py-3 text-right">Amount</th>
+                    <th class="px-6 py-3">Customer</th>
+                    <th class="px-6 py-3 text-right">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                ${settlements.map(s => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                    <td class="px-6 py-3 text-slate-500">${s.date}</td>
+                    <td class="px-6 py-3 font-medium text-slate-800 dark:text-white">${s.territoryName}</td>
+                    <td class="px-6 py-3"><span
+                            class="px-2 py-1 rounded text-[10px] uppercase font-bold bg-purple-100 text-purple-600">${s.type}</span>
+                    </td>
+                    <td class="px-6 py-3 text-right font-mono font-bold text-slate-700 dark:text-slate-300">
+                        ${parseInt(s.amount).toLocaleString()}</td>
+                    <td class="px-6 py-3 text-xs font-mono">${s.customerCode}</td>
+                    <td class="px-6 py-3 text-right"><span class="text-green-600 font-bold text-xs"><i
+                                class="fa-solid fa-check mr-1"></i> Approved</span></td>
+                </tr>
+                `).join('')}
+                ${settlements.length === 0 ? '<tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-slate-400 italic">No settlement records found.
+                    </td>
+                </tr>' : ''}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>`;
+},
+
+// --- ADMIN HISTORY ---
+renderAdminHistory() {
+const db = Store.get();
+const history = db.collections.sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 100); // Last 100
+
+let html = `
+<div class="animate-entry">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Global Collection History</h2>
+        <p class="text-sm text-slate-500">Recent transactions across all territories</p>
+    </div>
+    <div class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden">
+        <table class="w-full text-sm text-left">
+            <thead class="bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 font-bold uppercase">
+                <tr>
+                    <th class="px-4 py-3">Date</th>
+                    <th class="px-4 py-3">Territory</th>
+                    <th class="px-4 py-3">Customer</th>
+                    <th class="px-4 py-3">Mode</th>
+                    <th class="px-4 py-3 text-right">Amount</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                ${history.map(c => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                    <td class="px-4 py-3 text-slate-500">${c.date}</td>
+                    <td class="px-4 py-3 font-medium">${db.territories.find(t=>t.id===c.territoryId)?.name || 'Unknown'}
+                    </td>
+                    <td class="px-4 py-3 font-mono text-xs">${c.customerCode}</td>
+                    <td class="px-4 py-3"><span
+                            class="px-2 py-1 rounded text-[10px] bg-slate-100 dark:bg-slate-700">${c.mode}</span></td>
+                    <td class="px-4 py-3 text-right font-bold text-emerald-600">${parseInt(c.amount).toLocaleString()}
+                    </td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    </div>
+</div>`;
+document.getElementById('views-container').innerHTML = html;
+},
+
+// --- ADMIN VEHICLE PERFORMANCE ---
+renderAdminVehiclePerf() {
+this.renderAdminHistory(); // Fallback for simplicity in this patch, or stub
+},
+
+// --- OFFICER VIEWS ---
+renderOfficerDashboard() {
+const db = Store.get();
+const metrics = Calc.getMetrics(Auth.currentUser.territoryId);
+const t = db.territories.find(x => x.id === Auth.currentUser.territoryId);
+
+document.getElementById('views-container').innerHTML = `
+<div class="animate-entry space-y-6">
+    <!-- Welcome Banner -->
+    <div
+        class="p-6 rounded-2xl bg-gradient-to-r from-brand-600 to-emerald-600 text-white shadow-lg relative overflow-hidden group">
+        <div
+            class="absolute right-0 top-0 p-6 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-award text-9xl"></i>
+        </div>
+        <div class="relative z-10">
+            <p class="text-brand-100 font-bold uppercase tracking-widest text-xs mb-2">Territory Overview</p>
+            <h1 class="text-3xl font-black mb-1">${t.name}</h1>
+            <p class="opacity-90 text-sm">Welcome back, ${Auth.currentUser.officerName}</p>
+        </div>
+        <!-- RPI Badge -->
+        <div class="absolute bottom-6 right-6 text-right">
+            <p class="text-xs font-bold text-brand-200 uppercase">My RPI Score</p>
+            <p class="text-4xl font-black text-white">${metrics.rpi}</p>
+        </div>
+    </div>
+
+    <!-- Key Metrics Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-panel p-4 rounded-xl text-center hover-lift">
+            <p class="text-xs text-slate-500 uppercase font-bold mb-1">Target</p>
+            <p class="text-xl font-black text-slate-800 dark:text-white">${parseInt(metrics.targetAmt).toLocaleString()}
+            </p>
+        </div>
+        <div class="glass-panel p-4 rounded-xl text-center hover-lift border-b-4 border-emerald-500">
+            <p class="text-xs text-slate-500 uppercase font-bold mb-1">Collection</p>
+            <p class="text-xl font-black text-emerald-600">${parseInt(metrics.mtdColl).toLocaleString()}</p>
+        </div>
+        <div class="glass-panel p-4 rounded-xl text-center hover-lift">
+            <p class="text-xs text-slate-500 uppercase font-bold mb-1">Achievement</p>
+            <p class="text-xl font-black text-blue-600">${metrics.achievement}%</p>
+        </div>
+        <div class="glass-panel p-4 rounded-xl text-center hover-lift border-b-4 border-amber-500">
+            <p class="text-xs text-slate-500 uppercase font-bold mb-1">Today Proj</p>
+            <p class="text-xl font-black text-slate-800 dark:text-white">${parseInt(metrics.todayProj).toLocaleString()}
+            </p>
+        </div>
+    </div>
+
+    <!-- Daily Status -->
+    <div class="glass-panel p-6 rounded-xl shadow-lg dark:bg-dark-card">
+        <h3 class="font-bold text-slate-800 dark:text-white mb-4">Today's Pulse</h3>
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-slate-500">Projected: <span
+                    class="font-bold text-slate-700 dark:text-slate-200">${parseInt(metrics.todayProj).toLocaleString()}</span></span>
+            <span class="text-sm text-slate-500">Collected: <span
+                    class="font-bold text-emerald-600">${parseInt(metrics.todayColl).toLocaleString()}</span></span>
+        </div>
+        <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-4 overflow-hidden relative">
+            <div class="bg-emerald-500 h-full rounded-full transition-all duration-1000"
+                style="width: ${metrics.todayProj > 0 ? Math.min((metrics.todayColl/metrics.todayProj)*100, 100) : 0}%">
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
+                ${metrics.todayProj > 0 ? Math.round((metrics.todayColl/metrics.todayProj)*100) : 0}%
+            </div>
+        </div>
+        <p class="text-xs text-slate-400 mt-2 text-center">Daily Accuracy Score: <span
+                class="font-bold text-brand-600">${metrics.projAcc}</span></p>
+    </div>
+</div>
+`;
+},
+
+renderProjectionForm() {
+const db = Store.get();
+const today = new Date().toISOString().split('T')[0];
+const tId = Auth.currentUser.territoryId;
+const existing = db.projections.find(p => p.territoryId === tId && p.date === today);
+
+// Check Lock logic (10 AM limit)
+const now = new Date();
+const limit = new Date();
+limit.setHours(10, 0, 0, 0);
+const isLocked = now > limit && (!db.unlocks || !db.unlocks[tId] || db.unlocks[tId] < Date.now()); if(isLocked &&
+    existing) { document.getElementById('views-container').innerHTML=` <div class="animate-entry text-center p-10">
+    <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fa-solid fa-check text-4xl"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Projection Submitted</h2>
+    <p class="text-slate-500">You have already submitted your projection for today.</p>
+    <div class="mt-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg inline-block text-left">
+        <p class="text-sm"><strong>Amount:</strong> ${parseInt(existing.amount).toLocaleString()}</p>
+        <p class="text-sm"><strong>Files:</strong> ${existing.fileCount}</p>
+    </div>
+    </div>`;
+    return;
+    }
+
+    document.getElementById('views-container').innerHTML = `
+    <div class="animate-entry max-w-md mx-auto">
+        <div class="mb-6 text-center">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Morning Projection</h2>
+            <p class="text-sm text-slate-500">Set your goals for ${today}</p>
+        </div>
+        <div class="glass-panel p-8 rounded-2xl shadow-lg dark:bg-dark-card border-t-4 border-brand-500">
+            <form onsubmit="UI.handleOfficerProjectionSubmit(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Regular Collection</label>
+                        <input type="number" name="regularAmount"
+                            class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none"
+                            placeholder="0.00" required value="${existing?.regularAmount || ''}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Advance Collection</label>
+                        <input type="number" name="advanceAmount"
+                            class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none"
+                            placeholder="0.00" value="${existing?.advanceAmount || ''}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">File Count</label>
+                        <input type="number" name="fileCount"
+                            class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none"
+                            placeholder="0" required value="${existing?.fileCount || ''}">
+                    </div>
+                </div>
+                <button type="submit"
+                    class="w-full mt-6 py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> Submit Projection
+                </button>
+            </form>
+            ${isLocked ? '<p class="text-xs text-red-500 mt-4 text-center"><i class="fa-solid fa-lock mr-1"></i> Time
+                limit exceeded. Contact Admin to unlock.</p>' : ''}
+        </div>
+    </div>
+    `;
+    },
+
+    handleOfficerProjectionSubmit(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const db = Store.get();
+    const today = new Date().toISOString().split('T')[0];
+    const tId = Auth.currentUser.territoryId;
+
+    const data = {
+    territoryId: tId,
+    date: today,
+    regularAmount: parseFloat(formData.get('regularAmount')) || 0,
+    advanceAmount: parseFloat(formData.get('advanceAmount')) || 0,
+    fileCount: parseInt(formData.get('fileCount')) || 0
+    };
+    data.amount = data.regularAmount + data.advanceAmount;
+
+    const idx = db.projections.findIndex(p => p.territoryId === tId && p.date === today);
+    if(idx >= 0) db.projections[idx] = data;
+    else db.projections.push(data);
+
+    Store.save(db);
+    UI.renderOfficerDashboard(); // Redirect
+    },
+
+    renderCollectionForm() {
+    document.getElementById('views-container').innerHTML = `
+    <div class="animate-entry max-w-md mx-auto">
+        <div class="mb-6 text-center">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Collection Entry</h2>
+            <p class="text-sm text-slate-500">Record a new payment</p>
+        </div>
+        <div class="glass-panel p-8 rounded-2xl shadow-lg dark:bg-dark-card border-t-4 border-blue-500">
+            <form onsubmit="UI.handleCollectionSubmit(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Customer Code</label>
+                        <input type="text" name="customerCode"
+                            class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                            placeholder="CUST-0000" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Amount</label>
+                        <input type="number" name="amount"
+                            class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="0.00" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Payment Mode</label>
+                        <select name="mode"
+                            class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option>Cash</option>
+                            <option>bKash</option>
+                            <option>Bank Transfer</option>
+                            <option>Cheque</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" name="isLmNp" id="isLmNp" class="w-4 h-4 text-brand-600 rounded">
+                        <label for="isLmNp" class="text-sm text-slate-600 dark:text-slate-300">Is Last Month
+                            Non-Pay?</label>
+                    </div>
+                </div>
+                <button type="submit"
+                    class="w-full mt-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center">
+                    <i class="fa-solid fa-save mr-2"></i> Save Collection
+                </button>
+            </form>
+        </div>
+    </div>`;
+    },
+
+    handleCollectionSubmit(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const db = Store.get();
+
+    const item = {
+    territoryId: Auth.currentUser.territoryId,
+    date: new Date().toISOString().split('T')[0],
+    customerCode: formData.get('customerCode'),
+    amount: parseFloat(formData.get('amount')),
+    mode: formData.get('mode'),
+    isLmNp: formData.get('isLmNp') === 'on',
+    timestamp: new Date().toISOString()
+    };
+
+    Store.update('collections', item);
+    e.target.reset();
+    alert('Collection Saved Successfully!');
+    // Optional: Show success animation
+    },
+
+    renderOfficerOffroadTracker() {
+    // Simplified Offroad Form
+    document.getElementById('views-container').innerHTML = `
+    <div class="animate-entry max-w-md mx-auto">
+        <h2 class="text-2xl font-bold text-center mb-6 text-slate-800 dark:text-white">Report Offroad</h2>
+        <div class="glass-panel p-6 rounded-xl shadow-lg">
+            <form onsubmit="UI.handleOffroadSubmit(event)">
+                <div class="space-y-4">
+                    <input type="text" name="customerCode" placeholder="Customer Code"
+                        class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"
+                        required>
+                    <select name="reason"
+                        class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                        <option>Engine Failure</option>
+                        <option>Accident</option>
+                        <option>Captured</option>
+                        <option>Police Custody (Thana)</option>
+                    </select>
+                    <input type="text" name="location" placeholder="Current Location"
+                        class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                    <textarea name="remarks" placeholder="Remarks"
+                        class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"></textarea>
+                </div>
+                <button type="submit"
+                    class="w-full mt-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl">Report
+                    Issue</button>
+            </form>
+        </div>
+    </div>`;
+    },
+
+    handleOffroadSubmit(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const item = {
+    territoryId: Auth.currentUser.territoryId,
+    customerCode: fd.get('customerCode'),
+    reason: fd.get('reason'),
+    location: fd.get('location'),
+    remarks: fd.get('remarks'),
+    status: 'Active',
+    inDate: new Date().toISOString().split('T')[0]
+    };
+    Store.update('offroad_vehicles', item);
+    alert('Report Submitted');
+    UI.renderOfficerDashboard();
+    },
+
+    renderOfficerSettlementsView() { this.renderAdminSettlementsView(); }, // Re-use
+    renderOfficerHistory() { this.renderAdminHistory(); }, // Re-use
+    renderOfficerVehicleAnalytics() { this.renderOfficerDashboard(); }, // Stub
+
+    // --- EXPORTS & HELPERS ---
+    exportCSV() {
+    const metrics = Calc.getMetrics();
+    const headers = ["Territory", "Target Amt", "Collection", "Ach%", "RPI"];
+    let csv = headers.join(",") + "\\n";
+    // Add rows logic here (simplified)
+    alert("Export functionality simulated: downloading Report.csv...");
+    },
+
+    exportOffroadCSV(type) { alert(`Exporting ${type} offroad cases...`); },
+    exportSettlementCSV() { alert("Exporting settlement data..."); },
+    openRawExportModal() { alert("Raw Data Export Module Loading..."); },
+
+    getOffroadIcon(reason) {
+    if(reason.includes('Engine')) return 'fa-car-battery';
+    if(reason.includes('Accident')) return 'fa-car-crash';
+    if(reason.includes('Captured')) return 'fa-hands-bound';
+    if(reason.includes('Police')) return 'fa-building-shield';
+    return 'fa-triangle-exclamation';
+    },
+
+    showModal(content) {
+    const modal = document.getElementById('generic-modal');
+    const contentDiv = document.getElementById('modal-content');
+    contentDiv.innerHTML = content;
+    modal.classList.remove('hidden');
+    setTimeout(() => { modal.classList.add('opacity-100'); contentDiv.classList.remove('scale-95', 'opacity-0'); }, 10);
+    }
+    };
+
+    // --- CHARTS ENGINE ---
+    const Charts = {
+    renderDoughnut(id, labels, data) {
+    const ctx = document.getElementById(id);
+    if(!ctx) return;
+    if(UI.charts[id]) UI.charts[id].destroy();
+
+    UI.charts[id] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+    labels: labels,
+    datasets: [{
+    data: data,
+    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+    borderWidth: 0
+    }]
+    },
+    options: { responsive: true,cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+    });
+    },
+    renderLine(id, labels, data) {
+    const ctx = document.getElementById(id);
+    if(!ctx) return;
+    if(UI.charts[id]) UI.charts[id].destroy();
+
+    UI.charts[id] = new Chart(ctx, {
+    type: 'line',
+    data: {
+    labels: labels,
+    datasets: [{
+    label: 'Daily Collection',
+    data: data,
+    borderColor: '#10b981',
+    tension: 0.4,
+    fill: true,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)'
+    }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: {
+    color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } }
+    });
+    }
+    };
+
+    // --- PARTICLE ENGINE ---
+    const ParticleEngine = {
+    canvas: null, ctx: null, width: 0, height: 0, particles: [],
+    init() {
+    this.canvas = document.createElement('canvas');
+    this.canvas.id = 'particle-canvas';
+    this.canvas.style.position = 'fixed';
+    this.canvas.style.top = '0';
+    this.canvas.style.left = '0';
+    this.canvas.style.width = '100%';
+    this.canvas.style.height = '100%';
+    this.canvas.style.zIndex = '-1';
+    this.canvas.style.pointerEvents = 'none';
+    document.body.appendChild(this.canvas);
+    this.ctx = this.canvas.getContext('2d');
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+    this.createParticles();
+    this.animate();
+    },
+    resize() {
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
+    },
+    createParticles() {
+    for(let i=0; i<50; i++) { this.particles.push({ x: Math.random() * this.width, y: Math.random() * this.height,
+        speed: Math.random() * 0.5 + 0.1, size: Math.random() * 2 + 0.5, opacity: Math.random() * 0.5 + 0.1 }); } },
+        animate() { this.ctx.clearRect(0, 0, this.width, this.height); this.ctx.fillStyle='#10b981' ;
+        this.particles.forEach(p=> {
+        p.y -= p.speed;
+        if(p.y < 0) p.y=this.height; this.ctx.globalAlpha=p.opacity; this.ctx.beginPath(); this.ctx.arc(p.x, p.y,
+            p.size, 0, Math.PI * 2); this.ctx.fill(); }); requestAnimationFrame(()=> this.animate());
+            }
+            };
+
+            // --- GLOBAL INIT ---
+            window.addEventListener('DOMContentLoaded', () => {
+            Store.init();
+            Auth.checkSession();
+            ParticleEngine.init();
+
+            // Login Handler
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const role = UI.currentLoginRole;
+            const finalUser = role === 'officer' ? document.getElementById('officer-select').value : u;
+            Auth.login(finalUser, p, role);
+            });
+            });
+
+            </script>
+            </body>
+
+            </html>
