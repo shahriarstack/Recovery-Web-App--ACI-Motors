@@ -13,6 +13,16 @@ export async function onRequest(context) {
     // Set up Neon Database Pool using environment variables that you'll configure in Cloudflare manually
     const pool = new Pool({ connectionString: env.DATABASE_URL });
 
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+    };
+
+    if (request.method === 'OPTIONS') {
+        return new Response(null, { headers: corsHeaders });
+    }
+
     try {
         // --- GET DB STATE ---
         if (request.method === 'GET' && path === '/api/db') {
@@ -63,7 +73,12 @@ export async function onRequest(context) {
                 const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
                 const result = await pool.query(`INSERT INTO ${table} (${columns}) VALUES (${placeholders}) RETURNING id`, values);
                 item.id = result.rows[0].id;
-                return new Response(JSON.stringify(item), { headers: { 'Content-Type': 'application/json' } });
+                return new Response(JSON.stringify(item), {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                });
             }
         }
 
