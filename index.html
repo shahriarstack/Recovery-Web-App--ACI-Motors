@@ -340,107 +340,112 @@
 
     <!-- LOGIN SCREEN -->
     <div id="login-view"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-white sm:bg-slate-100 dark:bg-[#202124] animate-fade-in overflow-hidden">
+        class="fixed inset-0 z-50 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#121212] animate-fade-in overflow-hidden">
 
-        <div class="relative z-10 w-full max-w-[450px] px-4 sm:p-6 animate-entry">
-            <!-- Google Style Clean Background -->
+        <!-- Elegant subtle animated background shapes -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
             <div
-                class="bg-white dark:bg-[#202124] sm:border sm:border-slate-200 sm:dark:border-[#3c4043] rounded-2xl p-6 sm:p-10 sm:shadow-md transition-all duration-300">
+                class="absolute -top-[20%] -right-[10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-blue-100/40 to-purple-100/40 dark:from-blue-900/10 dark:to-purple-900/10 blur-3xl saturate-150">
+            </div>
+            <div
+                class="absolute -bottom-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tr from-emerald-100/40 to-teal-100/40 dark:from-emerald-900/10 dark:to-teal-900/10 blur-3xl saturate-150">
+            </div>
+        </div>
+
+        <div class="relative z-10 w-full max-w-[420px] px-4 sm:p-6 animate-entry">
+            <!-- Sleek Minimal Card -->
+            <div
+                class="bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-xl border border-white/40 dark:border-white/5 rounded-[24px] p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300">
 
                 <div class="text-center mb-8">
                     <!-- ACI MOTORS LOGO -->
                     <img src="https://i.ibb.co.com/cshLMZ7/aci-motors-seeklogo.png" alt="ACI Motors"
-                        class="h-8 w-auto object-contain mx-auto mb-4 hover:opacity-80 transition-opacity duration-300">
+                        class="h-9 w-auto object-contain mx-auto mb-5 hover:scale-105 transition-transform duration-500 drop-shadow-sm">
 
-                    <h1 class="text-2xl font-normal text-[#202124] dark:text-[#e8eaed] tracking-tight mb-2"
-                        style="font-family: Arial, sans-serif;">Sign in</h1>
-                    <p class="text-[15px] font-normal text-[#5f6368] dark:text-[#9aa0a6]">Use your Recovery Account</p>
+                    <h1
+                        class="text-[22px] font-semibold text-slate-800 dark:text-slate-100 tracking-tight mb-1.5 font-sans">
+                        Welcome back
+                    </h1>
+                    <p class="text-[14px] font-normal text-slate-500 dark:text-slate-400">Sign in to Recovery Portal</p>
                 </div>
 
-                <!-- Tabs -->
-                <div class="flex border-b border-slate-200 dark:border-[#3c4043] mb-8 relative">
+                <!-- Sleek Tabs -->
+                <div class="flex p-1 bg-slate-100/80 dark:bg-[#2a2a2a] rounded-xl mb-8 relative">
                     <div id="login-tab-indicator"
-                        class="absolute bottom-[0px] left-0 w-1/2 h-[3px] bg-[#1a73e8] dark:bg-[#8ab4f8] transition-transform duration-300 rounded-t-sm">
+                        class="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white dark:bg-[#3f3f3f] shadow-sm rounded-lg transition-transform duration-300 pointer-events-none">
                     </div>
                     <button type="button" onclick="UI.setLoginTab('officer')" id="btn-officer"
-                        class="w-1/2 pb-3 text-[14px] font-bold text-[#1a73e8] dark:text-[#8ab4f8] focus:outline-none transition-colors">Officer</button>
+                        class="w-1/2 py-2 text-[13px] font-semibold text-slate-800 dark:text-white relative z-10 focus:outline-none transition-colors">Officer</button>
                     <button type="button" onclick="UI.setLoginTab('admin')" id="btn-admin"
-                        class="w-1/2 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none rounded-t-sm">Admin</button>
+                        class="w-1/2 py-2 text-[13px] font-medium text-slate-500 dark:text-slate-400 relative z-10 focus:outline-none transition-colors">Admin</button>
                 </div>
 
-                <form id="login-form" class="space-y-6">
+                <form id="login-form" class="space-y-5">
                     <div>
                         <div class="relative group">
                             <!-- Admin Input -->
                             <input type="text" id="username"
-                                class="hidden w-full px-4 py-3.5 bg-transparent border border-slate-300 dark:border-[#5f6368] rounded focus:border-[#1a73e8] dark:focus:border-[#8ab4f8] focus:border-2 outline-none transition-all text-[#202124] dark:text-[#e8eaed] placeholder-transparent peer"
+                                class="hidden w-full px-4 py-3.5 bg-slate-50/50 dark:bg-[#2a2a2a]/50 border border-slate-200 dark:border-slate-700/50 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 outline-none transition-all text-slate-800 dark:text-slate-100 placeholder-transparent peer"
                                 placeholder="Admin Username">
                             <label id="lbl-username-admin"
-                                class="hidden absolute left-3 -top-2.5 bg-white dark:bg-[#202124] px-1 text-xs text-[#5f6368] dark:text-[#9aa0a6] peer-focus:text-[#1a73e8] dark:peer-focus:text-[#8ab4f8] transition-all">Admin
+                                class="hidden absolute left-4 -top-2.5 bg-white dark:bg-[#1e1e1e] px-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 peer-focus:text-blue-600 dark:peer-focus:text-blue-400 transition-all rounded">Admin
                                 Username</label>
 
                             <!-- Officer Dropdown -->
                             <select id="officer-select"
-                                class="w-full px-4 py-3.5 bg-transparent border border-slate-300 dark:border-[#5f6368] rounded focus:border-[#1a73e8] dark:focus:border-[#8ab4f8] focus:border-2 outline-none transition-all appearance-none cursor-pointer text-[#202124] dark:text-[#e8eaed] peer">
-                                <option value="" class="dark:bg-[#202124]">Select Territory</option>
+                                class="w-full px-4 py-3.5 bg-slate-50/50 dark:bg-[#2a2a2a]/50 border border-slate-200 dark:border-slate-700/50 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 outline-none transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-100 peer shadow-sm">
+                                <option value="" class="bg-white text-black dark:bg-[#202124] dark:text-[#e8eaed]">
+                                    Select Territory</option>
                             </select>
                             <label id="lbl-username"
-                                class="absolute left-3 -top-2.5 bg-white dark:bg-[#202124] px-1 text-xs text-[#1a73e8] dark:text-[#8ab4f8] transition-all">Select
+                                class="absolute left-4 -top-2.5 bg-white dark:bg-[#1e1e1e] px-1.5 text-[11px] font-medium text-blue-600 dark:text-blue-400 transition-all rounded">Select
                                 Territory</label>
 
                             <div id="officer-dropdown-arrow"
-                                class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-[#5f6368] dark:text-[#9aa0a6]">
-                                <i class="fa-solid fa-caret-down text-sm"></i>
+                                class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400 dark:text-slate-500">
+                                <i class="fa-solid fa-chevron-down text-xs"></i>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <div class="relative group mt-2">
+                        <div class="relative group mt-3">
                             <input type="password" id="password" autocomplete="current-password"
-                                class="w-full px-4 py-3.5 bg-transparent border border-slate-300 dark:border-[#5f6368] rounded focus:border-[#1a73e8] dark:focus:border-[#8ab4f8] focus:border-2 outline-none transition-all text-[#202124] dark:text-[#e8eaed] placeholder-transparent peer"
+                                class="w-full px-4 py-3.5 bg-slate-50/50 dark:bg-[#2a2a2a]/50 border border-slate-200 dark:border-slate-700/50 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 outline-none transition-all text-slate-800 dark:text-slate-100 placeholder-transparent peer shadow-sm"
                                 placeholder="Employee ID" required>
                             <label id="lbl-password"
-                                class="absolute left-3 -top-2.5 bg-white dark:bg-[#202124] px-1 text-xs text-[#5f6368] dark:text-[#9aa0a6] peer-focus:text-[#1a73e8] dark:peer-focus:text-[#8ab4f8] transition-all">Employee
+                                class="absolute left-4 -top-2.5 bg-white dark:bg-[#1e1e1e] px-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 peer-focus:text-blue-600 dark:peer-focus:text-blue-400 transition-all rounded">Employee
                                 ID (Password)</label>
                         </div>
                     </div>
 
-                    <div class="pt-6 flex justify-between items-center">
+                    <div class="pt-2 flex justify-end items-center mb-6">
                         <button type="button"
-                            class="text-[14px] font-medium text-[#1a73e8] dark:text-[#8ab4f8] hover:bg-[#f8f9fa] dark:hover:bg-[#8ab4f8]/10 px-2 py-1.5 rounded transition-colors -ml-2">Forgot
-                            credentials?</button>
+                            class="text-[12px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Forgot
+                            password?</button>
+                    </div>
+
+                    <div>
                         <button type="submit"
-                            class="px-6 py-2 bg-[#1a73e8] hover:bg-[#1b66c9] text-white text-[14px] font-medium rounded-md shadow-sm transition-all focus:ring-2 focus:ring-offset-2 focus:ring-[#1a73e8]">
-                            Next
+                            class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 text-white text-[14px] font-semibold rounded-xl shadow-[0_4px_14px_0_rgb(0,0,0,0.1)] dark:shadow-[0_4px_14px_0_rgb(255,255,255,0.1)] transition-transform hover:scale-[1.01] active:scale-[0.99] flex justify-center items-center">
+                            Continue
                         </button>
                     </div>
                 </form>
-
-                <div class="mt-14 pt-4 text-left">
-                    <p class="text-[12px] text-[#5f6368] dark:text-[#9aa0a6] leading-relaxed">
-                        Demo Accounts:<br>
-                        Admin: <span class="text-[#202124] dark:text-[#e8eaed] font-medium">admin</span> / <span
-                            class="text-[#202124] dark:text-[#e8eaed]">1234</span> &nbsp;&bull;&nbsp;
-                        Officer: <span class="text-[#202124] dark:text-[#e8eaed] font-medium">territory1</span> / <span
-                            class="text-[#202124] dark:text-[#e8eaed]">1001</span>
-                    </p>
-                </div>
             </div>
 
             <div
-                class="w-full max-w-[450px] mx-auto mt-4 px-2 flex justify-between items-center text-[12px] text-[#5f6368] dark:text-[#9aa0a6]">
+                class="w-full max-w-[420px] mx-auto mt-6 px-2 flex justify-between items-center text-[12px] text-slate-400 dark:text-slate-500 font-medium">
                 <div>
-                    <span class="cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 px-2 py-1 rounded">English
-                        (United States) <i class="fa-solid fa-caret-down ml-1 text-[10px]"></i></span>
+                    <span class="cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                        onclick="UI.toggleDarkMode()">
+                        Theme <i class="fa-solid fa-circle-half-stroke ml-1 text-[10px]"></i>
+                    </span>
                 </div>
-                <div class="space-x-1">
-                    <a href="#"
-                        class="hover:bg-slate-200 dark:hover:bg-slate-800 px-3 py-1.5 rounded transition-colors">Help</a>
-                    <a href="#"
-                        class="hover:bg-slate-200 dark:hover:bg-slate-800 px-3 py-1.5 rounded transition-colors">Privacy</a>
-                    <a href="#"
-                        class="hover:bg-slate-200 dark:hover:bg-slate-800 px-3 py-1.5 rounded transition-colors">Terms</a>
+                <div class="space-x-4">
+                    <a href="#" class="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Help</a>
+                    <a href="#" class="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Privacy</a>
+                    <a href="#" class="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Terms</a>
                 </div>
             </div>
         </div>
@@ -974,40 +979,56 @@
                 const arrow = document.getElementById('officer-dropdown-arrow');
 
                 if (role === 'officer') {
-                    indicator.classList.remove('translate-x-[100%]', 'translate-x-full');
-                    indicator.classList.add('translate-x-0');
+                    if (indicator) {
+                        indicator.classList.remove('translate-x-[100%]', 'translate-x-[102%]', 'translate-x-full');
+                        indicator.classList.add('translate-x-0');
+                    }
 
-                    btnOfficer.classList.add('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnOfficer.classList.remove('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
-                    btnAdmin.classList.remove('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnAdmin.classList.add('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
+                    if (btnOfficer) {
+                        btnOfficer.classList.add('text-slate-800', 'dark:text-white', 'font-semibold');
+                        btnOfficer.classList.remove('text-slate-500', 'dark:text-slate-400', 'font-medium');
+                    }
+                    if (btnAdmin) {
+                        btnAdmin.classList.remove('text-slate-800', 'dark:text-white', 'font-semibold');
+                        btnAdmin.classList.add('text-slate-500', 'dark:text-slate-400', 'font-medium');
+                    }
 
-                    lblUsername.innerText = 'Select Territory';
+                    if (lblUsername) lblUsername.innerText = 'Select Territory';
                     const lblAdmin = document.getElementById('lbl-username-admin');
                     if (lblAdmin) lblAdmin.classList.add('hidden');
                     if (lblUsername) lblUsername.classList.remove('hidden');
 
-                    inpUsername.classList.add('hidden');
-                    selOfficer.classList.remove('hidden');
-                    arrow.classList.remove('hidden');
+                    if (lblPassword) lblPassword.innerText = 'Employee ID (Password)';
+
+                    if (inpUsername) inpUsername.classList.add('hidden');
+                    if (selOfficer) selOfficer.classList.remove('hidden');
+                    if (arrow) arrow.classList.remove('hidden');
                     this.populateLoginDropdown();
                 } else {
-                    indicator.classList.remove('translate-x-0');
-                    indicator.classList.add('translate-x-[100%]');
+                    if (indicator) {
+                        indicator.classList.remove('translate-x-0');
+                        indicator.classList.add('translate-x-[100%]');
+                    }
 
-                    btnAdmin.classList.add('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnAdmin.classList.remove('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
-                    btnOfficer.classList.remove('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnOfficer.classList.add('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
+                    if (btnAdmin) {
+                        btnAdmin.classList.add('text-slate-800', 'dark:text-white', 'font-semibold');
+                        btnAdmin.classList.remove('text-slate-500', 'dark:text-slate-400', 'font-medium');
+                    }
+                    if (btnOfficer) {
+                        btnOfficer.classList.remove('text-slate-800', 'dark:text-white', 'font-semibold');
+                        btnOfficer.classList.add('text-slate-500', 'dark:text-slate-400', 'font-medium');
+                    }
 
                     const lblAdmin = document.getElementById('lbl-username-admin');
                     if (lblAdmin) lblAdmin.classList.remove('hidden');
                     if (lblUsername) lblUsername.classList.add('hidden');
 
-                    inpUsername.classList.remove('hidden');
-                    selOfficer.classList.add('hidden');
-                    arrow.classList.add('hidden');
-                    inpUsername.placeholder = '';
+                    if (lblPassword) lblPassword.innerText = 'Password';
+
+                    if (inpUsername) inpUsername.classList.remove('hidden');
+                    if (selOfficer) selOfficer.classList.add('hidden');
+                    if (arrow) arrow.classList.add('hidden');
+                    if (inpUsername) inpUsername.placeholder = '';
                 }
             },
 
@@ -1015,16 +1036,21 @@
                 Store.init();
                 const db = Store.get();
                 const select = document.getElementById('officer-select');
-                select.innerHTML = '<option value="">-- Select Your Territory --</option>';
+                if (!select) return;
 
-                const officers = db.users.filter(u => u.role === 'officer').sort((a, b) => a.username.localeCompare(b.username));
+                select.innerHTML = '<option value="" class="bg-white text-black dark:bg-[#202124] dark:text-[#e8eaed]">-- Select Your Territory --</option>';
 
-                officers.forEach(u => {
-                    const opt = document.createElement('option');
-                    opt.value = u.username;
-                    opt.text = `${u.username}`;
-                    select.appendChild(opt);
-                });
+                if (db && db.users) {
+                    const officers = db.users.filter(u => u.role === 'officer').sort((a, b) => a.username.localeCompare(b.username));
+
+                    officers.forEach(u => {
+                        const opt = document.createElement('option');
+                        opt.value = u.username;
+                        opt.text = `${u.username}`;
+                        opt.className = 'bg-white text-black dark:bg-[#202124] dark:text-[#e8eaed]';
+                        select.appendChild(opt);
+                    });
+                }
             },
 
             initApp() {
