@@ -340,123 +340,107 @@
 
     <!-- LOGIN SCREEN -->
     <div id="login-view"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 animate-fade-in overflow-hidden">
-        <!-- New Creative Low-Poly Style Background (Green Theme #53db8c) -->
-        <div class="absolute inset-0 z-0 overflow-hidden">
-            <!-- Base Gradient: Deep Forest Green -> #53db8c -> Pale Mint -->
-            <div class="absolute inset-0 bg-gradient-to-br from-[#064e3b] via-[#53db8c] to-[#d1fae5]"></div>
+        class="fixed inset-0 z-50 flex items-center justify-center bg-white sm:bg-slate-100 dark:bg-[#202124] animate-fade-in overflow-hidden">
 
-            <!-- Geometric Facet Overlays to mimic Low Poly -->
-            <div class="absolute top-0 left-0 w-full h-full mix-blend-overlay opacity-50">
-                <!-- Large Diagonal Slice -->
-                <div class="absolute top-0 left-0 w-full h-full bg-white/10"
-                    style="clip-path: polygon(0 0, 100% 0, 50% 100%);"></div>
-                <!-- Bottom Right Highlight (using #53db8c tint) -->
-                <div class="absolute bottom-0 right-0 w-2/3 h-full bg-[#53db8c]/30"
-                    style="clip-path: polygon(0 100%, 100% 100%, 100% 0);"></div>
-                <!-- Top Left Shadow -->
-                <div class="absolute top-0 left-0 w-2/3 h-full bg-black/10"
-                    style="clip-path: polygon(0 0, 100% 0, 0 100%);"></div>
-                <!-- Center Diamond tint -->
-                <div class="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-white/10 rotate-45 backdrop-blur-sm"></div>
-            </div>
+        <div class="relative z-10 w-full max-w-[450px] px-4 sm:p-6 animate-entry">
+            <!-- Google Style Clean Background -->
+            <div
+                class="bg-white dark:bg-[#202124] sm:border sm:border-slate-200 sm:dark:border-[#3c4043] rounded-2xl p-6 sm:p-10 sm:shadow-md transition-all duration-300">
 
-            <!-- Subtle Texture/Noise -->
-            <div class="absolute inset-0 opacity-[0.03]"
-                style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');">
-            </div>
-        </div>
-
-        <div class="relative z-10 w-full max-w-md px-4 sm:p-6 animate-entry">
-            <!-- UPDATED LOGIN CARD with #53db8c Theme -->
-            <div class="glass-panel p-6 sm:p-10 rounded-3xl backdrop-blur-xl transition-all duration-300 relative overflow-hidden"
-                style="background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 60%, rgba(83, 219, 140, 0.15) 100%); 
-                        box-shadow: 0 25px 50px -12px rgba(83, 219, 140, 0.3);
-                        border: 1px solid rgba(83, 219, 140, 0.3);">
-
-                <!-- Dark mode override via class for bg, inline style handles light mode specific gradient structure mostly -->
-                <div class="absolute inset-0 bg-slate-800/90 dark:block hidden z-[-1]"
-                    style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(30, 41, 59, 0.85) 60%, rgba(83, 219, 140, 0.15) 100%);">
-                </div>
-
-                <div class="text-center mb-10">
+                <div class="text-center mb-8">
                     <!-- ACI MOTORS LOGO -->
                     <img src="https://i.ibb.co.com/cshLMZ7/aci-motors-seeklogo.png" alt="ACI Motors"
-                        class="h-10 w-auto object-contain mx-auto mb-6 hover:scale-105 transition-transform duration-300">
+                        class="h-8 w-auto object-contain mx-auto mb-4 hover:opacity-80 transition-opacity duration-300">
 
-                    <h1 class="text-3xl font-bold text-slate-800 dark:text-white tracking-tight mb-2">Recovery Companion
-                    </h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-sm">Welcome back</p>
+                    <h1 class="text-2xl font-normal text-[#202124] dark:text-[#e8eaed] tracking-tight mb-2"
+                        style="font-family: Arial, sans-serif;">Sign in</h1>
+                    <p class="text-[15px] font-normal text-[#5f6368] dark:text-[#9aa0a6]">Use your Recovery Account</p>
                 </div>
 
-                <!-- CREATIVE TABS -->
-                <div class="relative p-1 rounded-xl bg-slate-100 dark:bg-slate-700/50 flex mb-8">
+                <!-- Tabs -->
+                <div class="flex border-b border-slate-200 dark:border-[#3c4043] mb-8 relative">
                     <div id="login-tab-indicator"
-                        class="absolute left-1 top-1 bottom-1 w-[calc(50%-4px)] bg-white dark:bg-slate-600 rounded-lg shadow-sm transition-all duration-300 ease-out transform translate-x-0">
+                        class="absolute bottom-[0px] left-0 w-1/2 h-[3px] bg-[#1a73e8] dark:bg-[#8ab4f8] transition-transform duration-300 rounded-t-sm">
                     </div>
                     <button type="button" onclick="UI.setLoginTab('officer')" id="btn-officer"
-                        class="relative z-10 w-1/2 py-2 text-sm font-bold text-[#53db8c] transition-colors duration-300 focus:outline-none">Officer</button>
+                        class="w-1/2 pb-3 text-[14px] font-bold text-[#1a73e8] dark:text-[#8ab4f8] focus:outline-none transition-colors">Officer</button>
                     <button type="button" onclick="UI.setLoginTab('admin')" id="btn-admin"
-                        class="relative z-10 w-1/2 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors duration-300 focus:outline-none">Admin</button>
+                        class="w-1/2 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none rounded-t-sm">Admin</button>
                 </div>
 
-                <form id="login-form" class="space-y-5">
+                <form id="login-form" class="space-y-6">
                     <div>
-                        <label
-                            class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1"
-                            id="lbl-username">Select Territory</label>
                         <div class="relative group">
-                            <span
-                                class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-[#53db8c] transition-colors pointer-events-none z-10">
-                                <i class="fa-regular fa-user"></i>
-                            </span>
-
                             <!-- Admin Input -->
                             <input type="text" id="username"
-                                class="hidden w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-[#53db8c]/20 focus:border-[#53db8c] outline-none transition-all text-slate-800 dark:text-white placeholder-slate-400"
+                                class="hidden w-full px-4 py-3.5 bg-transparent border border-slate-300 dark:border-[#5f6368] rounded focus:border-[#1a73e8] dark:focus:border-[#8ab4f8] focus:border-2 outline-none transition-all text-[#202124] dark:text-[#e8eaed] placeholder-transparent peer"
                                 placeholder="Admin Username">
+                            <label id="lbl-username-admin"
+                                class="hidden absolute left-3 -top-2.5 bg-white dark:bg-[#202124] px-1 text-xs text-[#5f6368] dark:text-[#9aa0a6] peer-focus:text-[#1a73e8] dark:peer-focus:text-[#8ab4f8] transition-all">Admin
+                                Username</label>
 
                             <!-- Officer Dropdown -->
                             <select id="officer-select"
-                                class="w-full pl-11 pr-10 py-3.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-[#53db8c]/20 focus:border-[#53db8c] outline-none transition-all appearance-none cursor-pointer text-slate-800 dark:text-white">
-                                <option value="">Select Territory</option>
-                                <!-- Populated via JS -->
+                                class="w-full px-4 py-3.5 bg-transparent border border-slate-300 dark:border-[#5f6368] rounded focus:border-[#1a73e8] dark:focus:border-[#8ab4f8] focus:border-2 outline-none transition-all appearance-none cursor-pointer text-[#202124] dark:text-[#e8eaed] peer">
+                                <option value="" class="dark:bg-[#202124]">Select Territory</option>
                             </select>
+                            <label id="lbl-username"
+                                class="absolute left-3 -top-2.5 bg-white dark:bg-[#202124] px-1 text-xs text-[#1a73e8] dark:text-[#8ab4f8] transition-all">Select
+                                Territory</label>
+
                             <div id="officer-dropdown-arrow"
-                                class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400">
-                                <i class="fa-solid fa-chevron-down text-xs"></i>
+                                class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-[#5f6368] dark:text-[#9aa0a6]">
+                                <i class="fa-solid fa-caret-down text-sm"></i>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <label
-                            class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1"
-                            id="lbl-password">Employee ID</label>
-                        <div class="relative group">
-                            <span
-                                class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-[#53db8c] transition-colors">
-                                <i class="fa-solid fa-lock-open"></i>
-                            </span>
-                            <input type="password" id="password"
-                                class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-[#53db8c]/20 focus:border-[#53db8c] outline-none transition-all text-slate-800 dark:text-white placeholder-slate-400"
-                                placeholder="••••••••" required>
+                        <div class="relative group mt-2">
+                            <input type="password" id="password" autocomplete="current-password"
+                                class="w-full px-4 py-3.5 bg-transparent border border-slate-300 dark:border-[#5f6368] rounded focus:border-[#1a73e8] dark:focus:border-[#8ab4f8] focus:border-2 outline-none transition-all text-[#202124] dark:text-[#e8eaed] placeholder-transparent peer"
+                                placeholder="Employee ID" required>
+                            <label id="lbl-password"
+                                class="absolute left-3 -top-2.5 bg-white dark:bg-[#202124] px-1 text-xs text-[#5f6368] dark:text-[#9aa0a6] peer-focus:text-[#1a73e8] dark:peer-focus:text-[#8ab4f8] transition-all">Employee
+                                ID (Password)</label>
                         </div>
                     </div>
 
-                    <button type="submit"
-                        class="w-full text-white font-bold py-3.5 rounded-xl transition-all transform active:scale-[0.98] shadow-lg flex justify-center items-center group"
-                        style="background: linear-gradient(90deg, #53db8c 0%, #10b981 100%); box-shadow: 0 10px 15px -3px rgba(83, 219, 140, 0.4);">
-                        <span class="mr-2">Sign In</span>
-                        <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-                    </button>
+                    <div class="pt-6 flex justify-between items-center">
+                        <button type="button"
+                            class="text-[14px] font-medium text-[#1a73e8] dark:text-[#8ab4f8] hover:bg-[#f8f9fa] dark:hover:bg-[#8ab4f8]/10 px-2 py-1.5 rounded transition-colors -ml-2">Forgot
+                            credentials?</button>
+                        <button type="submit"
+                            class="px-6 py-2 bg-[#1a73e8] hover:bg-[#1b66c9] text-white text-[14px] font-medium rounded-md shadow-sm transition-all focus:ring-2 focus:ring-offset-2 focus:ring-[#1a73e8]">
+                            Next
+                        </button>
+                    </div>
                 </form>
 
-                <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700/50 text-center">
-                    <p class="text-xs text-slate-400">
-                        <span class="font-medium text-slate-500 dark:text-slate-300">Demo Access:</span><br>
-                        Admin: admin / 1234 &nbsp;|&nbsp; Officer: territory1 / 1001
+                <div class="mt-14 pt-4 text-left">
+                    <p class="text-[12px] text-[#5f6368] dark:text-[#9aa0a6] leading-relaxed">
+                        Demo Accounts:<br>
+                        Admin: <span class="text-[#202124] dark:text-[#e8eaed] font-medium">admin</span> / <span
+                            class="text-[#202124] dark:text-[#e8eaed]">1234</span> &nbsp;&bull;&nbsp;
+                        Officer: <span class="text-[#202124] dark:text-[#e8eaed] font-medium">territory1</span> / <span
+                            class="text-[#202124] dark:text-[#e8eaed]">1001</span>
                     </p>
+                </div>
+            </div>
+
+            <div
+                class="w-full max-w-[450px] mx-auto mt-4 px-2 flex justify-between items-center text-[12px] text-[#5f6368] dark:text-[#9aa0a6]">
+                <div>
+                    <span class="cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 px-2 py-1 rounded">English
+                        (United States) <i class="fa-solid fa-caret-down ml-1 text-[10px]"></i></span>
+                </div>
+                <div class="space-x-1">
+                    <a href="#"
+                        class="hover:bg-slate-200 dark:hover:bg-slate-800 px-3 py-1.5 rounded transition-colors">Help</a>
+                    <a href="#"
+                        class="hover:bg-slate-200 dark:hover:bg-slate-800 px-3 py-1.5 rounded transition-colors">Privacy</a>
+                    <a href="#"
+                        class="hover:bg-slate-200 dark:hover:bg-slate-800 px-3 py-1.5 rounded transition-colors">Terms</a>
                 </div>
             </div>
         </div>
@@ -993,32 +977,37 @@
                     indicator.classList.remove('translate-x-[100%]', 'translate-x-full');
                     indicator.classList.add('translate-x-0');
 
-                    btnOfficer.classList.add('text-[#53db8c]', 'font-bold');
-                    btnOfficer.classList.remove('text-slate-500', 'dark:text-slate-400', 'font-medium');
-                    btnAdmin.classList.remove('text-[#53db8c]', 'font-bold');
-                    btnAdmin.classList.add('text-slate-500', 'dark:text-slate-400', 'font-medium');
+                    btnOfficer.classList.add('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
+                    btnOfficer.classList.remove('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
+                    btnAdmin.classList.remove('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
+                    btnAdmin.classList.add('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
 
                     lblUsername.innerText = 'Select Territory';
-                    lblPassword.innerText = 'Employee ID';
+                    const lblAdmin = document.getElementById('lbl-username-admin');
+                    if (lblAdmin) lblAdmin.classList.add('hidden');
+                    if (lblUsername) lblUsername.classList.remove('hidden');
+
                     inpUsername.classList.add('hidden');
                     selOfficer.classList.remove('hidden');
                     arrow.classList.remove('hidden');
                     this.populateLoginDropdown();
                 } else {
                     indicator.classList.remove('translate-x-0');
-                    indicator.classList.add('translate-x-[102%]');
+                    indicator.classList.add('translate-x-[100%]');
 
-                    btnAdmin.classList.add('text-[#53db8c]', 'font-bold');
-                    btnAdmin.classList.remove('text-slate-500', 'dark:text-slate-400', 'font-medium');
-                    btnOfficer.classList.remove('text-[#53db8c]', 'font-bold');
-                    btnOfficer.classList.add('text-slate-500', 'dark:text-slate-400', 'font-medium');
+                    btnAdmin.classList.add('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
+                    btnAdmin.classList.remove('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
+                    btnOfficer.classList.remove('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
+                    btnOfficer.classList.add('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
 
-                    lblUsername.innerText = 'Admin Username';
-                    lblPassword.innerText = 'Password';
+                    const lblAdmin = document.getElementById('lbl-username-admin');
+                    if (lblAdmin) lblAdmin.classList.remove('hidden');
+                    if (lblUsername) lblUsername.classList.add('hidden');
+
                     inpUsername.classList.remove('hidden');
                     selOfficer.classList.add('hidden');
                     arrow.classList.add('hidden');
-                    inpUsername.placeholder = 'e.g., admin';
+                    inpUsername.placeholder = '';
                 }
             },
 
@@ -2375,61 +2364,65 @@
                 const advPct = totalCollSplit > 0 ? Math.round((mtdCollAdv / totalCollSplit) * 100) : 0;
 
                 document.getElementById('views-container').innerHTML = `
-            <div class="animate-entry mb-6" >
-                        <h2 class="text-2xl font-bold">Dashboard</h2>
-                        <p class="text-slate-500">${Auth.currentUser.officerName || Auth.currentUser.username}</p>
+            <div class="animate-entry mb-4 sm:mb-6" >
+                        <div class="flex justify-between items-end mb-2">
+                            <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h2>
+                            <p class="text-xs sm:text-sm text-slate-500 font-medium">${Auth.currentUser.officerName || Auth.currentUser.username}</p>
+                        </div>
                     </div>
                     
                     <!--Portfolio Health Strip(Green Theme)-->
-                    <div class="animate-entry mb-8 p-1 rounded-xl bg-gradient-to-r from-brand-600 to-blue-500 shadow-lg text-white hover-lift">
-                        <div class="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-white/20 bg-white/10 backdrop-blur-sm rounded-lg">
-                            <div class="flex-1 p-4 text-center">
-                                <p class="text-xs uppercase tracking-wider opacity-80 mb-1">Month Start Total OD</p>
-                                <p class="text-2xl font-bold font-mono">${parseInt(targetData.totalOd || 0).toLocaleString()}</p>
+                    <div class="animate-entry mb-4 sm:mb-6 rounded-lg bg-gradient-to-r from-brand-600 to-blue-500 shadow-md text-white hover-lift overflow-hidden">
+                        <div class="grid grid-cols-2 md:grid-cols-5 md:divide-x divide-white/20 bg-white/10 backdrop-blur-sm">
+                            <div class="p-3 bg-black/10 md:bg-transparent col-span-2 md:col-span-1 border-b md:border-b-0 border-white/20">
+                                <p class="text-[10px] uppercase tracking-wider opacity-80 mb-0.5">Month Start Total OD</p>
+                                <p class="text-xl font-bold font-mono">${parseInt(targetData.totalOd || 0).toLocaleString()}</p>
                             </div>
-                            <div class="flex-1 p-4 text-center">
-                                <p class="text-xs uppercase tracking-wider opacity-80 mb-1">OD Growth (SPLY)</p>
-                                <p class="text-xl font-bold ${parseFloat(targetData.odGrowthSply) > 0 ? 'text-red-200' : 'text-green-200'}">
-                                    ${targetData.odGrowthSply || 0}% <i class="fa-solid fa-arrow-${parseFloat(targetData.odGrowthSply) > 0 ? 'up' : 'down'} text-xs"></i>
+                            <div class="p-2.5 sm:p-3 border-r md:border-r-0 border-white/20">
+                                <p class="text-[9px] sm:text-[10px] uppercase tracking-wider opacity-80 mb-0.5">OD Growth(SPLY)</p>
+                                <p class="text-base sm:text-lg font-bold leading-tight ${parseFloat(targetData.odGrowthSply) > 0 ? 'text-red-200' : 'text-green-200'}">
+                                    ${targetData.odGrowthSply || 0}% <i class="fa-solid fa-arrow-${parseFloat(targetData.odGrowthSply) > 0 ? 'up' : 'down'} text-[10px]"></i>
                                 </p>
                             </div>
-                            <div class="flex-1 p-4 text-center">
-                                <p class="text-xs uppercase tracking-wider opacity-80 mb-1">Per File OD</p>
-                                <p class="text-xl font-bold font-mono">${parseInt(targetData.perFileOd || 0).toLocaleString()}</p>
+                            <div class="p-2.5 sm:p-3 border-b md:border-b-0 border-white/20">
+                                <p class="text-[9px] sm:text-[10px] uppercase tracking-wider opacity-80 mb-0.5">Per File OD</p>
+                                <p class="text-base sm:text-lg font-bold font-mono leading-tight">${parseInt(targetData.perFileOd || 0).toLocaleString()}</p>
                             </div>
-                            <div class="flex-1 p-4 text-center">
-                                <p class="text-xs uppercase tracking-wider opacity-80 mb-1">6+ OD Files</p>
-                                <p class="text-2xl font-bold">${targetData.sixPlusOdFiles || 0}</p>
+                            <div class="p-2.5 sm:p-3 border-r md:border-r-0 border-white/20">
+                                <p class="text-[9px] sm:text-[10px] uppercase tracking-wider opacity-80 mb-0.5">6+ OD Files</p>
+                                <p class="text-base sm:text-lg font-bold leading-tight">${targetData.sixPlusOdFiles || 0}</p>
                             </div>
-                            <div class="flex-1 p-4 text-center">
-                                <p class="text-xs uppercase tracking-wider opacity-80 mb-1">6+ Growth (SPLM)</p>
-                                <p class="text-xl font-bold ${parseFloat(targetData.sixPlusOdGrowthSplm) > 0 ? 'text-red-200' : 'text-green-200'}">
+                            <div class="p-2.5 sm:p-3">
+                                <p class="text-[9px] sm:text-[10px] uppercase tracking-wider opacity-80 mb-0.5">6+ Growth(SPLM)</p>
+                                <p class="text-base sm:text-lg font-bold leading-tight ${parseFloat(targetData.sixPlusOdGrowthSplm) > 0 ? 'text-red-200' : 'text-green-200'}">
                                     ${targetData.sixPlusOdGrowthSplm || 0}%
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <!--RPI & OFFROAD STATUS BANNER-->
-                    <div class="animate-entry mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="md:col-span-3 p-6 rounded-2xl border ${Calc.getRPIBg(metrics.rpi)} flex items-center justify-between shadow-sm hover-lift relative overflow-hidden group">
-                           <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform">
-                                <i class="fa-solid fa-bolt-lightning text-8xl"></i>
+                    <!--RPI & OFFROAD STATUS BANNER - COMPRESSED FOR MOBILE -->
+                    <div class="animate-entry mb-4 sm:mb-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="col-span-2 lg:col-span-3 p-4 sm:p-5 rounded-xl border ${Calc.getRPIBg(metrics.rpi)} flex items-center justify-between shadow-sm hover-lift relative overflow-hidden group">
+                           <div class="absolute right-[-10px] top-[-10px] opacity-[0.08] transform transition-transform group-hover:scale-110">
+                                <i class="fa-solid fa-bolt-lightning text-7xl sm:text-8xl"></i>
                            </div>
-                           <div class="relative z-10">
-                                <h3 class="text-lg font-black text-slate-800 dark:text-white tracking-tight">Recovery Performance Index (RPI)</h3>
-                                <p class="text-xs uppercase font-bold opacity-60 tracking-widest">Efficiency Multiplier Index</p>
+                           <div class="relative z-10 w-2/3">
+                                <h3 class="text-sm sm:text-lg font-black text-slate-800 dark:text-white tracking-tight leading-tight mb-1">Recovery Performance Index (RPI)</h3>
+                                <p class="text-[9px] sm:text-[10px] uppercase font-bold opacity-60 tracking-widest hidden sm:block">Efficiency Multiplier Index</p>
                             </div>
-                            <div class="text-5xl font-black ${Calc.getRPIColor(metrics.rpi)} relative z-10">${metrics.rpi}</div>
+                            <div class="text-3xl sm:text-5xl font-black ${Calc.getRPIColor(metrics.rpi)} relative z-10">${metrics.rpi}</div>
                         </div>
 
-                        <div onclick="Router.navigate('offroad-monitor')" class="cursor-pointer p-6 rounded-2xl border border-rose-100 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-900/10 flex flex-col justify-center shadow-sm hover-lift relative overflow-hidden group">
-                            <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-4 translate-y-4 group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-car-burst text-6xl text-rose-600"></i>
+                        <div onclick="Router.navigate('offroad-monitor')" class="col-span-2 lg:col-span-1 p-3 sm:p-5 rounded-xl border border-rose-100 dark:border-rose-900/30 bg-rose-50/80 dark:bg-rose-900/10 flex items-center justify-between shadow-sm hover-lift relative overflow-hidden group cursor-pointer transition-colors hover:bg-rose-100">
+                            <div class="relative z-10 flex flex-col justify-center">
+                                <p class="text-[10px] sm:text-xs uppercase font-bold text-rose-500 mb-0.5 tracking-tight">Active Offroad</p>
+                                <button class="text-[9px] font-bold text-rose-600 border-b border-rose-200 w-fit sm:mt-1 hover:border-rose-600 transition-all">VIEW TRACKER <i class="fa-solid fa-chevron-right ml-0.5"></i></button>
                             </div>
-                            <p class="text-[10px] uppercase font-bold text-rose-500 mb-1">Active Offroad</p>
-                            <h3 class="text-3xl font-black text-rose-600">${db.offroad_vehicles.filter(v => v.territoryId === linkedTId && v.status === 'Active').length}</h3>
-                            <button class="mt-2 text-[10px] font-bold text-rose-600 border-b border-rose-200 w-fit hover:border-rose-600 transition-all">VIEW TRACKER <i class="fa-solid fa-chevron-right ml-1"></i></button>
+                            <h3 class="relative z-10 text-2xl sm:text-4xl font-black text-rose-600 pr-2">${db.offroad_vehicles.filter(v => v.territoryId === linkedTId && v.status === 'Active').length}</h3>
+                             <div class="absolute right-0 bottom-[-10px] opacity-10 transform translate-x-3 translate-y-2 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-car-burst text-5xl text-rose-600"></i>
+                            </div>
                         </div>
                     </div>
 
@@ -2552,32 +2545,27 @@
                     </div>
 
                     <!--COLLECTION MIX(Regular vs Advance) - NEW CREATIVE SECTION-->
-                    <div class="animate-entry mb-8 p-3 rounded-xl bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <div class="flex justify-between items-end mb-2 px-1">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                    <div class="animate-entry mb-4 sm:mb-6 p-2 rounded-lg bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 shadow-sm mt-3">
+                        <div class="flex justify-between items-end mb-1.5 px-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-slate-500"></span>
                                 <div class="leading-none">
-                                    <p class="text-[10px] uppercase font-bold text-slate-400">Regular</p>
-                                    <p class="text-sm font-bold text-slate-700 dark:text-slate-200">${parseInt(mtdCollReg).toLocaleString()}</p>
+                                    <p class="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400">Regular</p>
+                                    <p class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200">${parseInt(mtdCollReg).toLocaleString()}</p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 text-right">
+                            <div class="flex items-center gap-1.5 text-right">
                                 <div class="leading-none">
-                                    <p class="text-[10px] uppercase font-bold text-brand-500">Advance</p>
-                                    <p class="text-sm font-bold text-brand-600">${parseInt(mtdCollAdv).toLocaleString()}</p>
+                                    <p class="text-[9px] sm:text-[10px] uppercase font-bold text-brand-500">Advance</p>
+                                    <p class="text-xs sm:text-sm font-bold text-brand-600">${parseInt(mtdCollAdv).toLocaleString()}</p>
                                 </div>
-                                <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
+                                <span class="w-2 h-2 rounded-full bg-brand-500"></span>
                             </div>
                         </div>
                         
-                        <div class="relative h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
+                        <div class="relative h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
                             <div class="h-full bg-slate-500 relative group transition-all duration-700" style="width: ${regPct}%"></div>
                             <div class="h-full bg-brand-500 relative group transition-all duration-700" style="width: ${advPct}%"></div>
-                        </div>
-                        
-                        <div class="flex justify-between mt-1 px-1 text-[9px] font-bold text-slate-400">
-                            <span>${regPct}%</span>
-                            <span>${advPct}%</span>
                         </div>
                     </div>
 
@@ -2598,40 +2586,49 @@
                     </div>
 
                     <!--RECENT TRANSACTIONS-->
-            <div class="animate-entry glass-panel rounded-xl shadow dark:bg-dark-card overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <div class="animate-entry rounded-lg shadow border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card overflow-hidden">
+                <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sm:hidden">
+                    <h3 class="font-bold text-slate-800 dark:text-white text-sm">Today's Collections</h3>
+                    <button onclick="Router.navigate('officer-collection')" class="text-[10px] bg-brand-600 text-white px-2 py-1 rounded hover:bg-brand-700"><i class="fa-solid fa-plus"></i> Add</button>
+                </div>
+                <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700 hidden sm:flex justify-between items-center">
                     <h3 class="font-bold text-slate-800 dark:text-white">Today's Collections</h3>
-                    <button onclick="Router.navigate('officer-collection')" class="text-xs bg-brand-600 text-white px-3 py-1 rounded hover:bg-brand-700 hover-lift">New Entry</button>
+                    <button onclick="Router.navigate('officer-collection')" class="text-xs bg-brand-600 text-white px-3 py-1.5 rounded hover:bg-brand-700 hover-lift"><i class="fa-solid fa-plus mr-1"></i> New Entry</button>
                 </div>
                 <div class="overflow-x-auto scrollbar-hide">
-                    <table class="w-full text-sm text-left min-w-[600px]">
-                    <thead class="bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 uppercase">
+                    <table class="w-full text-xs sm:text-sm text-left min-w-[500px]">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80 text-[10px] sm:text-xs text-slate-500 uppercase">
                         <tr>
-                            <th class="px-6 py-3">Receipt</th>
-                            <th class="px-6 py-3">Breakdown</th>
-                            <th class="px-6 py-3">Mode</th>
-                            <th class="px-6 py-3 text-right">Total</th>
-                            <th class="px-6 py-3"></th>
+                            <th class="px-4 pb-2 pt-2 sm:px-6 sm:py-3">Receipt / Code</th>
+                            <th class="px-4 pb-2 pt-2 sm:px-6 sm:py-3 w-1/4">Breakdown</th>
+                            <th class="px-4 pb-2 pt-2 sm:px-6 sm:py-3 text-center">Mode</th>
+                            <th class="px-4 pb-2 pt-2 sm:px-6 sm:py-3 text-right">Total</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                         ${metrics.rawCollections.filter(c => c.date === new Date().toISOString().split('T')[0]).map(c => `
-                                    <tr class="interactive-row border-b border-slate-100 dark:border-slate-700">
-                                        <td class="px-6 py-3 font-medium">#${c.receipt}<br><span class="text-xs text-slate-400">${c.customerCode || 'N/A'}</span></td>
-                                        <td class="px-6 py-3">
-                                            <div class="text-xs">
-                                                <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-300"></span> <span class="text-slate-500">Reg:</span> <span class="font-bold text-slate-700 dark:text-slate-300">${c.regularAmount ? parseFloat(c.regularAmount).toLocaleString() : '-'}</span></div>
-                                                <div class="flex items-center gap-1 mt-0.5"><span class="w-2 h-2 rounded-full bg-brand-400"></span> <span class="text-slate-500">Adv:</span> <span class="font-bold text-brand-600">${c.advanceAmount ? parseFloat(c.advanceAmount).toLocaleString() : '-'}</span></div>
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800">
+                                        <td class="px-4 py-2 sm:px-6 sm:py-3">
+                                            <div class="font-medium text-slate-800 dark:text-slate-200">#${c.receipt}</div>
+                                            <div class="text-[10px] sm:text-xs text-slate-400 font-mono">${c.customerCode || 'N/A'}</div>
+                                        </td>
+                                        <td class="px-4 py-2 sm:px-6 sm:py-3">
+                                            <div class="text-[10px] sm:text-xs">
+                                                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-slate-300"></span> <span class="text-slate-500 hidden sm:inline">Reg:</span><span class="sm:hidden w-6 text-slate-400 inline-block font-mono">Rg:</span> <span class="font-bold text-slate-700 dark:text-slate-300">${c.regularAmount ? parseFloat(c.regularAmount).toLocaleString() : '-'}</span></div>
+                                                <div class="flex items-center gap-1 mt-0.5"><span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-brand-400"></span> <span class="text-slate-500 hidden sm:inline">Adv:</span><span class="sm:hidden w-6 text-slate-400 inline-block font-mono">Ad:</span> <span class="font-bold text-brand-600">${c.advanceAmount ? parseFloat(c.advanceAmount).toLocaleString() : '-'}</span></div>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-3"><span class="px-2 py-1 rounded text-xs bg-slate-100 dark:bg-slate-700">${c.mode}</span></td>
-                                        <td class="px-6 py-3 text-right font-bold">${parseFloat(c.amount).toLocaleString()}</td>
-                                        <td class="px-6 py-3 text-right">
-                                            <span class="text-xs text-slate-400 italic">Locked</span>
+                                        <td class="px-4 py-2 sm:px-6 sm:py-3 text-center">
+                                            <span class="inline-block px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[9px] sm:text-xs bg-slate-100 dark:bg-slate-700 font-medium">${c.mode === 'Cash' || c.mode.toLowerCase().includes('cash') ? '<i class="fa-solid fa-money-bill text-green-500 mr-1"></i>' : c.mode === 'Cheque' ? '<i class="fa-solid fa-money-check text-blue-500 mr-1"></i>' : '<i class="fa-solid fa-building-columns text-yellow-500 mr-1"></i>'} 
+                                            ${c.mode}</span>
+                                        </td>
+                                        <td class="px-4 py-2 sm:px-6 sm:py-3 text-right">
+                                            <div class="font-bold tracking-tight">${parseFloat(c.amount).toLocaleString()}</div>
+                                            <div class="text-[9px] text-slate-400 italic">Locked</div>
                                         </td>
                                     </tr>
                                 `).join('')}
-                        ${metrics.rawCollections.filter(c => c.date === new Date().toISOString().split('T')[0]).length === 0 ? '<tr><td colspan="5" class="px-6 py-4 text-center text-slate-400">No collections today</td></tr>' : ''}
+                        ${metrics.rawCollections.filter(c => c.date === new Date().toISOString().split('T')[0]).length === 0 ? '<tr><td colspan="4" class="px-6 py-6 text-center text-slate-400 text-sm">No collections today</td></tr>' : ''}
                     </tbody>
                 </table>
                 </div>
