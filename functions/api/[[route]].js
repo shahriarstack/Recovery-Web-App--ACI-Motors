@@ -135,8 +135,12 @@ export async function onRequest(context) {
                 await client.query("DELETE FROM users WHERE role = 'officer'");
                 for (const u of users) {
                     if (u.role === 'officer') {
-                        await client.query(`INSERT INTO users (username, officer_name, role, password, territory_id) VALUES ($1, $2, $3, $4, $5)`,
-                            [u.username, u.officerName, u.role, u.password, u.territoryId]);
+                        // Use a subquery for territory_id to ensure it exists in territories table, otherwise insert NULL
+                        // to avoid foreign key constraint violation.
+                        await client.query(`
+                            INSERT INTO users (username, officer_name, role, password, territory_id) 
+                            VALUES ($1, $2, $3, $4, (SELECT id FROM territories WHERE id = $5))
+                        `, [u.username, u.officerName, u.role, u.password, u.territoryId]);
                     }
                 }
                 await client.query('COMMIT');
