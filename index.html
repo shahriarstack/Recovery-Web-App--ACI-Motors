@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="light">
 
 <head>
@@ -3853,22 +3853,34 @@
                         });
                     });
 
-                    await fetch(`${Store.apiUrl}/sync-targets`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ territories, targets })
-                    });
+                    try {
+                        const response = await fetch(`${Store.apiUrl}/sync-targets`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ territories, targets })
+                        });
 
-                    await Store.init(); // Refresh cache
-                    UI.showSuccess('Monthly Targets & Setup Saved!');
-                    UI.renderAdminDashboard();
-                    UI.toggleLoader(false);
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`Sync failed: ${errorText}`);
+                        }
+
+                        await Store.init(); // Refresh cache
+                        UI.showSuccess('Monthly Targets & Setup Saved!');
+                        UI.renderAdminDashboard();
+                    } catch (error) {
+                        console.error('Failed to save data:', error);
+                        alert(`Error saving targets: ${error.message}`);
+                    } finally {
+                        UI.toggleLoader(false);
+                    }
                 })();
             },
 
             saveUsers() {
                 (async () => {
                     UI.toggleLoader(true);
+                    const rows = document.querySelectorAll('#user-mgmt-table tbody tr');
                     const users = [];
                     rows.forEach(row => {
                         const getVal = (name) => row.querySelector(`[name="${name}"]`).value;
@@ -3884,15 +3896,26 @@
                         }
                     });
 
-                    await fetch(`${Store.apiUrl}/sync-users`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ users })
-                    });
+                    try {
+                        const response = await fetch(`${Store.apiUrl}/sync-users`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ users })
+                        });
 
-                    await Store.init();
-                    UI.showSuccess('User Credentials Saved!');
-                    UI.toggleLoader(false);
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`Sync failed: ${errorText}`);
+                        }
+
+                        await Store.init();
+                        UI.showSuccess('User Credentials Saved!');
+                    } catch (error) {
+                        console.error('Failed to save users:', error);
+                        alert(`Error saving users: ${error.message}`);
+                    } finally {
+                        UI.toggleLoader(false);
+                    }
                 })();
             },
 
@@ -4214,16 +4237,27 @@
                     }
                 });
 
-                await fetch(`${Store.apiUrl}/sync-vehicle-perf`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data })
-                });
+                try {
+                    const response = await fetch(`${Store.apiUrl}/sync-vehicle-perf`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data })
+                    });
 
-                await Store.init();
-                UI.showSuccess('Vehicle Performance Data Saved!');
-                UI.renderAdminVehiclePerf();
-                UI.toggleLoader(false);
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Sync failed: ${errorText}`);
+                    }
+
+                    await Store.init();
+                    UI.showSuccess('Vehicle Performance Data Saved!');
+                    UI.renderAdminVehiclePerf();
+                } catch (error) {
+                    console.error('Failed to save vehicle perf:', error);
+                    alert(`Error saving performance: ${error.message}`);
+                } finally {
+                    UI.toggleLoader(false);
+                }
             },
 
 
