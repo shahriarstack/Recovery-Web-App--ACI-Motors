@@ -3891,7 +3891,7 @@
                                 officerName: getVal('officerName'),
                                 password: getVal('password'),
                                 role: 'officer',
-                                territoryId: username // Usually mapped to territory name/id
+                                territoryId: username.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
                             });
                         }
                     });
