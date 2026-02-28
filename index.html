@@ -340,112 +340,107 @@
 
     <!-- LOGIN SCREEN -->
     <div id="login-view"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#121212] animate-fade-in overflow-hidden">
+        class="fixed inset-0 z-50 flex items-center justify-center bg-white sm:bg-slate-100 dark:bg-[#202124] animate-fade-in overflow-hidden">
 
-        <!-- Elegant subtle animated background shapes -->
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="relative z-10 w-full max-w-[450px] px-4 sm:p-6 animate-entry">
+            <!-- Google Style Clean Background -->
             <div
-                class="absolute -top-[20%] -right-[10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-blue-100/40 to-purple-100/40 dark:from-blue-900/10 dark:to-purple-900/10 blur-3xl saturate-150">
-            </div>
-            <div
-                class="absolute -bottom-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tr from-emerald-100/40 to-teal-100/40 dark:from-emerald-900/10 dark:to-teal-900/10 blur-3xl saturate-150">
-            </div>
-        </div>
-
-        <div class="relative z-10 w-full max-w-[420px] px-4 sm:p-6 animate-entry">
-            <!-- Sleek Minimal Card -->
-            <div
-                class="bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-xl border border-white/40 dark:border-white/5 rounded-[24px] p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300">
+                class="bg-white dark:bg-[#202124] sm:border sm:border-slate-200 sm:dark:border-[#3c4043] rounded-2xl p-6 sm:p-10 sm:shadow-md transition-all duration-300">
 
                 <div class="text-center mb-8">
                     <!-- ACI MOTORS LOGO -->
                     <img src="https://i.ibb.co.com/cshLMZ7/aci-motors-seeklogo.png" alt="ACI Motors"
-                        class="h-9 w-auto object-contain mx-auto mb-5 hover:scale-105 transition-transform duration-500 drop-shadow-sm">
+                        class="h-8 w-auto object-contain mx-auto mb-4 hover:opacity-80 transition-opacity duration-300">
 
-                    <h1
-                        class="text-[22px] font-semibold text-slate-800 dark:text-slate-100 tracking-tight mb-1.5 font-sans">
-                        Welcome back
-                    </h1>
-                    <p class="text-[14px] font-normal text-slate-500 dark:text-slate-400">Sign in to Recovery Portal</p>
+                    <h1 class="text-2xl font-normal text-[#202124] dark:text-[#e8eaed] tracking-tight mb-2"
+                        style="font-family: Arial, sans-serif;">Sign in</h1>
+                    <p class="text-[15px] font-normal text-[#5f6368] dark:text-[#9aa0a6]">Use your Recovery Account</p>
                 </div>
 
-                <!-- Sleek Tabs -->
-                <div class="flex p-1 bg-slate-100/80 dark:bg-[#2a2a2a] rounded-xl mb-8 relative">
+                <!-- Tabs -->
+                <div class="flex border-b border-slate-200 dark:border-[#3c4043] mb-8 relative">
                     <div id="login-tab-indicator"
-                        class="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white dark:bg-[#3f3f3f] shadow-sm rounded-lg transition-transform duration-300 pointer-events-none">
+                        class="absolute bottom-[0px] left-0 w-1/2 h-[3px] bg-[#1a73e8] dark:bg-[#8ab4f8] transition-transform duration-300 rounded-t-sm">
                     </div>
                     <button type="button" onclick="UI.setLoginTab('officer')" id="btn-officer"
-                        class="w-1/2 py-2 text-[13px] font-semibold text-slate-800 dark:text-white relative z-10 focus:outline-none transition-colors">Officer</button>
+                        class="w-1/2 pb-3 text-[14px] font-bold text-[#1a73e8] dark:text-[#8ab4f8] focus:outline-none transition-colors">Officer</button>
                     <button type="button" onclick="UI.setLoginTab('admin')" id="btn-admin"
-                        class="w-1/2 py-2 text-[13px] font-medium text-slate-500 dark:text-slate-400 relative z-10 focus:outline-none transition-colors">Admin</button>
+                        class="w-1/2 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none rounded-t-sm">Admin</button>
                 </div>
 
-                <form id="login-form" class="space-y-5">
+                <form id="login-form" class="space-y-6">
                     <div>
                         <div class="relative group">
                             <!-- Admin Input -->
                             <input type="text" id="username"
-                                class="hidden w-full px-4 py-3.5 bg-slate-50/50 dark:bg-[#2a2a2a]/50 border border-slate-200 dark:border-slate-700/50 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 outline-none transition-all text-slate-800 dark:text-slate-100 placeholder-transparent peer"
+                                class="hidden w-full px-4 py-3.5 bg-transparent border border-slate-300 dark:border-[#5f6368] rounded focus:border-[#1a73e8] dark:focus:border-[#8ab4f8] focus:border-2 outline-none transition-all text-[#202124] dark:text-[#e8eaed] placeholder-transparent peer"
                                 placeholder="Admin Username">
                             <label id="lbl-username-admin"
-                                class="hidden absolute left-4 -top-2.5 bg-white dark:bg-[#1e1e1e] px-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 peer-focus:text-blue-600 dark:peer-focus:text-blue-400 transition-all rounded">Admin
+                                class="hidden absolute left-3 -top-2.5 bg-white dark:bg-[#202124] px-1 text-xs text-[#5f6368] dark:text-[#9aa0a6] peer-focus:text-[#1a73e8] dark:peer-focus:text-[#8ab4f8] transition-all">Admin
                                 Username</label>
 
                             <!-- Officer Dropdown -->
                             <select id="officer-select"
-                                class="w-full px-4 py-3.5 bg-slate-50/50 dark:bg-[#2a2a2a]/50 border border-slate-200 dark:border-slate-700/50 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 outline-none transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-100 peer shadow-sm">
-                                <option value="" class="bg-white text-black dark:bg-[#202124] dark:text-[#e8eaed]">
-                                    Select Territory</option>
+                                class="w-full px-4 py-3.5 bg-transparent border border-slate-300 dark:border-[#5f6368] rounded focus:border-[#1a73e8] dark:focus:border-[#8ab4f8] focus:border-2 outline-none transition-all appearance-none cursor-pointer text-[#202124] dark:text-[#e8eaed] peer">
+                                <option value="" class="dark:bg-[#202124]">Select Territory</option>
                             </select>
                             <label id="lbl-username"
-                                class="absolute left-4 -top-2.5 bg-white dark:bg-[#1e1e1e] px-1.5 text-[11px] font-medium text-blue-600 dark:text-blue-400 transition-all rounded">Select
+                                class="absolute left-3 -top-2.5 bg-white dark:bg-[#202124] px-1 text-xs text-[#1a73e8] dark:text-[#8ab4f8] transition-all">Select
                                 Territory</label>
 
                             <div id="officer-dropdown-arrow"
-                                class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400 dark:text-slate-500">
-                                <i class="fa-solid fa-chevron-down text-xs"></i>
+                                class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-[#5f6368] dark:text-[#9aa0a6]">
+                                <i class="fa-solid fa-caret-down text-sm"></i>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <div class="relative group mt-3">
+                        <div class="relative group mt-2">
                             <input type="password" id="password" autocomplete="current-password"
-                                class="w-full px-4 py-3.5 bg-slate-50/50 dark:bg-[#2a2a2a]/50 border border-slate-200 dark:border-slate-700/50 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-400/10 outline-none transition-all text-slate-800 dark:text-slate-100 placeholder-transparent peer shadow-sm"
+                                class="w-full px-4 py-3.5 bg-transparent border border-slate-300 dark:border-[#5f6368] rounded focus:border-[#1a73e8] dark:focus:border-[#8ab4f8] focus:border-2 outline-none transition-all text-[#202124] dark:text-[#e8eaed] placeholder-transparent peer"
                                 placeholder="Employee ID" required>
                             <label id="lbl-password"
-                                class="absolute left-4 -top-2.5 bg-white dark:bg-[#1e1e1e] px-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 peer-focus:text-blue-600 dark:peer-focus:text-blue-400 transition-all rounded">Employee
+                                class="absolute left-3 -top-2.5 bg-white dark:bg-[#202124] px-1 text-xs text-[#5f6368] dark:text-[#9aa0a6] peer-focus:text-[#1a73e8] dark:peer-focus:text-[#8ab4f8] transition-all">Employee
                                 ID (Password)</label>
                         </div>
                     </div>
 
-                    <div class="pt-2 flex justify-end items-center mb-6">
+                    <div class="pt-6 flex justify-between items-center">
                         <button type="button"
-                            class="text-[12px] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Forgot
-                            password?</button>
-                    </div>
-
-                    <div>
+                            class="text-[14px] font-medium text-[#1a73e8] dark:text-[#8ab4f8] hover:bg-[#f8f9fa] dark:hover:bg-[#8ab4f8]/10 px-2 py-1.5 rounded transition-colors -ml-2">Forgot
+                            credentials?</button>
                         <button type="submit"
-                            class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 text-white text-[14px] font-semibold rounded-xl shadow-[0_4px_14px_0_rgb(0,0,0,0.1)] dark:shadow-[0_4px_14px_0_rgb(255,255,255,0.1)] transition-transform hover:scale-[1.01] active:scale-[0.99] flex justify-center items-center">
-                            Continue
+                            class="px-6 py-2 bg-[#1a73e8] hover:bg-[#1b66c9] text-white text-[14px] font-medium rounded-md shadow-sm transition-all focus:ring-2 focus:ring-offset-2 focus:ring-[#1a73e8]">
+                            Next
                         </button>
                     </div>
                 </form>
+
+                <div class="mt-14 pt-4 text-left">
+                    <p class="text-[12px] text-[#5f6368] dark:text-[#9aa0a6] leading-relaxed">
+                        Demo Accounts:<br>
+                        Admin: <span class="text-[#202124] dark:text-[#e8eaed] font-medium">admin</span> / <span
+                            class="text-[#202124] dark:text-[#e8eaed]">1234</span> &nbsp;&bull;&nbsp;
+                        Officer: <span class="text-[#202124] dark:text-[#e8eaed] font-medium">territory1</span> / <span
+                            class="text-[#202124] dark:text-[#e8eaed]">1001</span>
+                    </p>
+                </div>
             </div>
 
             <div
-                class="w-full max-w-[420px] mx-auto mt-6 px-2 flex justify-between items-center text-[12px] text-slate-400 dark:text-slate-500 font-medium">
+                class="w-full max-w-[450px] mx-auto mt-4 px-2 flex justify-between items-center text-[12px] text-[#5f6368] dark:text-[#9aa0a6]">
                 <div>
-                    <span class="cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                        onclick="UI.toggleDarkMode()">
-                        Theme <i class="fa-solid fa-circle-half-stroke ml-1 text-[10px]"></i>
-                    </span>
+                    <span class="cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 px-2 py-1 rounded">English
+                        (United States) <i class="fa-solid fa-caret-down ml-1 text-[10px]"></i></span>
                 </div>
-                <div class="space-x-4">
-                    <a href="#" class="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Help</a>
-                    <a href="#" class="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Privacy</a>
-                    <a href="#" class="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Terms</a>
+                <div class="space-x-1">
+                    <a href="#"
+                        class="hover:bg-slate-200 dark:hover:bg-slate-800 px-3 py-1.5 rounded transition-colors">Help</a>
+                    <a href="#"
+                        class="hover:bg-slate-200 dark:hover:bg-slate-800 px-3 py-1.5 rounded transition-colors">Privacy</a>
+                    <a href="#"
+                        class="hover:bg-slate-200 dark:hover:bg-slate-800 px-3 py-1.5 rounded transition-colors">Terms</a>
                 </div>
             </div>
         </div>
@@ -979,56 +974,40 @@
                 const arrow = document.getElementById('officer-dropdown-arrow');
 
                 if (role === 'officer') {
-                    if (indicator) {
-                        indicator.classList.remove('translate-x-[100%]', 'translate-x-[102%]', 'translate-x-full');
-                        indicator.classList.add('translate-x-0');
-                    }
+                    indicator.classList.remove('translate-x-[100%]', 'translate-x-full');
+                    indicator.classList.add('translate-x-0');
 
-                    if (btnOfficer) {
-                        btnOfficer.classList.add('text-slate-800', 'dark:text-white', 'font-semibold');
-                        btnOfficer.classList.remove('text-slate-500', 'dark:text-slate-400', 'font-medium');
-                    }
-                    if (btnAdmin) {
-                        btnAdmin.classList.remove('text-slate-800', 'dark:text-white', 'font-semibold');
-                        btnAdmin.classList.add('text-slate-500', 'dark:text-slate-400', 'font-medium');
-                    }
+                    btnOfficer.classList.add('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
+                    btnOfficer.classList.remove('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
+                    btnAdmin.classList.remove('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
+                    btnAdmin.classList.add('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
 
-                    if (lblUsername) lblUsername.innerText = 'Select Territory';
+                    lblUsername.innerText = 'Select Territory';
                     const lblAdmin = document.getElementById('lbl-username-admin');
                     if (lblAdmin) lblAdmin.classList.add('hidden');
                     if (lblUsername) lblUsername.classList.remove('hidden');
 
-                    if (lblPassword) lblPassword.innerText = 'Employee ID (Password)';
-
-                    if (inpUsername) inpUsername.classList.add('hidden');
-                    if (selOfficer) selOfficer.classList.remove('hidden');
-                    if (arrow) arrow.classList.remove('hidden');
+                    inpUsername.classList.add('hidden');
+                    selOfficer.classList.remove('hidden');
+                    arrow.classList.remove('hidden');
                     this.populateLoginDropdown();
                 } else {
-                    if (indicator) {
-                        indicator.classList.remove('translate-x-0');
-                        indicator.classList.add('translate-x-[100%]');
-                    }
+                    indicator.classList.remove('translate-x-0');
+                    indicator.classList.add('translate-x-[100%]');
 
-                    if (btnAdmin) {
-                        btnAdmin.classList.add('text-slate-800', 'dark:text-white', 'font-semibold');
-                        btnAdmin.classList.remove('text-slate-500', 'dark:text-slate-400', 'font-medium');
-                    }
-                    if (btnOfficer) {
-                        btnOfficer.classList.remove('text-slate-800', 'dark:text-white', 'font-semibold');
-                        btnOfficer.classList.add('text-slate-500', 'dark:text-slate-400', 'font-medium');
-                    }
+                    btnAdmin.classList.add('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
+                    btnAdmin.classList.remove('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
+                    btnOfficer.classList.remove('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
+                    btnOfficer.classList.add('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
 
                     const lblAdmin = document.getElementById('lbl-username-admin');
                     if (lblAdmin) lblAdmin.classList.remove('hidden');
                     if (lblUsername) lblUsername.classList.add('hidden');
 
-                    if (lblPassword) lblPassword.innerText = 'Password';
-
-                    if (inpUsername) inpUsername.classList.remove('hidden');
-                    if (selOfficer) selOfficer.classList.add('hidden');
-                    if (arrow) arrow.classList.add('hidden');
-                    if (inpUsername) inpUsername.placeholder = '';
+                    inpUsername.classList.remove('hidden');
+                    selOfficer.classList.add('hidden');
+                    arrow.classList.add('hidden');
+                    inpUsername.placeholder = '';
                 }
             },
 
@@ -1036,21 +1015,16 @@
                 Store.init();
                 const db = Store.get();
                 const select = document.getElementById('officer-select');
-                if (!select) return;
+                select.innerHTML = '<option value="">-- Select Your Territory --</option>';
 
-                select.innerHTML = '<option value="" class="bg-white text-black dark:bg-[#202124] dark:text-[#e8eaed]">-- Select Your Territory --</option>';
+                const officers = db.users.filter(u => u.role === 'officer').sort((a, b) => a.username.localeCompare(b.username));
 
-                if (db && db.users) {
-                    const officers = db.users.filter(u => u.role === 'officer').sort((a, b) => a.username.localeCompare(b.username));
-
-                    officers.forEach(u => {
-                        const opt = document.createElement('option');
-                        opt.value = u.username;
-                        opt.text = `${u.username}`;
-                        opt.className = 'bg-white text-black dark:bg-[#202124] dark:text-[#e8eaed]';
-                        select.appendChild(opt);
-                    });
-                }
+                officers.forEach(u => {
+                    const opt = document.createElement('option');
+                    opt.value = u.username;
+                    opt.text = `${u.username}`;
+                    select.appendChild(opt);
+                });
             },
 
             initApp() {
@@ -2595,7 +2569,21 @@
                         </div>
                     </div>
 
-
+                    <!--CHARTS ROW-->
+                    <div class="animate-entry grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="glass-panel p-5 rounded-xl shadow dark:bg-dark-card hover-lift">
+                            <h4 class="font-bold mb-4 text-sm text-slate-500 uppercase">Collection Trend (Daily)</h4>
+                            <div class="relative h-64">
+                                <canvas id="chart-trend"></canvas>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-5 rounded-xl shadow dark:bg-dark-card hover-lift">
+                            <h4 class="font-bold mb-4 text-sm text-slate-500 uppercase">Projection vs Actual</h4>
+                            <div class="relative h-64">
+                                <canvas id="chart-proj-act"></canvas>
+                            </div>
+                        </div>
+                    </div>
 
                     <!--RECENT TRANSACTIONS-->
             <div class="animate-entry rounded-lg shadow border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card overflow-hidden">
@@ -2646,7 +2634,13 @@
                 </div>
             </div>
         `;
-                `;
+
+                // Render Charts
+                const dailyData = this.getDailyTrendData(linkedTId);
+                setTimeout(() => {
+                    Charts.renderLine('chart-trend', dailyData.labels, dailyData.data);
+                    Charts.renderBar('chart-proj-act', ['Projected', 'Actual'], [metrics.todayProj, metrics.todayColl]);
+                }, 100);
             },
 
             renderOfficerOffroadTracker(viewMode = 'active') {
@@ -2654,7 +2648,7 @@
                 const linkedTId = this.getCurrentTerritoryId();
 
                 if (!linkedTId) {
-                    document.getElementById('views-container').innerHTML = `< div class="p-8 text-center text-slate-500" > Your account is not linked to any Territory Data.Please contact Admin.</div > `;
+                    document.getElementById('views-container').innerHTML = `<div class="p-8 text-center text-slate-500">Your account is not linked to any Territory Data. Please contact Admin.</div>`;
                     return;
                 }
 
@@ -2681,7 +2675,7 @@
                 const others = displayData.filter(v => v.reason === 'Lost or untraceable').length;
 
                 document.getElementById('views-container').innerHTML = `
-                    < div class="animate-entry max-w-6xl mx-auto" >
+                    <div class="animate-entry max-w-6xl mx-auto">
                         <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
                                 <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Offroad Monitor</h2>
@@ -2704,7 +2698,7 @@
                             </div>
                         </div>
 
-                        <!--Mini Dashboard-- >
+                        <!-- Mini Dashboard -->
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                             <div class="glass-panel p-4 rounded-2xl border-b-4 border-slate-500/50 hover-lift">
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total ${viewMode === 'active' ? 'Active' : 'Solved'}</p>
@@ -2728,7 +2722,7 @@
                             </div>
                         </div>
 
-                        <!--Search & Filter-- >
+                        <!-- Search & Filter -->
                         <div class="mb-4 flex gap-4">
                             <div class="flex-1 relative">
                                 <i class="fa-solid fa-filter absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
@@ -2784,8 +2778,8 @@
                                 </table>
                             </div>
                         </div>
-                    </div >
-            `;
+                    </div>
+                `;
             },
 
             renderProjectionForm() {
@@ -2811,7 +2805,7 @@
                 const existingAdvance = existing ? (existing.advanceAmount || '') : '';
 
                 document.getElementById('views-container').innerHTML = `
-            < div class="animate-entry max-w-xl mx-auto mt-10" >
+            <div class="animate-entry max-w-xl mx-auto mt-10" >
                 <div class="glass-panel p-8 rounded-2xl shadow-xl dark:bg-dark-card border-t-4 ${isLate ? 'border-red-500' : 'border-brand-500'}">
                     <div class="flex items-center mb-6">
                         <div class="w-12 h-12 rounded-full ${isLate ? 'bg-red-100 text-red-600' : 'bg-brand-100 text-brand-600'} flex items-center justify-center text-xl mr-4">
@@ -2828,35 +2822,35 @@
                     ${isLate && !existing ? `<div class="p-4 bg-red-50 text-red-700 rounded-lg mb-4 flex items-center"><i class="fa-solid fa-lock mr-2"></i> The projection window is closed. Contact Admin to unlock.</div>` : ''}
 
                     <form id="projection-form" onsubmit="UI.handleProjectionSubmit(event)">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Today's Projection Amount (Total)</label>
-                                <div class="relative group">
-                                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-brand-500 group-focus-within:scale-110 transition-transform">
-                                        <i class="fa-solid fa-bangladeshi-taka-sign"></i>
-                                    </span>
-                                    <input type="number" id="proj-amount" value="${existing ? existing.amount : ''}"
-                                        ${isLate ? 'disabled' : ''}
-                                        class="w-full pl-11 pr-4 py-4 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all text-lg font-bold font-mono"
-                                        placeholder="Enter total amount..." required>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Today's Projection Amount (Total)</label>
+                                    <div class="relative group">
+                                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-brand-500 group-focus-within:scale-110 transition-transform">
+                                            <i class="fa-solid fa-bangladeshi-taka-sign"></i>
+                                        </span>
+                                        <input type="number" id="proj-amount" value="${existing ? existing.amount : ''}" 
+                                            ${isLate ? 'disabled' : ''} 
+                                            class="w-full pl-11 pr-4 py-4 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all text-lg font-bold font-mono" 
+                                            placeholder="Enter total amount..." required>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Expected Collection Files</label>
+                                    <div class="relative group">
+                                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-blue-500 group-focus-within:scale-110 transition-transform">
+                                            <i class="fa-solid fa-file-invoice"></i>
+                                        </span>
+                                        <input type="number" id="proj-files" value="${existing ? existing.fileCount : ''}" 
+                                            ${isLate ? 'disabled' : ''} 
+                                            class="w-full pl-11 pr-4 py-4 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-lg font-bold font-mono" 
+                                            placeholder="Enter number of files..." required>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Expected Collection Files</label>
-                                <div class="relative group">
-                                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-blue-500 group-focus-within:scale-110 transition-transform">
-                                        <i class="fa-solid fa-file-invoice"></i>
-                                    </span>
-                                    <input type="number" id="proj-files" value="${existing ? existing.fileCount : ''}"
-                                        ${isLate ? 'disabled' : ''}
-                                        class="w-full pl-11 pr-4 py-4 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-lg font-bold font-mono"
-                                        placeholder="Enter number of files..." required>
-                                </div>
-                            </div>
-                        </div>
-
-                        ${!isLate ? `
+                                    ${!isLate ? `
                                         <div class="pt-4">
                                             <button type="submit" class="w-full bg-gradient-to-r from-brand-600 to-emerald-600 hover:from-brand-700 hover:to-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg border border-brand-500/20 transition transform active:scale-[0.98] flex items-center justify-center gap-2 group">
                                                 <i class="fa-solid fa-paper-plane group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform"></i>
@@ -2864,16 +2858,16 @@
                                             </button>
                                         </div>
                                     ` : ''}
+                        </div>
+                    </form>
                 </div>
-                    </form >
-                </div >
-                    </div >
+                    </div>
             `;
             },
 
             renderCollectionForm() {
                 document.getElementById('views-container').innerHTML = `
-            < div class="animate-entry max-w-xl mx-auto mt-6" >
+            <div class="animate-entry max-w-xl mx-auto mt-6" >
                 <div class="glass-panel p-8 rounded-2xl shadow-xl dark:bg-dark-card relative overflow-hidden">
                     <!-- Decorative bg element -->
                     <div class="absolute -top-12 -right-12 w-40 h-40 bg-brand-500/5 rounded-full blur-3xl pointer-events-none"></div>
@@ -2941,7 +2935,7 @@
                         </button>
                     </form>
                 </div>
-                    </div >
+                    </div>
             `;
                 document.getElementById('coll-date').valueAsDate = new Date();
             },
@@ -2955,12 +2949,12 @@
                 // Load existing data or create dummy rows if empty
                 if (db.territories.length <= 2) {
                     for (let i = 1; i <= 20; i++) {
-                        const tId = `t${ 100 + i } `;
+                        const tId = `t${100 + i} `;
                         const part = i % 2 === 0 ? 'B' : 'A';
-                        const existingT = db.territories.find(t => t.name === `Territory ${ i } `);
+                        const existingT = db.territories.find(t => t.name === `Territory ${i} `);
                         displayData.push({
                             id: existingT ? existingT.id : tId,
-                            name: existingT ? existingT.name : `Region ${ i.toString().padStart(2, '0') } `,
+                            name: existingT ? existingT.name : `Region ${i.toString().padStart(2, '0')} `,
                             part: existingT ? existingT.part : part,
                             targetFiles: 150,
                             projFiles: 140,
@@ -3000,7 +2994,7 @@
                 }
 
                 document.getElementById('views-container').innerHTML = `
-            < div class="animate-entry flex flex-col h-[calc(100vh-140px)]" >
+            <div class="animate-entry flex flex-col h-[calc(100vh-140px)]" >
                         <div class="mb-6 flex justify-between items-center">
                             <div>
                                 <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Data Entry Setup</h2>
@@ -3088,7 +3082,7 @@
                                 <button onclick="UI.addEmptyDataRow()" class="text-brand-600 hover:text-brand-700 font-bold">+ Add Row</button>
                             </div>
                         </div>
-                    </div >
+                    </div>
             `;
             },
 
@@ -3097,7 +3091,7 @@
                 const db = Store.get();
 
                 document.getElementById('views-container').innerHTML = `
-            < div class="animate-entry flex flex-col h-[calc(100vh-140px)]" >
+            <div class="animate-entry flex flex-col h-[calc(100vh-140px)]" >
                         <div class="mb-6 flex justify-between items-center">
                             <div>
                                 <h2 class="text-2xl font-bold text-slate-800 dark:text-white">User Management</h2>
@@ -3146,7 +3140,7 @@
                                 <button onclick="UI.addUserRow()" class="text-brand-600 hover:text-brand-700 font-bold">+ Add Officer</button>
                             </div>
                         </div>
-                    </div >
+                    </div>
             `;
             },
 
@@ -3158,18 +3152,18 @@
                 const style = document.createElement('style');
                 style.id = 'floating-dock-style';
                 style.textContent = `
-                .floating - dock {
+                .floating-dock {
             position: fixed;
             bottom: 20px;
-            left: 50 %;
-            transform: translateX(-50 %) translateY(100px); /* Start off-screen */
+            left: 50%;
+            transform: translateX(-50%) translateY(100px); /* Start off-screen */
             opacity: 0;
             visibility: hidden;
-            transition: transform 0.3s ease - out, opacity 0.3s ease - out, visibility 0.3s ease - out;
-            z - index: 1000;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out, visibility 0.3s ease-out;
+            z-index: 1000;
         }
-                    .floating - dock.visible {
-            transform: translateX(-50 %) translateY(0); /* Slide into view */
+                    .floating-dock.visible {
+            transform: translateX(-50%) translateY(0); /* Slide into view */
             opacity: 1;
             visibility: visible;
         }
@@ -3200,11 +3194,11 @@
             },
 
             updateCheckboxes(type) {
-                document.querySelectorAll(`input[data - select - type= "${type}"]`).forEach(cb => {
+                document.querySelectorAll(`input[data-select-type="${type}"]`).forEach(cb => {
                     const id = cb.getAttribute('data-id');
                     cb.checked = this.selection.ids.has(id);
                 });
-                const master = document.getElementById(`select - all - ${ type } `);
+                const master = document.getElementById(`select-all-${type}`);
                 if (master) master.checked = this.selection.ids.size > 0; // Simple indeterminate/checked state
             },
 
@@ -3224,10 +3218,10 @@
                 }
 
                 dock.innerHTML = `
-            < div class="flex items-center border-r border-slate-300 dark:border-slate-600 pr-4 mr-2" >
+            <div class="flex items-center border-r border-slate-300 dark:border-slate-600 pr-4 mr-2" >
                         <span class="bg-brand-600 text-white text-xs font-bold px-2 py-1 rounded-full mr-2">${this.selection.ids.size}</span>
                         <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Selected</span>
-                    </div >
+                    </div>
                     <div class="flex items-center gap-2">
                          ${this.selection.type !== 'vehicle_performance' ? `
                         <button onclick="UI.bulkEdit('${this.selection.type}')" class="p-2 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition" title="Edit Selected">
@@ -3253,7 +3247,7 @@
             },
 
             async bulkDelete(type) {
-                if (!confirm(`Delete ${ this.selection.ids.size } items ? This cannot be undone.`)) return;
+                if (!confirm(`Delete ${this.selection.ids.size} items ? This cannot be undone.`)) return;
 
                 // Map selection types to DB collections
                 const map = {
@@ -3393,14 +3387,14 @@
                 const linkedTId = this.getCurrentTerritoryId();
 
                 if (!linkedTId) {
-                    document.getElementById('views-container').innerHTML = `< div class="p-8 text-center text-slate-500" > Your account is not linked to any Territory Data.Please contact Admin.</div > `;
+                    document.getElementById('views-container').innerHTML = `<div class="p-8 text-center text-slate-500">Your account is not linked to any Territory Data. Please contact Admin.</div>`;
                     return;
                 }
 
                 const settlements = db.settlements.filter(s => s.territoryId === linkedTId).sort((a, b) => new Date(b.date) - new Date(a.date));
 
                 document.getElementById('views-container').innerHTML = `
-            < div class="animate-entry max-w-5xl mx-auto" >
+                    <div class="animate-entry max-w-5xl mx-auto">
                         <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
                                 <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Settlements & Closures</h2>
@@ -3443,12 +3437,12 @@
                                 </table>
                             </div>
                         </div>
-                    </div >
-            `;
+                    </div>
+                `;
             },
             renderOfficerVehicleAnalytics() {
                 document.getElementById('views-container').innerHTML = `
-            < div class="animate-entry max-w-2xl mx-auto mt-10" >
+            <div class="animate-entry max-w-2xl mx-auto mt-10" >
                         <div class="text-center mb-10">
                             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-100 text-brand-600 mb-4 shadow-lg hover-lift">
                                 <i class="fa-solid fa-magnifying-glass-chart text-3xl"></i>
@@ -3468,7 +3462,7 @@
                         <div id="vehicle-result" class="hidden animate-fade-in">
                             <!-- Results injected here -->
                         </div>
-                    </div >
+                    </div>
             `;
             },
 
@@ -3480,7 +3474,7 @@
                 const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
 
                 document.getElementById('views-container').innerHTML = `
-            < div class="animate-entry max-w-5xl mx-auto" >
+            <div class="animate-entry max-w-5xl mx-auto" >
                         <div class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
                             <div>
                                 <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Collection History</h2>
@@ -3502,7 +3496,7 @@
                             </form>
                         </div>
 
-                        <!--Summary Cards-- >
+                        <!--Summary Cards-->
                         <div id="history-summary" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                             <!-- Injected by JS -->
                         </div>
@@ -3528,7 +3522,7 @@
                     </table>
                 </div>
             </div>
-                    </div >
+                    </div>
             `;
 
                 // Trigger initial load
@@ -3565,14 +3559,14 @@
 
                 // Update Summary
                 document.getElementById('history-summary').innerHTML = `
-            < div class="p-5 rounded-2xl bg-gradient-to-br from-brand-500 to-emerald-600 text-white shadow-lg relative overflow-hidden group" >
+            <div class="p-5 rounded-2xl bg-gradient-to-br from-brand-500 to-emerald-600 text-white shadow-lg relative overflow-hidden group" >
                          <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                             <i class="fa-solid fa-sack-dollar text-6xl"></i>
                         </div>
                         <p class="text-xs font-bold opacity-80 uppercase tracking-wider mb-1">Total Collected</p>
                         <p class="text-3xl font-bold">${totalAmt.toLocaleString()}</p>
                         <p class="text-xs opacity-70 mt-1">${start} to ${end}</p>
-                    </div >
+                    </div>
                     <div class="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
                          <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                             <i class="fa-solid fa-receipt text-6xl text-slate-400"></i>
@@ -3592,13 +3586,13 @@
                 // Update Table
                 const tbody = document.getElementById('history-table-body');
                 if (filtered.length === 0) {
-                    tbody.innerHTML = `< tr > <td colspan="7" class="px-6 py-12 text-center text-slate-400 italic">No collections found for this period.</td></tr > `;
+                    tbody.innerHTML = `<tr > <td colspan="7" class="px-6 py-12 text-center text-slate-400 italic">No collections found for this period.</td></tr > `;
                 } else {
                     tbody.innerHTML = filtered.map(c => {
                         const reg = c.regularAmount || (c.advanceAmount ? 0 : c.amount); // Fallback for old data
                         const adv = c.advanceAmount || 0;
                         return `
-            < tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition" >
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition" >
                             <td class="px-6 py-3 font-mono text-slate-600 dark:text-slate-400 text-xs">${c.date}</td>
                             <td class="px-6 py-3 font-medium text-slate-800 dark:text-white">#${c.receipt}</td>
                             <td class="px-6 py-3 font-bold text-brand-600">${c.customerCode || 'N/A'}</td>
@@ -3623,7 +3617,7 @@
                     const reg = c.regularAmount || (c.advanceAmount ? 0 : c.amount); // Fallback for old data
                     const adv = c.advanceAmount || 0;
 
-                    const row = `${ c.date }, "${tName}", "${c.customerCode || 'N/A'}", "${c.receipt}", ${ reg },${ adv },${ c.amount },${ c.mode },${ c.isLmNp ? 'LM NP' : 'Regular' } `;
+                    const row = `${c.date}, "${tName}", "${c.customerCode || 'N/A'}", "${c.receipt}", ${reg},${adv},${c.amount},${c.mode},${c.isLmNp ? 'LM NP' : 'Regular'} `;
                     csvContent += row + "\n";
                 });
                 const encodedUri = encodeURI(csvContent);
@@ -3640,7 +3634,7 @@
                 const firstDay = new Date().toISOString().slice(0, 7) + '-01';
 
                 const html = `
-            < div class="text-left" >
+            <div class="text-left" >
                         <div class="flex items-center mb-6">
                             <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center mr-3">
                                 <i class="fa-solid fa-file-csv text-lg"></i>
@@ -3675,7 +3669,7 @@
                                 </button>
                             </div>
                         </form>
-                    </div >
+                    </div>
             `;
                 this.showModal(html);
             },
@@ -3724,7 +3718,7 @@
                     const encodedUri = encodeURI(csvContent);
                     const link = document.createElement("a");
                     link.setAttribute("href", encodedUri);
-                    link.setAttribute("download", `ACI_Recovery_Raw_${ startDate }_to_${ endDate }.csv`);
+                    link.setAttribute("download", `ACI_Recovery_Raw_${startDate}_to_${endDate}.csv`);
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
@@ -3748,7 +3742,7 @@
             // --- HELPER METHODS ---
             createKPICard(title, value, icon, color) {
                 const colors = { blue: 'bg-blue-100 text-blue-600', green: 'bg-emerald-100 text-emerald-600', purple: 'bg-indigo-100 text-indigo-600', orange: 'bg-orange-100 text-orange-600', red: 'bg-rose-100 text-rose-600', yellow: 'bg-yellow-100 text-yellow-600' };
-                return `< div class="glass-panel p-6 rounded-xl shadow-sm dark:bg-dark-card hover-lift" ><div class="flex justify-between mb-4"><h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase">${title}</h3><div class="w-10 h-10 rounded-full ${colors[color]} flex items-center justify-center"><i class="fa-solid ${icon}"></i></div></div><div class="text-2xl font-bold dark:text-white">${value}</div></div > `;
+                return `<div class="glass-panel p-6 rounded-xl shadow-sm dark:bg-dark-card hover-lift" ><div class="flex justify-between mb-4"><h3 class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase">${title}</h3><div class="w-10 h-10 rounded-full ${colors[color]} flex items-center justify-center"><i class="fa-solid ${icon}"></i></div></div><div class="text-2xl font-bold dark:text-white">${value}</div></div> `;
             },
 
             getDailyTrendData(tId) {
@@ -3780,7 +3774,7 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition";
                 tr.innerHTML = `
-            < td class="p-2 text-center text-slate-400 text-xs" > ${ rowCount }</td >
+            <td class="p-2 text-center text-slate-400 text-xs" > ${rowCount}</td>
                     <td class="p-1"><select name="part" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none text-center"><option value="A">A</option><option value="B">B</option></select></td>
                     <td class="p-1"><input type="text" name="name" placeholder="New Territory" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none font-medium"></td>
                     <td class="p-1"><input type="number" name="targetFiles" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none text-center font-mono"></td>
@@ -3809,7 +3803,7 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition";
                 tr.innerHTML = `
-            < td class="p-2 text-center text-slate-400 text-xs" > ${ rowCount }</td >
+            <td class="p-2 text-center text-slate-400 text-xs" > ${rowCount}</td>
                     <td class="p-1"><input type="text" name="username" placeholder="New Territory" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none font-medium"></td>
                     <td class="p-1"><input type="text" name="officerName" placeholder="Officer Name" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none"></td>
                     <td class="p-1"><input type="text" name="password" placeholder="1234" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none font-mono text-slate-600 dark:text-slate-400"></td>
@@ -3830,7 +3824,7 @@
 
                     rows.forEach(row => {
                         const id = row.getAttribute('data-id');
-                        const getVal = (name) => row.querySelector(`[name = "${name}"]`).value;
+                        const getVal = (name) => row.querySelector(`[name="${name}"]`).value;
                         const getNum = (name) => parseFloat(getVal(name)) || 0;
 
                         const tId = id === 'new' ? 't' + Date.now().toString(36) + Math.random().toString(36).substr(2) : id;
@@ -3861,213 +3855,213 @@
                     });
 
                     try {
-                        const response = await fetch(`${ Store.apiUrl }/sync-targets`, {
-        method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ territories, targets })
+                        const response = await fetch(`${Store.apiUrl}/sync-targets`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ territories, targets })
                         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Sync failed: ${errorText}`);
-        }
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`Sync failed: ${errorText}`);
+                        }
 
-        await Store.init(); // Refresh cache
-        UI.showSuccess('Monthly Targets & Setup Saved!');
-        UI.renderAdminDashboard();
+                        await Store.init(); // Refresh cache
+                        UI.showSuccess('Monthly Targets & Setup Saved!');
+                        UI.renderAdminDashboard();
                     } catch (error) {
-            console.error('Failed to save data:', error);
-            alert(`Error saving targets: ${error.message}`);
-        } finally {
-            UI.toggleLoader(false);
-        }
-                }) ();
+                        console.error('Failed to save data:', error);
+                        alert(`Error saving targets: ${error.message}`);
+                    } finally {
+                        UI.toggleLoader(false);
+                    }
+                })();
             },
 
-        saveUsers() {
-            (async () => {
-                UI.toggleLoader(true);
-                const rows = document.querySelectorAll('#user-mgmt-table tbody tr');
-                const users = [];
-                rows.forEach(row => {
-                    const getVal = (name) => row.querySelector(`[name="${name}"]`).value;
-                    const username = getVal('username');
-                    if (username) {
-                        users.push({
-                            username: username,
-                            officerName: getVal('officerName'),
-                            password: getVal('password'),
-                            role: 'officer',
-                            territoryId: username.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
-                        });
-                    }
-                });
-
-                try {
-                    const response = await fetch(`${Store.apiUrl}/sync-users`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ users })
+            saveUsers() {
+                (async () => {
+                    UI.toggleLoader(true);
+                    const rows = document.querySelectorAll('#user-mgmt-table tbody tr');
+                    const users = [];
+                    rows.forEach(row => {
+                        const getVal = (name) => row.querySelector(`[name="${name}"]`).value;
+                        const username = getVal('username');
+                        if (username) {
+                            users.push({
+                                username: username,
+                                officerName: getVal('officerName'),
+                                password: getVal('password'),
+                                role: 'officer',
+                                territoryId: username.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+                            });
+                        }
                     });
 
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Sync failed: ${errorText}`);
-                    }
-
-                    await Store.init();
-                    UI.showSuccess('User Credentials Saved!');
-                } catch (error) {
-                    console.error('Failed to save users:', error);
-                    alert(`Error saving users: ${error.message}`);
-                } finally {
-                    UI.toggleLoader(false);
-                }
-            })();
-        },
-
-        downloadTargetTemplate() {
-            const db = Store.get();
-            let csv = "Part,Territory Name,Total Files,Proj Files,Total EMI,Proj (Reg),Proj (Adv),LM NP Amt,LM NP Files,Total OD,OD Growth SPLY,Per File OD,6+ OD Files,6+ OD Growth SPLM\n";
-
-            // Include all current territories from the Store
-            db.territories.forEach(t => {
-                csv += `${t.part},${t.name},0,0,0,0,0,0,0,0,0,0,0,0\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = "target_setup_template.csv";
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 100);
-        },
-
-            async handleCSVUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            if (!confirm('Importing new month data will clear all existing data and reset the system. Proceed?')) return;
-
-            UI.toggleLoader(true);
-            // Clear all data on server
-            await fetch(`${Store.apiUrl}/sync-targets`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ territories: [], targets: [] })
-            });
-
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const text = event.target.result;
-                const rows = text.split('\n').slice(1);
-                const territories = [];
-                const targets = [];
-                const currentMonth = new Date().toISOString().slice(0, 7);
-
-                rows.forEach((row, i) => {
-                    if (!row.trim()) return;
-                    const cols = row.split(',');
-                    if (cols.length >= 14) {
-                        const tId = cols[1].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-                        territories.push({ id: tId, name: cols[1], part: cols[0], officer: cols[1] });
-                        targets.push({
-                            territory_id: tId, month: currentMonth,
-                            files: parseInt(cols[2]) || 0, proj_files: parseInt(cols[3]) || 0,
-                            amount: parseFloat(cols[4]) || 0, proj_reg: parseFloat(cols[5]) || 0,
-                            proj_adv: parseFloat(cols[6]) || 0, lm_np_target_amount: parseFloat(cols[7]) || 0,
-                            lm_np_target_files: parseInt(cols[8]) || 0, total_od: parseFloat(cols[9]) || 0,
-                            od_growth_sply: parseFloat(cols[10]) || 0, per_file_od: parseFloat(cols[11]) || 0,
-                            six_plus_od_files: parseInt(cols[12]) || 0, six_plus_od_growth_splm: parseFloat(cols[13]) || 0
+                    try {
+                        const response = await fetch(`${Store.apiUrl}/sync-users`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ users })
                         });
+
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`Sync failed: ${errorText}`);
+                        }
+
+                        await Store.init();
+                        UI.showSuccess('User Credentials Saved!');
+                    } catch (error) {
+                        console.error('Failed to save users:', error);
+                        alert(`Error saving users: ${error.message}`);
+                    } finally {
+                        UI.toggleLoader(false);
                     }
+                })();
+            },
+
+            downloadTargetTemplate() {
+                const db = Store.get();
+                let csv = "Part,Territory Name,Total Files,Proj Files,Total EMI,Proj (Reg),Proj (Adv),LM NP Amt,LM NP Files,Total OD,OD Growth SPLY,Per File OD,6+ OD Files,6+ OD Growth SPLM\n";
+
+                // Include all current territories from the Store
+                db.territories.forEach(t => {
+                    csv += `${t.part},${t.name},0,0,0,0,0,0,0,0,0,0,0,0\n`;
                 });
 
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = "target_setup_template.csv";
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+            },
+
+            async handleCSVUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (!confirm('Importing new month data will clear all existing data and reset the system. Proceed?')) return;
+
+                UI.toggleLoader(true);
+                // Clear all data on server
                 await fetch(`${Store.apiUrl}/sync-targets`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ territories, targets })
+                    body: JSON.stringify({ territories: [], targets: [] })
                 });
 
-                await Store.init();
-                UI.renderDataEntry();
-                UI.toggleLoader(false);
-                UI.showSuccess('Data Imported successfully');
-            };
-            reader.readAsText(file);
-        },
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    const text = event.target.result;
+                    const rows = text.split('\n').slice(1);
+                    const territories = [];
+                    const targets = [];
+                    const currentMonth = new Date().toISOString().slice(0, 7);
 
-        handleUserCSV(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const text = event.target.result;
-                const rows = text.split('\n').slice(1);
-                const tbody = document.querySelector('#user-mgmt-table tbody');
-                tbody.innerHTML = '';
-                rows.forEach((row, i) => {
-                    if (!row.trim()) return;
-                    const cols = row.split(',');
-                    if (cols.length >= 3) {
-                        const tr = document.createElement('tr');
-                        tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition";
-                        tr.innerHTML = `
+                    rows.forEach((row, i) => {
+                        if (!row.trim()) return;
+                        const cols = row.split(',');
+                        if (cols.length >= 14) {
+                            const tId = cols[1].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                            territories.push({ id: tId, name: cols[1], part: cols[0], officer: cols[1] });
+                            targets.push({
+                                territory_id: tId, month: currentMonth,
+                                files: parseInt(cols[2]) || 0, proj_files: parseInt(cols[3]) || 0,
+                                amount: parseFloat(cols[4]) || 0, proj_reg: parseFloat(cols[5]) || 0,
+                                proj_adv: parseFloat(cols[6]) || 0, lm_np_target_amount: parseFloat(cols[7]) || 0,
+                                lm_np_target_files: parseInt(cols[8]) || 0, total_od: parseFloat(cols[9]) || 0,
+                                od_growth_sply: parseFloat(cols[10]) || 0, per_file_od: parseFloat(cols[11]) || 0,
+                                six_plus_od_files: parseInt(cols[12]) || 0, six_plus_od_growth_splm: parseFloat(cols[13]) || 0
+                            });
+                        }
+                    });
+
+                    await fetch(`${Store.apiUrl}/sync-targets`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ territories, targets })
+                    });
+
+                    await Store.init();
+                    UI.renderDataEntry();
+                    UI.toggleLoader(false);
+                    UI.showSuccess('Data Imported successfully');
+                };
+                reader.readAsText(file);
+            },
+
+            handleUserCSV(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const text = event.target.result;
+                    const rows = text.split('\n').slice(1);
+                    const tbody = document.querySelector('#user-mgmt-table tbody');
+                    tbody.innerHTML = '';
+                    rows.forEach((row, i) => {
+                        if (!row.trim()) return;
+                        const cols = row.split(',');
+                        if (cols.length >= 3) {
+                            const tr = document.createElement('tr');
+                            tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition";
+                            tr.innerHTML = `
                                 <td class="p-2 text-center text-slate-400 text-xs">${i + 1}</td>
                                 <td class="p-1"><input type="text" name="username" value="${(cols[0] || '').trim()}" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none font-medium"></td>
                                 <td class="p-1"><input type="text" name="officerName" value="${(cols[1] || '').trim()}" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none"></td>
                                 <td class="p-1"><input type="text" name="password" value="${(cols[2] || '').trim()}" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none font-mono text-slate-600 dark:text-slate-400"></td>
                                 <td class="p-1 text-center"><button onclick="this.closest('tr').remove()" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td>
                             `;
-                        tbody.appendChild(tr);
-                    }
-                });
-            };
-            reader.readAsText(file);
-        },
+                            tbody.appendChild(tr);
+                        }
+                    });
+                };
+                reader.readAsText(file);
+            },
 
-        downloadUserTemplate() {
-            const csv = "Territory Name (Username),Officer Name,Employee ID (Password)\n" +
-                "Region 01,John Doe,EMP101";
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = "user_import_template.csv";
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 100);
-        },
+            downloadUserTemplate() {
+                const csv = "Territory Name (Username),Officer Name,Employee ID (Password)\n" +
+                    "Region 01,John Doe,EMP101";
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = "user_import_template.csv";
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+            },
 
 
 
-        handleVehiclePerfCSV(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            handleVehiclePerfCSV(event) {
+                const file = event.target.files[0];
+                if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const text = e.target.result;
-                const rows = text.split('\n').slice(1);
-                const tbody = document.querySelector('#vehicle-perf-table tbody');
-                tbody.innerHTML = '';
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const text = e.target.result;
+                    const rows = text.split('\n').slice(1);
+                    const tbody = document.querySelector('#vehicle-perf-table tbody');
+                    tbody.innerHTML = '';
 
-                rows.forEach(row => {
-                    const cols = row.split(',');
-                    if (cols.length >= 6) {
-                        const tr = document.createElement('tr');
-                        tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition";
-                        tr.innerHTML = `
+                    rows.forEach(row => {
+                        const cols = row.split(',');
+                        if (cols.length >= 6) {
+                            const tr = document.createElement('tr');
+                            tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition";
+                            tr.innerHTML = `
             <td class="p-1" ><input type="text" name="customerId" value="${(cols[0] || '').trim()}" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none font-mono font-bold"></td>
                                 <td class="p-1"><input type="text" name="customerName" value="${(cols[1] || '').trim()}" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none"></td>
                                 <td class="p-1"><input type="text" name="model" value="${(cols[2] || '').trim()}" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none"></td>
@@ -4080,25 +4074,25 @@
                                 <td class="p-1"><input type="text" name="extra2" value="${(cols[9] || '').trim()}" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none"></td>
                                 <td class="p-1 text-center"><button onclick="this.closest('tr').remove()" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td>
         `;
-                        tbody.appendChild(tr);
-                    }
-                });
-            };
-            reader.readAsText(file);
-        },
+                            tbody.appendChild(tr);
+                        }
+                    });
+                };
+                reader.readAsText(file);
+            },
 
-        renderAdminVehiclePerf() {
-            const db = Store.get();
-            const data = db.vehicle_performance || [];
-            // Migration: Ensure IDs
-            let dirty = false;
-            data.forEach(d => { if (!d.id) { d.id = Math.random().toString(36).substring(2); dirty = true; } });
-            if (dirty) Store.save(db);
+            renderAdminVehiclePerf() {
+                const db = Store.get();
+                const data = db.vehicle_performance || [];
+                // Migration: Ensure IDs
+                let dirty = false;
+                data.forEach(d => { if (!d.id) { d.id = Math.random().toString(36).substring(2); dirty = true; } });
+                if (dirty) Store.save(db);
 
-            // Extract all IDs for Select All
-            const allIds = data.map(d => d.id);
+                // Extract all IDs for Select All
+                const allIds = data.map(d => d.id);
 
-            document.getElementById('views-container').innerHTML = `
+                document.getElementById('views-container').innerHTML = `
             <div class="animate-entry flex flex-col h-[calc(100vh-140px)]" >
                         <div class="mb-6 flex justify-between items-center">
                             <div>
@@ -4170,17 +4164,17 @@
                         </div>
                     </div>
             `;
-        },
+            },
 
-        addVehiclePerfRow() {
-            const tbody = document.querySelector('#vehicle-perf-table tbody');
-            if (tbody.children.length === 1 && tbody.children[0].innerText.includes('No data')) tbody.innerHTML = '';
+            addVehiclePerfRow() {
+                const tbody = document.querySelector('#vehicle-perf-table tbody');
+                if (tbody.children.length === 1 && tbody.children[0].innerText.includes('No data')) tbody.innerHTML = '';
 
-            const id = 'new_' + Date.now();
-            const tr = document.createElement('tr');
-            tr.setAttribute('data-row-id', id);
-            tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition";
-            tr.innerHTML = `
+                const id = 'new_' + Date.now();
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-row-id', id);
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition";
+                tr.innerHTML = `
             <td class="p-3 text-center" >
                          <!--New rows not selectable until saved-->
             <i class="fa-solid fa-asterisk text-slate-300 text-xs"></i>
@@ -4197,95 +4191,95 @@
                     <td class="p-1"><input type="text" name="extra2" placeholder="Info" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none"></td>
                     <td class="p-1 text-center"><button onclick="this.closest('tr').remove()" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td>
         `;
-            tbody.appendChild(tr);
-            tbody.lastElementChild.scrollIntoView({ behavior: 'smooth' });
-        },
+                tbody.appendChild(tr);
+                tbody.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+            },
 
-        // NEW TEMPLATE DOWNLOAD FUNCTION
-        downloadVehiclePerfTemplate() {
-            const csvContent = "CustomerID,CustomerName,VehicleModel,KMRunMonth1,KMRunMonth2,EstimatedEarning,OverdueNo,OverdueAmount,ExtraInfo1,ExtraInfo2\n" +
-                "C-1001,John Doe,Yamaha FZS V3,1200,1500,25000,1,5500,Note1,Note2";
+            // NEW TEMPLATE DOWNLOAD FUNCTION
+            downloadVehiclePerfTemplate() {
+                const csvContent = "CustomerID,CustomerName,VehicleModel,KMRunMonth1,KMRunMonth2,EstimatedEarning,OverdueNo,OverdueAmount,ExtraInfo1,ExtraInfo2\n" +
+                    "C-1001,John Doe,Yamaha FZS V3,1200,1500,25000,1,5500,Note1,Note2";
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `vehicle_performance_template.csv`;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 100);
-        },
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `vehicle_performance_template.csv`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+            },
 
             async saveVehiclePerf() {
-            UI.toggleLoader(true);
-            const rows = document.querySelectorAll('#vehicle-perf-table tbody tr');
-            const data = [];
-            rows.forEach(row => {
-                const getVal = (name) => row.querySelector(`input[name = "${name}"]`)?.value || '';
-                const cid = getVal('customerId');
+                UI.toggleLoader(true);
+                const rows = document.querySelectorAll('#vehicle-perf-table tbody tr');
+                const data = [];
+                rows.forEach(row => {
+                    const getVal = (name) => row.querySelector(`input[name = "${name}"]`)?.value || '';
+                    const cid = getVal('customerId');
 
-                if (cid) {
-                    data.push({
-                        customerId: cid,
-                        customerName: getVal('customerName'),
-                        model: getVal('model'),
-                        km1: parseFloat(getVal('km1')) || 0,
-                        km2: parseFloat(getVal('km2')) || 0,
-                        earning: parseFloat(getVal('earning')) || 0,
-                        overdueNo: parseInt(getVal('overdueNo')) || 0,
-                        overdueAmt: parseFloat(getVal('overdueAmt')) || 0,
-                        extra1: getVal('extra1'),
-                        extra2: getVal('extra2')
-                    });
-                }
-            });
-
-            try {
-                const response = await fetch(`${Store.apiUrl}/sync-vehicle-perf`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data })
+                    if (cid) {
+                        data.push({
+                            customerId: cid,
+                            customerName: getVal('customerName'),
+                            model: getVal('model'),
+                            km1: parseFloat(getVal('km1')) || 0,
+                            km2: parseFloat(getVal('km2')) || 0,
+                            earning: parseFloat(getVal('earning')) || 0,
+                            overdueNo: parseInt(getVal('overdueNo')) || 0,
+                            overdueAmt: parseFloat(getVal('overdueAmt')) || 0,
+                            extra1: getVal('extra1'),
+                            extra2: getVal('extra2')
+                        });
+                    }
                 });
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Sync failed: ${errorText}`);
+                try {
+                    const response = await fetch(`${Store.apiUrl}/sync-vehicle-perf`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Sync failed: ${errorText}`);
+                    }
+
+                    await Store.init();
+                    UI.showSuccess('Vehicle Performance Data Saved!');
+                    UI.renderAdminVehiclePerf();
+                } catch (error) {
+                    console.error('Failed to save vehicle perf:', error);
+                    alert(`Error saving performance: ${error.message}`);
+                } finally {
+                    UI.toggleLoader(false);
                 }
-
-                await Store.init();
-                UI.showSuccess('Vehicle Performance Data Saved!');
-                UI.renderAdminVehiclePerf();
-            } catch (error) {
-                console.error('Failed to save vehicle perf:', error);
-                alert(`Error saving performance: ${error.message}`);
-            } finally {
-                UI.toggleLoader(false);
-            }
-        },
+            },
 
 
 
-        searchVehiclePerf(query) {
-            if (!query) return;
-            UI.toggleLoader(true);
-            const container = document.getElementById('vehicle-result');
-            if (container) container.classList.add('hidden');
+            searchVehiclePerf(query) {
+                if (!query) return;
+                UI.toggleLoader(true);
+                const container = document.getElementById('vehicle-result');
+                if (container) container.classList.add('hidden');
 
-            setTimeout(() => {
-                const db = Store.get();
-                // Basic exact match or includes
-                query = query.toUpperCase();
-                const vehicle = (db.vehicle_performance || []).find(v => v.customerId.toUpperCase() === query || v.customerId.toUpperCase().includes(query));
+                setTimeout(() => {
+                    const db = Store.get();
+                    // Basic exact match or includes
+                    query = query.toUpperCase();
+                    const vehicle = (db.vehicle_performance || []).find(v => v.customerId.toUpperCase() === query || v.customerId.toUpperCase().includes(query));
 
-                if (!container) return;
+                    if (!container) return;
 
-                if (vehicle) {
-                    const totalKm = (parseFloat(vehicle.km1) || 0) + (parseFloat(vehicle.km2) || 0);
-                    container.innerHTML = `
+                    if (vehicle) {
+                        const totalKm = (parseFloat(vehicle.km1) || 0) + (parseFloat(vehicle.km2) || 0);
+                        container.innerHTML = `
             <div class="glass-panel p-0 rounded-3xl shadow-2xl dark:bg-dark-card overflow-hidden border border-brand-100 dark:border-brand-900/30">
                                 <div class="bg-gradient-to-r from-brand-600 to-emerald-500 p-6 text-white relative overflow-hidden">
                                     <div class="absolute -right-6 -bottom-6 opacity-20 transform rotate-12">
@@ -4331,38 +4325,38 @@
                                 </div>
                             </div>
             `;
-                } else {
-                    container.innerHTML = `
+                    } else {
+                        container.innerHTML = `
             <div class="glass-panel p-8 text-center bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/30">
                                 <div class="text-red-400 text-4xl mb-3"><i class="fa-regular fa-circle-xmark"></i></div>
                                 <h3 class="text-lg font-bold text-red-600 mb-1">No Data Found</h3>
                                 <p class="text-sm text-red-500 opacity-80">Could not find vehicle data for ID: <b>${query}</b></p>
                             </div>
             `;
+                    }
+
+                    container.classList.remove('hidden');
+                    UI.toggleLoader(false);
+                }, 500);
+            },
+
+            // --- MODAL HANDLERS (NEW) ---
+            renderModal(title, content) {
+                let m = document.getElementById('generic-modal');
+                // Ensure modal wrapper exists (it should from static HTML)
+                if (!m) {
+                    console.error('Generic modal container not found');
+                    return;
                 }
 
-                container.classList.remove('hidden');
-                UI.toggleLoader(false);
-            }, 500);
-        },
+                const modalContent = document.getElementById('modal-content');
+                if (!modalContent) {
+                    console.error('Modal content container not found');
+                    return;
+                }
 
-        // --- MODAL HANDLERS (NEW) ---
-        renderModal(title, content) {
-            let m = document.getElementById('generic-modal');
-            // Ensure modal wrapper exists (it should from static HTML)
-            if (!m) {
-                console.error('Generic modal container not found');
-                return;
-            }
-
-            const modalContent = document.getElementById('modal-content');
-            if (!modalContent) {
-                console.error('Modal content container not found');
-                return;
-            }
-
-            // Inject full structure including title and body into modal-content
-            modalContent.innerHTML = `
+                // Inject full structure including title and body into modal-content
+                modalContent.innerHTML = `
                     <div class="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700">
                         <h3 class="text-xl font-bold text-slate-800 dark:text-white" id="modal-title">${title}</h3>
                         <button onclick="UI.closeModal('generic-modal')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
@@ -4372,21 +4366,21 @@
                     <div id="modal-body" class="p-6">${content}</div>
                 `;
 
-            m.classList.remove('hidden');
-            setTimeout(() => {
-                modalContent.classList.remove('scale-95', 'opacity-0');
-                modalContent.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        },
+                m.classList.remove('hidden');
+                setTimeout(() => {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            },
 
-        openSettlementModal(id = null) {
-            const db = Store.get();
-            const item = id ? db.settlements.find(s => s.id === id) : {};
-            const isOfficer = Auth.currentUser.role === 'officer';
-            const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
-            const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
+            openSettlementModal(id = null) {
+                const db = Store.get();
+                const item = id ? db.settlements.find(s => s.id === id) : {};
+                const isOfficer = Auth.currentUser.role === 'officer';
+                const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
+                const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
 
-            const html = `
+                const html = `
                     <form onsubmit="UI.saveSettlement(event)" class="space-y-4">
                         <input type="hidden" name="id" value="${id || ''}">
                         <div class="grid grid-cols-2 gap-4">
@@ -4435,44 +4429,44 @@
                     </button>
                 </form>
         `;
-            this.renderModal(id ? 'Edit Settlement' : 'Add New Settlement', html);
-        },
+                this.renderModal(id ? 'Edit Settlement' : 'Add New Settlement', html);
+            },
 
-        saveSettlement(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
-            const db = Store.get();
+            saveSettlement(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+                const db = Store.get();
 
-            if (data.id) {
-                const idx = db.settlements.findIndex(s => s.id === data.id);
-                if (idx !== -1) db.settlements[idx] = { ...db.settlements[idx], ...data };
-            } else {
-                data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-                data.timestamp = Date.now();
-                db.settlements.push(data);
-            }
+                if (data.id) {
+                    const idx = db.settlements.findIndex(s => s.id === data.id);
+                    if (idx !== -1) db.settlements[idx] = { ...db.settlements[idx], ...data };
+                } else {
+                    data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                    data.timestamp = Date.now();
+                    db.settlements.push(data);
+                }
 
-            Store.save(db);
-            UI.closeModal('generic-modal');
+                Store.save(db);
+                UI.closeModal('generic-modal');
 
-            if (Auth.currentUser.role === 'admin') {
-                UI.renderAdminSettlementsView();
-            } else {
-                UI.renderOfficerSettlementsView();
-            }
+                if (Auth.currentUser.role === 'admin') {
+                    UI.renderAdminSettlementsView();
+                } else {
+                    UI.renderOfficerSettlementsView();
+                }
 
-            UI.showSuccess('Settlement Saved!');
-        },
+                UI.showSuccess('Settlement Saved!');
+            },
 
-        openCollectionModal(id = null) {
-            const db = Store.get();
-            const item = id ? db.collections.find(c => c.id === id) : {};
-            const isOfficer = Auth.currentUser.role === 'officer';
-            const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
-            const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
+            openCollectionModal(id = null) {
+                const db = Store.get();
+                const item = id ? db.collections.find(c => c.id === id) : {};
+                const isOfficer = Auth.currentUser.role === 'officer';
+                const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
+                const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
 
-            const html = `
+                const html = `
                     <form onsubmit="UI.saveManualCollection(event)" class="space-y-4">
                         <input type="hidden" name="id" value="${id || ''}">
                         <div class="grid grid-cols-2 gap-4">
@@ -4528,53 +4522,53 @@
                     </button>
                 </form>
         `;
-            this.renderModal(id ? 'Edit Collection' : 'Add Manual Collection', html);
-        },
+                this.renderModal(id ? 'Edit Collection' : 'Add Manual Collection', html);
+            },
 
-        saveManualCollection(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const reg = parseFloat(formData.get('regularAmount')) || 0;
-            const adv = parseFloat(formData.get('advanceAmount')) || 0;
+            saveManualCollection(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const reg = parseFloat(formData.get('regularAmount')) || 0;
+                const adv = parseFloat(formData.get('advanceAmount')) || 0;
 
-            const data = {
-                id: formData.get('id'),
-                date: formData.get('date'),
-                territoryId: formData.get('territoryId'),
-                receipt: formData.get('receipt'),
-                customerCode: formData.get('customerCode'),
-                regularAmount: reg,
-                advanceAmount: adv,
-                amount: reg + adv,
-                mode: formData.get('mode'),
-                timestamp: Date.now()
-            };
+                const data = {
+                    id: formData.get('id'),
+                    date: formData.get('date'),
+                    territoryId: formData.get('territoryId'),
+                    receipt: formData.get('receipt'),
+                    customerCode: formData.get('customerCode'),
+                    regularAmount: reg,
+                    advanceAmount: adv,
+                    amount: reg + adv,
+                    mode: formData.get('mode'),
+                    timestamp: Date.now()
+                };
 
-            const db = Store.get();
-            if (data.id) {
-                const idx = db.collections.findIndex(c => c.id === data.id);
-                if (idx !== -1) db.collections[idx] = { ...db.collections[idx], ...data };
-            } else {
-                data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-                db.collections.push(data);
-            }
+                const db = Store.get();
+                if (data.id) {
+                    const idx = db.collections.findIndex(c => c.id === data.id);
+                    if (idx !== -1) db.collections[idx] = { ...db.collections[idx], ...data };
+                } else {
+                    data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                    db.collections.push(data);
+                }
 
-            Store.save(db);
-            UI.closeModal('generic-modal');
-            if (document.getElementById('admin-history-table-body')) UI.updateAdminHistory(null, data.date.substring(0, 8) + '01', data.date.substring(0, 8) + '31');
-            else UI.renderAdminHistory();
+                Store.save(db);
+                UI.closeModal('generic-modal');
+                if (document.getElementById('admin-history-table-body')) UI.updateAdminHistory(null, data.date.substring(0, 8) + '01', data.date.substring(0, 8) + '31');
+                else UI.renderAdminHistory();
 
-            UI.showSuccess('Collection Saved!');
-        },
+                UI.showSuccess('Collection Saved!');
+            },
 
-        openOffroadModal(id = null) {
-            const db = Store.get();
-            const item = id ? db.offroad_vehicles.find(v => v.id === id) : {};
-            const isOfficer = Auth.currentUser.role === 'officer';
-            const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
-            const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
+            openOffroadModal(id = null) {
+                const db = Store.get();
+                const item = id ? db.offroad_vehicles.find(v => v.id === id) : {};
+                const isOfficer = Auth.currentUser.role === 'officer';
+                const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
+                const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
 
-            const html = `
+                const html = `
                     <form onsubmit="UI.saveOffroad(event)" class="space-y-4">
                         <input type="hidden" name="id" value="${id || ''}">
                         <div class="grid grid-cols-2 gap-4">
@@ -4625,65 +4619,65 @@
                         </button>
                     </form>
                 `;
-            this.renderModal(id ? 'Update Offroad record' : 'Report Offroad Vehicle', html);
-        },
+                this.renderModal(id ? 'Update Offroad record' : 'Report Offroad Vehicle', html);
+            },
 
-        saveOffroad(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
-            const db = Store.get();
+            saveOffroad(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+                const db = Store.get();
 
-            if (data.id) {
-                const idx = db.offroad_vehicles.findIndex(v => v.id === data.id);
+                if (data.id) {
+                    const idx = db.offroad_vehicles.findIndex(v => v.id === data.id);
+                    if (idx !== -1) {
+                        if (data.status === 'Solved' && db.offroad_vehicles[idx].status !== 'Solved') {
+                            data.solveDate = new Date().toISOString().split('T')[0];
+                        }
+                        db.offroad_vehicles[idx] = { ...db.offroad_vehicles[idx], ...data };
+                    }
+                } else {
+                    data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                    data.status = 'Active';
+                    db.offroad_vehicles.push(data);
+                }
+
+                Store.save(db);
+                UI.closeModal('generic-modal');
+
+                if (Auth.currentUser.role === 'admin') {
+                    UI.renderAdminOffroadView();
+                } else {
+                    UI.renderOfficerOffroadTracker();
+                }
+                UI.showSuccess('Offroad Case Saved!');
+            },
+
+            resolveOffroad(id) {
+                const db = Store.get();
+                const idx = db.offroad_vehicles.findIndex(v => v.id === id);
                 if (idx !== -1) {
-                    if (data.status === 'Solved' && db.offroad_vehicles[idx].status !== 'Solved') {
-                        data.solveDate = new Date().toISOString().split('T')[0];
-                    }
-                    db.offroad_vehicles[idx] = { ...db.offroad_vehicles[idx], ...data };
-                }
-            } else {
-                data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-                data.status = 'Active';
-                db.offroad_vehicles.push(data);
-            }
-
-            Store.save(db);
-            UI.closeModal('generic-modal');
-
-            if (Auth.currentUser.role === 'admin') {
-                UI.renderAdminOffroadView();
-            } else {
-                UI.renderOfficerOffroadTracker();
-            }
-            UI.showSuccess('Offroad Case Saved!');
-        },
-
-        resolveOffroad(id) {
-            const db = Store.get();
-            const idx = db.offroad_vehicles.findIndex(v => v.id === id);
-            if (idx !== -1) {
-                if (confirm('Mark this case as Solved?')) {
-                    db.offroad_vehicles[idx].status = 'Solved';
-                    db.offroad_vehicles[idx].solveDate = new Date().toISOString().split('T')[0];
-                    Store.save(db);
-                    if (Auth.currentUser.role === 'admin') {
-                        UI.renderAdminOffroadView();
-                    } else {
-                        UI.renderOfficerOffroadTracker();
+                    if (confirm('Mark this case as Solved?')) {
+                        db.offroad_vehicles[idx].status = 'Solved';
+                        db.offroad_vehicles[idx].solveDate = new Date().toISOString().split('T')[0];
+                        Store.save(db);
+                        if (Auth.currentUser.role === 'admin') {
+                            UI.renderAdminOffroadView();
+                        } else {
+                            UI.renderOfficerOffroadTracker();
+                        }
                     }
                 }
-            }
-        },
+            },
 
-        openProjectionModal(id = null) {
-            const db = Store.get();
-            const item = id ? db.projections.find(p => p.id === id) : {};
-            const isOfficer = Auth.currentUser.role === 'officer';
-            const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
-            const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
+            openProjectionModal(id = null) {
+                const db = Store.get();
+                const item = id ? db.projections.find(p => p.id === id) : {};
+                const isOfficer = Auth.currentUser.role === 'officer';
+                const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
+                const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
 
-            const html = `
+                const html = `
                     <form onsubmit="UI.saveProjection(event)" class="space-y-4">
                         <input type="hidden" name="id" value="${id || ''}">
                         ${isOfficer ? `
@@ -4729,103 +4723,103 @@
                     </button>
                 </form>
                  `;
-            this.renderModal(id ? 'Edit Projection' : 'Add Projection', html);
-        },
+                this.renderModal(id ? 'Edit Projection' : 'Add Projection', html);
+            },
 
-        saveProjection(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const isOfficer = Auth.currentUser.role === 'officer';
+            saveProjection(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const isOfficer = Auth.currentUser.role === 'officer';
 
-            let reg = parseFloat(formData.get('regularAmount')) || 0;
-            let adv = parseFloat(formData.get('advanceAmount')) || 0;
-            let total = reg + adv;
+                let reg = parseFloat(formData.get('regularAmount')) || 0;
+                let adv = parseFloat(formData.get('advanceAmount')) || 0;
+                let total = reg + adv;
 
-            if (isOfficer) {
-                total = parseFloat(formData.get('amount')) || 0;
-                reg = total;
-                adv = 0;
-            }
-
-            const data = {
-                id: formData.get('id'),
-                territoryId: formData.get('territoryId'), // Might be missing if disabled
-                regularAmount: reg,
-                advanceAmount: adv,
-                amount: total,
-                fileCount: formData.get('fileCount'),
-                date: new Date().toISOString().split('T')[0]
-            };
-
-            const db = Store.get();
-            if (data.id) {
-                const idx = db.projections.findIndex(p => p.id === data.id);
-                if (idx !== -1) {
-                    if (!data.territoryId) data.territoryId = db.projections[idx].territoryId;
-                    db.projections[idx] = { ...db.projections[idx], ...data };
+                if (isOfficer) {
+                    total = parseFloat(formData.get('amount')) || 0;
+                    reg = total;
+                    adv = 0;
                 }
-            } else {
-                const existing = db.projections.find(p => p.territoryId === data.territoryId && p.date === data.date);
-                if (existing) {
-                    if (!confirm('Projection for this territory already exists today. Overwrite?')) return;
-                    Object.assign(existing, data);
-                } else {
-                    data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-                    db.projections.push(data);
-                }
-            }
 
-            Store.save(db);
-            UI.closeModal('generic-modal');
-            UI.renderAdminProjections();
-            UI.showSuccess('Projection Saved!');
-        },
+                const data = {
+                    id: formData.get('id'),
+                    territoryId: formData.get('territoryId'), // Might be missing if disabled
+                    regularAmount: reg,
+                    advanceAmount: adv,
+                    amount: total,
+                    fileCount: formData.get('fileCount'),
+                    date: new Date().toISOString().split('T')[0]
+                };
 
-        // --- HELPERS ---
-        getOffroadIcon(reason) {
-            if (!reason) return 'fa-triangle-exclamation';
-            if (reason.includes('Thana') || reason.includes('Police')) return 'fa-shield-halved';
-            if (reason === 'Capture' || reason === 'Captured') return 'fa-handcuffs';
-            if (reason === 'Lost or untraceable') return 'fa-magnifying-glass-blur';
-            return 'fa-triangle-exclamation';
-        },
-        getOffroadBadgeColor(reason) {
-            if (!reason) return 'bg-red-100 text-red-600 border-red-200';
-            if (reason.includes('Thana') || reason.includes('Police')) return 'bg-blue-100 text-blue-600 border border-blue-200';
-            if (reason === 'Capture' || reason === 'Captured') return 'bg-orange-100 text-orange-600 border border-orange-200';
-            if (reason === 'Lost or untraceable') return 'bg-slate-100 text-slate-600 border border-slate-200';
-            return 'bg-red-100 text-red-600 border-red-200';
-        },
-        showModal(id) {
-            const m = document.getElementById(id);
-            if (m) {
-                m.classList.remove('hidden');
-                setTimeout(() => {
-                    if (m.firstElementChild) {
-                        m.firstElementChild.classList.remove('opacity-0', 'scale-95');
-                        m.firstElementChild.classList.add('opacity-100', 'scale-100');
+                const db = Store.get();
+                if (data.id) {
+                    const idx = db.projections.findIndex(p => p.id === data.id);
+                    if (idx !== -1) {
+                        if (!data.territoryId) data.territoryId = db.projections[idx].territoryId;
+                        db.projections[idx] = { ...db.projections[idx], ...data };
                     }
-                }, 10);
-            }
-        },
-        closeModal(id) {
-            const m = document.getElementById(id);
-            if (m) {
-                if (m.firstElementChild) {
-                    m.firstElementChild.classList.remove('opacity-100', 'scale-100');
-                    m.firstElementChild.classList.add('opacity-0', 'scale-95');
+                } else {
+                    const existing = db.projections.find(p => p.territoryId === data.territoryId && p.date === data.date);
+                    if (existing) {
+                        if (!confirm('Projection for this territory already exists today. Overwrite?')) return;
+                        Object.assign(existing, data);
+                    } else {
+                        data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                        db.projections.push(data);
+                    }
                 }
-                setTimeout(() => m.classList.add('hidden'), 300);
-            }
-        },
-        showSuccess(message) {
-            const existing = document.getElementById('success-toast');
-            if (existing) existing.remove();
 
-            const toast = document.createElement('div');
-            toast.id = 'success-toast';
-            toast.className = 'fixed top-6 right-6 z-[100] flex items-center gap-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-l-4 border-emerald-500 shadow-2xl rounded-xl px-6 py-4 pr-10 min-w-[320px] transform transition-all duration-500 translate-x-full opacity-0';
-            toast.innerHTML = `
+                Store.save(db);
+                UI.closeModal('generic-modal');
+                UI.renderAdminProjections();
+                UI.showSuccess('Projection Saved!');
+            },
+
+            // --- HELPERS ---
+            getOffroadIcon(reason) {
+                if (!reason) return 'fa-triangle-exclamation';
+                if (reason.includes('Thana') || reason.includes('Police')) return 'fa-shield-halved';
+                if (reason === 'Capture' || reason === 'Captured') return 'fa-handcuffs';
+                if (reason === 'Lost or untraceable') return 'fa-magnifying-glass-blur';
+                return 'fa-triangle-exclamation';
+            },
+            getOffroadBadgeColor(reason) {
+                if (!reason) return 'bg-red-100 text-red-600 border-red-200';
+                if (reason.includes('Thana') || reason.includes('Police')) return 'bg-blue-100 text-blue-600 border border-blue-200';
+                if (reason === 'Capture' || reason === 'Captured') return 'bg-orange-100 text-orange-600 border border-orange-200';
+                if (reason === 'Lost or untraceable') return 'bg-slate-100 text-slate-600 border border-slate-200';
+                return 'bg-red-100 text-red-600 border-red-200';
+            },
+            showModal(id) {
+                const m = document.getElementById(id);
+                if (m) {
+                    m.classList.remove('hidden');
+                    setTimeout(() => {
+                        if (m.firstElementChild) {
+                            m.firstElementChild.classList.remove('opacity-0', 'scale-95');
+                            m.firstElementChild.classList.add('opacity-100', 'scale-100');
+                        }
+                    }, 10);
+                }
+            },
+            closeModal(id) {
+                const m = document.getElementById(id);
+                if (m) {
+                    if (m.firstElementChild) {
+                        m.firstElementChild.classList.remove('opacity-100', 'scale-100');
+                        m.firstElementChild.classList.add('opacity-0', 'scale-95');
+                    }
+                    setTimeout(() => m.classList.add('hidden'), 300);
+                }
+            },
+            showSuccess(message) {
+                const existing = document.getElementById('success-toast');
+                if (existing) existing.remove();
+
+                const toast = document.createElement('div');
+                toast.id = 'success-toast';
+                toast.className = 'fixed top-6 right-6 z-[100] flex items-center gap-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-l-4 border-emerald-500 shadow-2xl rounded-xl px-6 py-4 pr-10 min-w-[320px] transform transition-all duration-500 translate-x-full opacity-0';
+                toast.innerHTML = `
                     <div class="bg-emerald-100 text-emerald-600 rounded-full w-10 h-10 flex items-center justify-center shrink-0">
                         <i class="fa-solid fa-check text-lg"></i>
                     </div>
@@ -4840,118 +4834,118 @@
                     <div class="absolute bottom-0 left-0 h-1 bg-emerald-500/50 rounded-b-xl transition-all duration-[3000ms] ease-linear w-0" id="toast-progress"></div>
                 `;
 
-            document.body.appendChild(toast);
+                document.body.appendChild(toast);
 
-            // Entrance animation
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-x-full', 'opacity-0');
-                document.getElementById('toast-progress').style.width = '100%';
-            });
+                // Entrance animation
+                requestAnimationFrame(() => {
+                    toast.classList.remove('translate-x-full', 'opacity-0');
+                    document.getElementById('toast-progress').style.width = '100%';
+                });
 
-            // Auto remove
-            setTimeout(() => {
-                if (document.body.contains(toast)) {
-                    toast.classList.add('translate-x-full', 'opacity-0');
-                    setTimeout(() => toast.remove(), 500);
+                // Auto remove
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        toast.classList.add('translate-x-full', 'opacity-0');
+                        setTimeout(() => toast.remove(), 500);
+                    }
+                }, 3000);
+            },
+            toggleLoader(show) {
+                const loader = document.getElementById('global-loader');
+                if (loader) {
+                    if (show) {
+                        loader.classList.remove('hidden');
+                        void loader.offsetWidth;
+                        loader.classList.remove('opacity-0');
+                    } else {
+                        loader.classList.add('opacity-0');
+                        setTimeout(() => loader.classList.add('hidden'), 300);
+                    }
                 }
-            }, 3000);
-        },
-        toggleLoader(show) {
-            const loader = document.getElementById('global-loader');
-            if (loader) {
-                if (show) {
-                    loader.classList.remove('hidden');
-                    void loader.offsetWidth;
-                    loader.classList.remove('opacity-0');
-                } else {
-                    loader.classList.add('opacity-0');
-                    setTimeout(() => loader.classList.add('hidden'), 300);
-                }
-            }
-        },
+            },
 
             async captureDashboard() {
-            UI.toggleLoader(true);
-            UI.showSuccess('Generating Formal Excel Report...');
+                UI.toggleLoader(true);
+                UI.showSuccess('Generating Formal Excel Report...');
 
-            const dashboard = document.getElementById('views-container');
-            if (!dashboard) {
-                UI.toggleLoader(false);
-                return;
-            }
-
-            // Helper: Robust text extraction by label
-            const findValueByLabel = (label, root = dashboard) => {
-                const spans = Array.from(root.querySelectorAll('span, td, th'));
-                const target = spans.find(s => s.innerText.trim().toUpperCase() === label.toUpperCase());
-                if (!target) return 'N/A';
-
-                // Check next sibling for metric-style layout
-                if (target.nextElementSibling) return target.nextElementSibling.innerText.trim();
-
-                // Check parent's last child (for cards)
-                const parent = target.parentElement;
-                if (parent && parent.children.length > 1) {
-                    return parent.children[parent.children.length - 1].innerText.trim();
+                const dashboard = document.getElementById('views-container');
+                if (!dashboard) {
+                    UI.toggleLoader(false);
+                    return;
                 }
-                return 'N/A';
-            };
 
-            // Helper: Extract Achievement specifically
-            const getAchievement = (card) => {
-                if (!card) return 'N/A';
-                const target = Array.from(card.querySelectorAll('span')).find(s => s.innerText.includes('Achievement'));
-                return target ? target.nextElementSibling?.innerText.trim() : 'N/A';
-            };
+                // Helper: Robust text extraction by label
+                const findValueByLabel = (label, root = dashboard) => {
+                    const spans = Array.from(root.querySelectorAll('span, td, th'));
+                    const target = spans.find(s => s.innerText.trim().toUpperCase() === label.toUpperCase());
+                    if (!target) return 'N/A';
 
-            // 1. Data Gathering
-            const metrics = {
-                totalTarget: findValueByLabel('Total Target'),
-                totalFiles: findValueByLabel('Total Files'),
-                todayProj: findValueByLabel('Today Proj'),
-                remaining: findValueByLabel('Remaining'),
-                mtdColl: findValueByLabel('Till Date Coll'),
-                collFiles: findValueByLabel('Coll Files'),
-                todayColl: findValueByLabel('Collection'),
-                dailyReq: findValueByLabel('Daily Req'),
-                achMtd: findValueByLabel('Ach % (MTD)'),
-                uncollected: findValueByLabel('Uncollected'),
-                achToday: findValueByLabel('Ach % (Today)')
-            };
+                    // Check next sibling for metric-style layout
+                    if (target.nextElementSibling) return target.nextElementSibling.innerText.trim();
 
-            // Sections
-            const partACard = Array.from(dashboard.querySelectorAll('h3')).find(h => h.innerText.includes('Part A'))?.closest('.rounded-2xl');
-            const partBCard = Array.from(dashboard.querySelectorAll('h3')).find(h => h.innerText.includes('Part B'))?.closest('.rounded-2xl');
+                    // Check parent's last child (for cards)
+                    const parent = target.parentElement;
+                    if (parent && parent.children.length > 1) {
+                        return parent.children[parent.children.length - 1].innerText.trim();
+                    }
+                    return 'N/A';
+                };
 
-            const summaryPartA = {
-                rpi: partACard?.querySelector('.text-xl.font-black')?.innerText.trim() || 'N/A',
-                target: findValueByLabel('Target Amt', partACard),
-                coll: findValueByLabel('Coll Amt', partACard),
-                ach: getAchievement(partACard)
-            };
+                // Helper: Extract Achievement specifically
+                const getAchievement = (card) => {
+                    if (!card) return 'N/A';
+                    const target = Array.from(card.querySelectorAll('span')).find(s => s.innerText.includes('Achievement'));
+                    return target ? target.nextElementSibling?.innerText.trim() : 'N/A';
+                };
 
-            const summaryPartB = {
-                rpi: partBCard?.querySelector('.text-xl.font-black')?.innerText.trim() || 'N/A',
-                target: findValueByLabel('Target Amt', partBCard),
-                coll: findValueByLabel('Coll Amt', partBCard),
-                ach: getAchievement(partBCard)
-            };
+                // 1. Data Gathering
+                const metrics = {
+                    totalTarget: findValueByLabel('Total Target'),
+                    totalFiles: findValueByLabel('Total Files'),
+                    todayProj: findValueByLabel('Today Proj'),
+                    remaining: findValueByLabel('Remaining'),
+                    mtdColl: findValueByLabel('Till Date Coll'),
+                    collFiles: findValueByLabel('Coll Files'),
+                    todayColl: findValueByLabel('Collection'),
+                    dailyReq: findValueByLabel('Daily Req'),
+                    achMtd: findValueByLabel('Ach % (MTD)'),
+                    uncollected: findValueByLabel('Uncollected'),
+                    achToday: findValueByLabel('Ach % (Today)')
+                };
 
-            // 2. Report Generation
-            const report = document.createElement('div');
-            report.id = 'excel-report-render';
-            report.style.cssText = `
+                // Sections
+                const partACard = Array.from(dashboard.querySelectorAll('h3')).find(h => h.innerText.includes('Part A'))?.closest('.rounded-2xl');
+                const partBCard = Array.from(dashboard.querySelectorAll('h3')).find(h => h.innerText.includes('Part B'))?.closest('.rounded-2xl');
+
+                const summaryPartA = {
+                    rpi: partACard?.querySelector('.text-xl.font-black')?.innerText.trim() || 'N/A',
+                    target: findValueByLabel('Target Amt', partACard),
+                    coll: findValueByLabel('Coll Amt', partACard),
+                    ach: getAchievement(partACard)
+                };
+
+                const summaryPartB = {
+                    rpi: partBCard?.querySelector('.text-xl.font-black')?.innerText.trim() || 'N/A',
+                    target: findValueByLabel('Target Amt', partBCard),
+                    coll: findValueByLabel('Coll Amt', partBCard),
+                    ach: getAchievement(partBCard)
+                };
+
+                // 2. Report Generation
+                const report = document.createElement('div');
+                report.id = 'excel-report-render';
+                report.style.cssText = `
                     position: fixed; left: -9999px; top: 0; 
                     width: 900px; padding: 40px; background: #ffffff; 
                     font-family: 'Segoe UI', Arial, sans-serif; color: #1f2937;
                 `;
 
-            const tableStyle = 'width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px;';
-            const headerStyle = 'background-color: #f8fafc; font-weight: bold; border: 1px solid #cbd5e1; padding: 4px 8px; color: #475569; text-align: left;';
-            const cellStyle = 'border: 1px solid #cbd5e1; padding: 4px 8px; text-align: left;';
-            const mainTitle = 'font-size: 22px; font-weight: 800; color: #1e40af; letter-spacing: -0.5px; border-bottom: 3px solid #1e40af; padding-bottom: 10px; margin-bottom: 5px;';
+                const tableStyle = 'width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px;';
+                const headerStyle = 'background-color: #f8fafc; font-weight: bold; border: 1px solid #cbd5e1; padding: 4px 8px; color: #475569; text-align: left;';
+                const cellStyle = 'border: 1px solid #cbd5e1; padding: 4px 8px; text-align: left;';
+                const mainTitle = 'font-size: 22px; font-weight: 800; color: #1e40af; letter-spacing: -0.5px; border-bottom: 3px solid #1e40af; padding-bottom: 10px; margin-bottom: 5px;';
 
-            let html = `
+                let html = `
                     <div style="${mainTitle}">OFFICIAL RECOVERY PERFORMANCE REPORT</div>
                     <div style="margin-bottom: 25px; font-size: 12px; color: #64748b; font-weight: 600;">REPORTING DATE: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}</div>
                     
@@ -5001,80 +4995,80 @@
                     </table>
                 `;
 
-            // Ranking Table Section
-            const rankingTable = dashboard.querySelector('#ranking-table-body')?.closest('table');
-            if (rankingTable) {
-                html += `<div style="font-weight: 800; margin-bottom: 12px; font-size: 15px; color: #334155; text-transform: uppercase;">3. Territory Performance Ranking Details</div>`;
-                const clone = rankingTable.cloneNode(true);
-                clone.style.cssText = tableStyle;
+                // Ranking Table Section
+                const rankingTable = dashboard.querySelector('#ranking-table-body')?.closest('table');
+                if (rankingTable) {
+                    html += `<div style="font-weight: 800; margin-bottom: 12px; font-size: 15px; color: #334155; text-transform: uppercase;">3. Territory Performance Ranking Details</div>`;
+                    const clone = rankingTable.cloneNode(true);
+                    clone.style.cssText = tableStyle;
 
-                // Cleanup and formalize
-                clone.querySelectorAll('thead th').forEach(th => {
-                    th.style.cssText = headerStyle + 'background: #f1f5f9; position: static; white-space: normal; font-size: 11px;';
-                    th.className = '';
-                });
-                clone.querySelectorAll('tbody tr').forEach(tr => {
-                    tr.className = '';
-                    tr.style.backgroundColor = '';
-                });
-                clone.querySelectorAll('tbody td').forEach(td => {
-                    td.style.cssText = cellStyle + 'font-size: 11px; white-space: normal;';
-                    td.className = '';
-                    // Highlight Total rows
-                    if (td.innerText.includes('Total')) {
-                        td.parentElement.style.backgroundColor = '#f1f5f9';
-                        td.style.fontWeight = 'bold';
-                    }
-                });
-                clone.querySelectorAll('.sticky').forEach(el => el.style.position = 'static');
+                    // Cleanup and formalize
+                    clone.querySelectorAll('thead th').forEach(th => {
+                        th.style.cssText = headerStyle + 'background: #f1f5f9; position: static; white-space: normal; font-size: 11px;';
+                        th.className = '';
+                    });
+                    clone.querySelectorAll('tbody tr').forEach(tr => {
+                        tr.className = '';
+                        tr.style.backgroundColor = '';
+                    });
+                    clone.querySelectorAll('tbody td').forEach(td => {
+                        td.style.cssText = cellStyle + 'font-size: 11px; white-space: normal;';
+                        td.className = '';
+                        // Highlight Total rows
+                        if (td.innerText.includes('Total')) {
+                            td.parentElement.style.backgroundColor = '#f1f5f9';
+                            td.style.fontWeight = 'bold';
+                        }
+                    });
+                    clone.querySelectorAll('.sticky').forEach(el => el.style.position = 'static');
 
-                html += `<div style="width: 100%; border: 1px solid #cbd5e1;">${clone.outerHTML}</div>`;
-            }
+                    html += `<div style="width: 100%; border: 1px solid #cbd5e1;">${clone.outerHTML}</div>`;
+                }
 
-            html += `
+                html += `
                     <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #94a3b8; font-weight: 600;">
                         <span>GENERATED BY RECOVERY INTELLIGENCE PORTAL V3.0</span>
                         <span>STRICTLY CONFIDENTIAL - INTERNAL DISTRIBUTION</span>
                     </div>
                 `;
 
-            report.innerHTML = html;
-            document.body.appendChild(report);
+                report.innerHTML = html;
+                document.body.appendChild(report);
 
-            try {
-                const canvas = await html2canvas(report, {
-                    scale: 1.5,
-                    backgroundColor: '#ffffff',
-                    useCORS: true,
-                    logging: false
-                });
+                try {
+                    const canvas = await html2canvas(report, {
+                        scale: 1.5,
+                        backgroundColor: '#ffffff',
+                        useCORS: true,
+                        logging: false
+                    });
 
-                const image = canvas.toDataURL('image/png', 1.0);
-                const link = document.createElement('a');
-                const fileName = `Formal_Recovery_Report_${new Date().toISOString().slice(0, 10)}.png`;
-                link.download = fileName;
-                link.href = image;
-                link.click();
+                    const image = canvas.toDataURL('image/png', 1.0);
+                    const link = document.createElement('a');
+                    const fileName = `Formal_Recovery_Report_${new Date().toISOString().slice(0, 10)}.png`;
+                    link.download = fileName;
+                    link.href = image;
+                    link.click();
 
-                UI.showSuccess('Excel-Style Formal Report Ready!');
-            } catch (error) {
-                console.error('Report failed:', error);
-                UI.showSuccess('Error in Report Generation.');
-            } finally {
-                document.body.removeChild(report);
-                UI.toggleLoader(false);
+                    UI.showSuccess('Excel-Style Formal Report Ready!');
+                } catch (error) {
+                    console.error('Report failed:', error);
+                    UI.showSuccess('Error in Report Generation.');
+                } finally {
+                    document.body.removeChild(report);
+                    UI.toggleLoader(false);
+                }
+            },
+
+            getCurrentTerritoryId() {
+                const db = Store.get();
+                let tId = Auth.currentUser.territoryId;
+                if (!tId) {
+                    const t = db.territories.find(t => t.name === Auth.currentUser.username || t.officer === Auth.currentUser.username);
+                    if (t) tId = t.id;
+                }
+                return tId;
             }
-        },
-
-        getCurrentTerritoryId() {
-            const db = Store.get();
-            let tId = Auth.currentUser.territoryId;
-            if (!tId) {
-                const t = db.territories.find(t => t.name === Auth.currentUser.username || t.officer === Auth.currentUser.username);
-                if (t) tId = t.id;
-            }
-            return tId;
-        }
         };
 
         const Charts = {
