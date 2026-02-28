@@ -2569,22 +2569,6 @@
                         </div>
                     </div>
 
-                    <!--CHARTS ROW-->
-                    <div class="animate-entry grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div class="glass-panel p-5 rounded-xl shadow dark:bg-dark-card hover-lift">
-                            <h4 class="font-bold mb-4 text-sm text-slate-500 uppercase">Collection Trend (Daily)</h4>
-                            <div class="relative h-64">
-                                <canvas id="chart-trend"></canvas>
-                            </div>
-                        </div>
-                        <div class="glass-panel p-5 rounded-xl shadow dark:bg-dark-card hover-lift">
-                            <h4 class="font-bold mb-4 text-sm text-slate-500 uppercase">Projection vs Actual</h4>
-                            <div class="relative h-64">
-                                <canvas id="chart-proj-act"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
                     <!--RECENT TRANSACTIONS-->
             <div class="animate-entry rounded-lg shadow border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card overflow-hidden">
                 <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sm:hidden">
@@ -2634,13 +2618,6 @@
                 </div>
             </div>
         `;
-
-                // Render Charts
-                const dailyData = this.getDailyTrendData(linkedTId);
-                setTimeout(() => {
-                    Charts.renderLine('chart-trend', dailyData.labels, dailyData.data);
-                    Charts.renderBar('chart-proj-act', ['Projected', 'Actual'], [metrics.todayProj, metrics.todayColl]);
-                }, 100);
             },
 
             renderOfficerOffroadTracker(viewMode = 'active') {
