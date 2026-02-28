@@ -367,9 +367,9 @@
             </div>
         </div>
 
-        <div class="relative z-10 w-full max-w-md p-6 animate-entry">
+        <div class="relative z-10 w-full max-w-md px-4 sm:p-6 animate-entry">
             <!-- UPDATED LOGIN CARD with #53db8c Theme -->
-            <div class="glass-panel p-10 rounded-3xl backdrop-blur-xl transition-all duration-300 relative overflow-hidden"
+            <div class="glass-panel p-6 sm:p-10 rounded-3xl backdrop-blur-xl transition-all duration-300 relative overflow-hidden"
                 style="background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 60%, rgba(83, 219, 140, 0.15) 100%); 
                         box-shadow: 0 25px 50px -12px rgba(83, 219, 140, 0.3);
                         border: 1px solid rgba(83, 219, 140, 0.3);">
@@ -2434,8 +2434,9 @@
                     </div>
 
                     <!--COMPACT METRIC TABLE-->
-                    <div class="animate-entry mb-6 overflow-hidden rounded-xl shadow-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card">
-                        <table class="w-full text-xs text-left border-collapse">
+                    <div class="animate-entry mb-6 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card">
+                        <div class="overflow-x-auto scrollbar-hide">
+                            <table class="w-full text-xs text-left border-collapse min-w-[500px]">
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                                 <!-- Row 1 -->
                                 <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
@@ -2547,6 +2548,7 @@
                                 </tr>
                             </tbody>
                         </table>
+                        </div>
                     </div>
 
                     <!--COLLECTION MIX(Regular vs Advance) - NEW CREATIVE SECTION-->
@@ -2601,7 +2603,8 @@
                     <h3 class="font-bold text-slate-800 dark:text-white">Today's Collections</h3>
                     <button onclick="Router.navigate('officer-collection')" class="text-xs bg-brand-600 text-white px-3 py-1 rounded hover:bg-brand-700 hover-lift">New Entry</button>
                 </div>
-                <table class="w-full text-sm text-left">
+                <div class="overflow-x-auto scrollbar-hide">
+                    <table class="w-full text-sm text-left min-w-[600px]">
                     <thead class="bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 uppercase">
                         <tr>
                             <th class="px-6 py-3">Receipt</th>
@@ -2631,6 +2634,7 @@
                         ${metrics.rawCollections.filter(c => c.date === new Date().toISOString().split('T')[0]).length === 0 ? '<tr><td colspan="5" class="px-6 py-4 text-center text-slate-400">No collections today</td></tr>' : ''}
                     </tbody>
                 </table>
+                </div>
             </div>
         `;
 
