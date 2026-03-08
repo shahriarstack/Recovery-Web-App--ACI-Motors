@@ -1850,7 +1850,7 @@
                 const missing = [];
 
                 db.territories.forEach(t => {
-                    const proj = db.projections.find(p => p.territoryId === t.id && p.date === today);
+                    const proj = db.projections.find(p => (p.territoryId === t.id || p.territory_id === t.id) && p.date === today);
                     if (proj) {
                         submitted.push({ ...t, proj });
                     } else {
@@ -1887,14 +1887,22 @@
                                                         <p class="font-bold text-slate-700 dark:text-slate-200">${t.name}</p>
                                                         <p class="text-xs text-slate-500">${t.officer}</p>
                                                     </div>
-                                                    ${isUnlocked ?
-                                    `<span class="text-xs font-bold text-green-600 bg-green-100 px-3 py-1.5 rounded-lg flex items-center">
-                                                            <i class="fa-solid fa-lock-open mr-2"></i> Unlocked
+                                                    <div class="flex items-center space-x-2">
+                                                        <button onclick="UI.modalEditProjection('${t.id}', 0, 0, 0)" class="text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg shadow-sm transition transform">
+                                                            <i class="fa-solid fa-plus mr-1"></i> Proj
+                                                        </button>
+                                                        <button onclick="UI.openCollectionModal(null, '${t.id}')" class="text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg shadow-sm transition transform">
+                                                            <i class="fa-solid fa-plus mr-1"></i> Coll
+                                                        </button>
+                                                        ${isUnlocked ?
+                                    `<span class="text-xs font-bold text-green-600 bg-green-100 px-2 py-1.5 rounded-lg flex items-center" title="Unlocked">
+                                                            <i class="fa-solid fa-lock-open"></i>
                                                         </span>` :
-                                    `<button onclick="UI.unlockProjection('${t.id}')" class="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg shadow transition transform active:scale-95">
-                                                            <i class="fa-solid fa-key mr-1"></i> Unlock 30m
+                                    `<button onclick="UI.unlockProjection('${t.id}')" class="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-2 py-1.5 rounded-lg shadow transition transform active:scale-95" title="Unlock 30m">
+                                                            <i class="fa-solid fa-key"></i>
                                                         </button>`
                                 }
+                                                    </div>
                                                 </div>
                                             `;
                         }).join('')}
@@ -1923,11 +1931,16 @@
                                                             <span><i class="fa-solid fa-hand-holding-dollar text-blue-500 mr-1"></i> Adv: ${item.proj.advanceAmount.toLocaleString()}</span>
                                                         </div>
                                                     </div>
-                                                    <div class="text-right">
-                                                        <span class="text-[10px] text-slate-400 block mb-1">Files: ${item.proj.fileCount}</span>
-                                                        <button onclick="UI.modalEditProjection('${item.proj.territoryId}', '${item.proj.regularAmount}', '${item.proj.advanceAmount}', '${item.proj.fileCount}')" class="text-xs text-blue-500 hover:text-blue-700 font-medium flex items-center justify-end">
-                                                            <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
-                                                        </button>
+                                                    <div class="text-right flex flex-col items-end">
+                                                        <span class="text-[10px] text-slate-400 block mb-1 font-bold">Files: ${item.proj.fileCount || item.proj.file_count || 0}</span>
+                                                        <div class="flex items-center space-x-3 mt-1">
+                                                            <button onclick="UI.openCollectionModal(null, '${item.proj.territoryId || item.proj.territory_id}')" class="text-xs text-emerald-500 hover:text-emerald-700 font-bold flex items-center">
+                                                                <i class="fa-solid fa-plus mr-1"></i> Coll
+                                                            </button>
+                                                            <button onclick="UI.modalEditProjection('${item.proj.territoryId || item.proj.territory_id}', '${item.proj.regularAmount || item.proj.regular_amount || 0}', '${item.proj.advanceAmount || item.proj.advance_amount || 0}', '${item.proj.fileCount || item.proj.file_count || 0}')" class="text-xs text-blue-500 hover:text-blue-700 font-bold flex items-center">
+                                                                <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             `).join('')}
@@ -1983,33 +1996,40 @@
 
             handleAdminEditProjection(e, tId) {
                 e.preventDefault();
+                UI.toggleLoader(true);
                 const formData = new FormData(e.target);
                 const db = Store.get();
                 const today = new Date().toISOString().split('T')[0];
 
-                const projIndex = db.projections.findIndex(p => p.territoryId === tId && p.date === today);
+                const existingProj = db.projections.find(p => (p.territoryId === tId || p.territory_id === tId) && p.date === today);
 
-                const regAmt = formData.get('reg');
-                const advAmt = formData.get('adv');
+                const regAmt = parseFloat(formData.get('reg')) || 0;
+                const advAmt = parseFloat(formData.get('adv')) || 0;
+                const files = parseInt(formData.get('files')) || 0;
 
-                const updatedProj = {
-                    territoryId: tId,
+                const payload = {
+                    territory_id: tId,
                     date: today,
-                    regularAmount: regAmt,
-                    advanceAmount: advAmt || 0,
-                    amount: parseFloat(regAmt) + parseFloat(advAmt || 0),
-                    fileCount: formData.get('files')
+                    regular_amount: regAmt,
+                    advance_amount: advAmt,
+                    amount: regAmt + advAmt,
+                    file_count: files
                 };
-
-                if (projIndex !== -1) {
-                    db.projections[projIndex] = updatedProj;
+                
+                if (existingProj && existingProj.id) {
+                    payload.id = existingProj.id;
                 } else {
-                    db.projections.push(updatedProj);
+                    payload.id = 'new_' + Date.now();
                 }
 
-                Store.save(db);
-                document.getElementById('generic-modal').classList.add('hidden');
-                this.renderAdminProjections();
+                Store.update('projections', payload).then(() => {
+                    UI.toggleLoader(false);
+                    document.getElementById('generic-modal').classList.add('hidden');
+                    UI.renderAdminProjections();
+                }).catch(err => {
+                    UI.toggleLoader(false);
+                    alert("Error saving projection: " + err.message);
+                });
             },
 
             renderAdminSettlementsView() {
@@ -2894,13 +2914,15 @@
             },
 
             // --- DATA ENTRY PANEL ---
-            renderDataEntry() {
+            renderDataEntry(externalData = null) {
                 const db = Store.get();
                 const currentMonth = new Date().toISOString().slice(0, 7);
                 let displayData = [];
 
                 // Load existing data or create dummy rows if empty
-                if (db.territories.length <= 2) {
+                if (externalData) {
+                    displayData = externalData;
+                } else if (db.territories.length <= 2) {
                     for (let i = 1; i <= 20; i++) {
                         const tId = `t${100 + i} `;
                         const part = i % 2 === 0 ? 'B' : 'A';
@@ -3900,52 +3922,42 @@
                 const file = e.target.files[0];
                 if (!file) return;
 
-                if (!confirm('Importing new month data will clear all existing data and reset the system. Proceed?')) return;
-
                 UI.toggleLoader(true);
-                // Clear all data on server
-                await fetch(`${Store.apiUrl}/sync-targets`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ territories: [], targets: [] })
-                });
 
                 const reader = new FileReader();
                 reader.onload = async (event) => {
                     const text = event.target.result;
                     const rows = text.split('\n').slice(1);
-                    const territories = [];
-                    const targets = [];
-                    const currentMonth = new Date().toISOString().slice(0, 7);
+                    const externalData = [];
 
                     rows.forEach((row, i) => {
                         if (!row.trim()) return;
                         const cols = row.split(',');
                         if (cols.length >= 14) {
                             const tId = cols[1].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-                            territories.push({ id: tId, name: cols[1], part: cols[0], officer: cols[1] });
-                            targets.push({
-                                territory_id: tId, month: currentMonth,
-                                files: parseInt(cols[2]) || 0, proj_files: parseInt(cols[3]) || 0,
-                                amount: parseFloat(cols[4]) || 0, proj_reg: parseFloat(cols[5]) || 0,
-                                proj_adv: parseFloat(cols[6]) || 0, lm_np_target_amount: parseFloat(cols[7]) || 0,
-                                lm_np_target_files: parseInt(cols[8]) || 0, total_od: parseFloat(cols[9]) || 0,
-                                od_growth_sply: parseFloat(cols[10]) || 0, per_file_od: parseFloat(cols[11]) || 0,
-                                six_plus_od_files: parseInt(cols[12]) || 0, six_plus_od_growth_splm: parseFloat(cols[13]) || 0
+                            externalData.push({
+                                id: tId,
+                                part: cols[0],
+                                name: cols[1],
+                                targetFiles: parseInt(cols[2]) || 0,
+                                projFiles: parseInt(cols[3]) || 0,
+                                targetAmount: parseFloat(cols[4]) || 0,
+                                projReg: parseFloat(cols[5]) || 0,
+                                projAdv: parseFloat(cols[6]) || 0,
+                                lmNpTargetAmount: parseFloat(cols[7]) || 0,
+                                lmNpTargetFiles: parseInt(cols[8]) || 0,
+                                totalOd: parseFloat(cols[9]) || 0,
+                                odGrowthSply: parseFloat(cols[10]) || 0,
+                                perFileOd: parseFloat(cols[11]) || 0,
+                                sixPlusOdFiles: parseInt(cols[12]) || 0,
+                                sixPlusOdGrowthSplm: parseFloat(cols[13]) || 0
                             });
                         }
                     });
 
-                    await fetch(`${Store.apiUrl}/sync-targets`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ territories, targets })
-                    });
-
-                    await Store.init();
-                    UI.renderDataEntry();
+                    UI.renderDataEntry(externalData);
                     UI.toggleLoader(false);
-                    UI.showSuccess('Data Imported successfully');
+                    UI.showSuccess('Previewing imported data. Click "Save All Changes" to save to database.');
                 };
                 reader.readAsText(file);
             },
@@ -4412,12 +4424,12 @@
                 UI.showSuccess('Settlement Saved!');
             },
 
-            openCollectionModal(id = null) {
+            openCollectionModal(id = null, prefillTId = null) {
                 const db = Store.get();
                 const item = id ? db.collections.find(c => c.id === id) : {};
                 const isOfficer = Auth.currentUser.role === 'officer';
-                const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
-                const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
+                const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || item.territory_id || prefillTId || '');
+                const territories = db.territories.map(t => `<option value="${t.id}" ${currentTId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
 
                 const html = `
                     <form onsubmit="UI.saveManualCollection(event)" class="space-y-4">
@@ -4480,38 +4492,43 @@
 
             saveManualCollection(e) {
                 e.preventDefault();
+                UI.toggleLoader(true);
                 const formData = new FormData(e.target);
                 const reg = parseFloat(formData.get('regularAmount')) || 0;
                 const adv = parseFloat(formData.get('advanceAmount')) || 0;
 
-                const data = {
-                    id: formData.get('id'),
+                const payload = {
                     date: formData.get('date'),
-                    territoryId: formData.get('territoryId'),
+                    territory_id: formData.get('territoryId'),
                     receipt: formData.get('receipt'),
-                    customerCode: formData.get('customerCode'),
-                    regularAmount: reg,
-                    advanceAmount: adv,
+                    customer_code: formData.get('customerCode'),
+                    regular_amount: reg,
+                    advance_amount: adv,
                     amount: reg + adv,
                     mode: formData.get('mode'),
                     timestamp: Date.now()
                 };
 
-                const db = Store.get();
-                if (data.id) {
-                    const idx = db.collections.findIndex(c => c.id === data.id);
-                    if (idx !== -1) db.collections[idx] = { ...db.collections[idx], ...data };
+                const existingId = formData.get('id');
+                if (existingId) {
+                    payload.id = existingId;
                 } else {
-                    data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-                    db.collections.push(data);
+                    payload.id = 'new_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
                 }
 
-                Store.save(db);
-                UI.closeModal('generic-modal');
-                if (document.getElementById('admin-history-table-body')) UI.updateAdminHistory(null, data.date.substring(0, 8) + '01', data.date.substring(0, 8) + '31');
-                else UI.renderAdminHistory();
-
-                UI.showSuccess('Collection Saved!');
+                Store.update('collections', payload).then(() => {
+                    UI.closeModal('generic-modal');
+                    if (document.getElementById('admin-history-table-body')) {
+                        UI.updateAdminHistory(null, payload.date.substring(0, 8) + '01', payload.date.substring(0, 8) + '31');
+                    } else if (document.getElementById('views-container').innerHTML.includes('Projection Monitor')) {
+                        UI.renderAdminProjections();
+                    }
+                    UI.showSuccess('Collection Saved!');
+                    UI.toggleLoader(false);
+                }).catch(err => {
+                    UI.toggleLoader(false);
+                    alert("Error saving collection: " + err.message);
+                });
             },
 
             openOffroadModal(id = null) {
