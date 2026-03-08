@@ -631,6 +631,27 @@
                         return await this.init();
                     }
 
+                    // Bridge database snake_case keys to UI camelCase dynamically
+                    const convertKeys = (arr) => {
+                        arr.forEach(item => {
+                            for (let key in item) {
+                                if (key.includes('_')) {
+                                    const camel = key.replace(/_([a-z])/g, g => g[1].toUpperCase());
+                                    if (item[camel] === undefined) {
+                                        Object.defineProperty(item, camel, {
+                                            get: () => item[key],
+                                            set: (v) => item[key] = v,
+                                            enumerable: false
+                                        });
+                                    }
+                                }
+                            }
+                        });
+                    };
+                    ['users', 'targets', 'projections', 'collections', 'offroad_vehicles', 'settlements', 'vehicle_performance'].forEach(collection => {
+                        if (data[collection]) convertKeys(data[collection]);
+                    });
+
                     this.cache = data;
                     return data;
                 } catch (err) {
