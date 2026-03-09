@@ -790,6 +790,10 @@
                 const mtdLmNpColl = collections.filter(c => c.isLmNp).reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
                 const mtdLmNpFiles = new Set(collections.filter(c => c.isLmNp).map(c => c.customerCode)).size;
 
+                const presetProjReg = targets.reduce((sum, t) => sum + (parseFloat(t.projReg || t.proj_reg) || 0), 0);
+                const presetProjAdv = targets.reduce((sum, t) => sum + (parseFloat(t.projAdv || t.proj_adv) || 0), 0);
+                const presetProjTotal = presetProjReg + presetProjAdv;
+
                 const mtdProjRegular = projections.reduce((sum, p) => sum + (parseFloat(p.regularAmount) || parseFloat(p.amount) || 0), 0);
                 const mtdProjAdvance = projections.reduce((sum, p) => sum + (parseFloat(p.advanceAmount) || 0), 0);
                 const mtdProjTotal = mtdProjRegular + mtdProjAdvance;
@@ -808,7 +812,7 @@
                 const todayColl = collections.filter(c => c.date === todayStr).reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
 
                 const achievement = targetAmt > 0 ? (mtdColl / targetAmt) * 100 : 0;
-                const tillDayAchievement = mtdProjTotal > 0 ? (mtdColl / mtdProjTotal) * 100 : 0;
+                const tillDayAchievement = presetProjTotal > 0 ? (mtdColl / presetProjTotal) * 100 : 0;
                 const lmNpRecPct = lmNpTargetAmt > 0 ? (mtdLmNpColl / lmNpTargetAmt) * 100 : 0;
                 const cureRate = targetFiles > 0 ? (uniquePaidCodes / targetFiles) * 100 : 0;
 
@@ -842,6 +846,7 @@
                     uniquePaidCodes,
                     tillDateNonPayFiles,
                     mtdProjRegular, mtdProjAdvance, mtdProjTotal, mtdProjFiles,
+                    presetProjReg, presetProjAdv, presetProjTotal,
                     tillDayAchievement: tillDayAchievement.toFixed(1),
                     yestProjAmt, yestProjFiles, yestCollAmt, yestCollFiles,
                     lmNpTargetAmt, lmNpTargetFiles, mtdLmNpColl, mtdLmNpFiles,
@@ -1107,7 +1112,8 @@
                     const m = Calc.getMetrics(t.id);
                     // Calculate Last Day Achievement for the new column
                     const ldAch = m.yestProjAmt > 0 ? ((m.yestCollAmt / m.yestProjAmt) * 100).toFixed(1) : '0.0';
-                    return { ...t, ...m, lastDayAch: ldAch };
+                    const tdAch = m.todayProj > 0 ? ((m.todayColl / m.todayProj) * 100).toFixed(1) : (m.todayColl > 0 ? '100+' : '0.0');
+                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch };
                 });
 
                 // Helper to calculate totals
@@ -1115,6 +1121,7 @@
                     const sums = {
                         targetFiles: 0, mtdProjFiles: 0, uniquePaidCodes: 0, tillDateNonPayFiles: 0,
                         targetAmt: 0, mtdProjRegular: 0, mtdProjAdvance: 0, mtdProjTotal: 0, mtdColl: 0,
+                        presetProjReg: 0, presetProjAdv: 0, presetProjTotal: 0,
                         yestProjAmt: 0, yestProjFiles: 0, yestCollAmt: 0, yestCollFiles: 0,
                         lmNpTargetAmt: 0, lmNpTargetFiles: 0, mtdLmNpColl: 0, mtdLmNpFiles: 0,
                         todayProj: 0, todayColl: 0
@@ -1140,12 +1147,16 @@
                         sums.mtdLmNpFiles += parseInt(t.mtdLmNpFiles) || 0;
                         sums.todayProj += parseFloat(t.todayProj) || 0;
                         sums.todayColl += parseFloat(t.todayColl) || 0;
+                        sums.presetProjReg += parseFloat(t.presetProjReg) || 0;
+                        sums.presetProjAdv += parseFloat(t.presetProjAdv) || 0;
+                        sums.presetProjTotal += parseFloat(t.presetProjTotal) || 0;
                     });
 
                     // Derived Metrics for Totals
-                    sums.tillDayAchievement = sums.mtdProjTotal > 0 ? ((sums.mtdColl / sums.mtdProjTotal) * 100).toFixed(1) : '0.0';
+                    sums.tillDayAchievement = sums.presetProjTotal > 0 ? ((sums.mtdColl / sums.presetProjTotal) * 100).toFixed(1) : '0.0';
                     sums.achievement = sums.targetAmt > 0 ? ((sums.mtdColl / sums.targetAmt) * 100).toFixed(1) : '0.0';
                     sums.lastDayAch = sums.yestProjAmt > 0 ? ((sums.yestCollAmt / sums.yestProjAmt) * 100).toFixed(1) : '0.0';
+                    sums.todayAch = sums.todayProj > 0 ? ((sums.todayColl / sums.todayProj) * 100).toFixed(1) : (sums.todayColl > 0 ? '100+' : '0.0');
 
                     const cureRate = sums.targetFiles > 0 ? (sums.uniquePaidCodes / sums.targetFiles) * 100 : 0;
                     const lmNpRecPct = sums.lmNpTargetAmt > 0 ? (sums.mtdLmNpColl / sums.lmNpTargetAmt) * 100 : 0;
@@ -1190,13 +1201,17 @@
                         
                         <td class="p-1.5 border dark:border-slate-600 text-right font-medium">${parseInt(t.targetAmt).toLocaleString()}</td>
                         
-                        ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'text-slate-500' : ''}">${parseInt(t.mtdProjRegular).toLocaleString()}</td>` : ''}
-                        ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'text-slate-500' : ''}">${parseInt(t.mtdProjAdvance).toLocaleString()}</td>` : ''}
+                        ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'text-slate-500' : ''}">${parseInt(t.presetProjReg).toLocaleString()}</td>` : ''}
+                        ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'text-slate-500' : ''}">${parseInt(t.presetProjAdv).toLocaleString()}</td>` : ''}
                         
-                        <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-brand-600' : ''}">${parseInt(t.mtdProjTotal).toLocaleString()}</td>
+                        <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-brand-600' : ''}">${parseInt(t.presetProjTotal).toLocaleString()}</td>
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-green-600' : ''}">${parseInt(t.mtdColl).toLocaleString()}</td>
                         <td class="p-1.5 border dark:border-slate-600 text-center font-bold bg-blue-50 dark:bg-blue-900/20">${t.tillDayAchievement}%</td>
                         
+                        <td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'font-medium text-slate-700 dark:text-slate-300' : ''}">${parseInt(t.todayProj).toLocaleString()}</td>
+                        <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-green-600' : ''}">${parseInt(t.todayColl).toLocaleString()}</td>
+                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold text-fuchsia-600 bg-fuchsia-50 dark:bg-fuchsia-900/10">${t.todayAch}%</td>
+
                         <td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'text-slate-500' : ''} border-l-2 border-slate-100 dark:border-slate-600">${parseInt(t.yestProjAmt).toLocaleString()}</td>
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center ${!isTotal ? 'text-slate-500' : ''}">${t.yestProjFiles}</td>` : ''}
                         <td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'text-slate-500' : ''}">${parseInt(t.yestCollAmt).toLocaleString()}</td>
@@ -1492,12 +1507,16 @@
                                             
                                             <th class="p-2 border dark:border-slate-600">Total EMI</th>
                                             
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600">Proj (Reg)</th>` : ''}
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600">Proj (Adv)</th>` : ''}
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600">Target Proj (Reg)</th>` : ''}
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600">Target Proj (Adv)</th>` : ''}
                                             
                                             <th class="p-2 border dark:border-slate-600 font-bold">Total Proj</th>
                                             <th class="p-2 border dark:border-slate-600 bg-green-50 dark:bg-green-900/10">Till Day Coll</th>
                                             <th class="p-2 border dark:border-slate-600 bg-blue-50 dark:bg-blue-900/20">Ach %</th>
+                                            
+                                            <th class="p-2 border dark:border-slate-600">Today's Proj</th>
+                                            <th class="p-2 border dark:border-slate-600 bg-green-50 dark:bg-green-900/10">Today's Coll</th>
+                                            <th class="p-2 border dark:border-slate-600 bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 font-bold">Today Ach %</th>
                                             
                                             <th class="p-2 border dark:border-slate-600 bg-orange-50 dark:bg-orange-900/10 border-l-2 border-slate-200 dark:border-slate-600">Last Day Proj Amt</th>
                                             ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-orange-50 dark:bg-orange-900/10">Last Day Proj Files</th>` : ''}
