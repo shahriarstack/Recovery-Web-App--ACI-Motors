@@ -4527,7 +4527,7 @@
 
             openCollectionModal(id = null, prefillTId = null) {
                 const db = Store.get();
-                const item = id ? db.collections.find(c => c.id === id) : {};
+                const item = id ? (db.collections.find(c => String(c.id) === String(id)) || {}) : {};
                 const isOfficer = Auth.currentUser.role === 'officer';
                 const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || item.territory_id || prefillTId || '');
                 const territories = db.territories.map(t => `<option value="${t.id}" ${currentTId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
@@ -4629,6 +4629,26 @@
                 }).catch(err => {
                     UI.toggleLoader(false);
                     alert("Error saving collection: " + err.message);
+                });
+            },
+
+            deleteCollection(id) {
+                if (!confirm('Are you sure you want to permanently delete this collection? This will immediately affect MTD statistics for all users.')) return;
+                
+                UI.toggleLoader(true);
+                Store.delete('collections', id).then(() => {
+                    if (document.getElementById('admin-history-table-body')) {
+                        const formData = new FormData(document.querySelector('form[onsubmit="UI.updateAdminHistory(event)"]'));
+                        // Reload history using the existing date range in the filters
+                        UI.updateAdminHistory(null, formData.get('startDate'), formData.get('endDate'), formData.get('territorySearch'));
+                    } else if (document.getElementById('views-container').innerHTML.includes('Projection Monitor')) {
+                        UI.renderAdminProjections();
+                    }
+                    UI.showSuccess('Collection Deleted!');
+                    UI.toggleLoader(false);
+                }).catch(err => {
+                    UI.toggleLoader(false);
+                    alert("Error deleting collection: " + err.message);
                 });
             },
 
