@@ -2271,6 +2271,7 @@
                                 <th class="px-6 py-3 text-right text-slate-400">Regular</th>
                                 <th class="px-6 py-3 text-right text-brand-500">Advance</th>
                                 <th class="px-6 py-3 text-right">Total</th>
+                                <th class="px-6 py-3 text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="admin-history-table-body" class="divide-y divide-slate-100 dark:divide-slate-700">
@@ -2377,6 +2378,14 @@
                             <td class="px-6 py-3 text-right font-mono text-slate-500 text-xs">${parseFloat(reg).toLocaleString()}</td>
                             <td class="px-6 py-3 text-right font-mono text-brand-500 text-xs">${parseFloat(adv).toLocaleString()}</td>
                             <td class="px-6 py-3 text-right font-mono font-bold text-slate-800 dark:text-white">${parseFloat(c.amount).toLocaleString()}</td>
+                            <td class="px-6 py-3 text-center space-x-2">
+                                <button onclick="UI.openCollectionModal('${c.id}', '${c.territoryId}')" class="text-blue-500 hover:text-blue-700 p-1 transition" title="Edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button onclick="UI.deleteCollection('${c.id}')" class="text-red-500 hover:text-red-700 p-1 transition" title="Delete">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
                         </tr>
             `}).join('');
                 }
