@@ -808,7 +808,7 @@
                 const todayColl = collections.filter(c => c.date === todayStr).reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
 
                 const achievement = targetAmt > 0 ? (mtdColl / targetAmt) * 100 : 0;
-                const tillDayAchievement = mtdProjRegular > 0 ? (mtdColl / mtdProjRegular) * 100 : 0;
+                const tillDayAchievement = mtdProjTotal > 0 ? (mtdColl / mtdProjTotal) * 100 : 0;
                 const lmNpRecPct = lmNpTargetAmt > 0 ? (mtdLmNpColl / lmNpTargetAmt) * 100 : 0;
                 const cureRate = targetFiles > 0 ? (uniquePaidCodes / targetFiles) * 100 : 0;
 
@@ -1143,7 +1143,7 @@
                     });
 
                     // Derived Metrics for Totals
-                    sums.tillDayAchievement = sums.mtdProjRegular > 0 ? ((sums.mtdColl / sums.mtdProjRegular) * 100).toFixed(1) : '0.0';
+                    sums.tillDayAchievement = sums.mtdProjTotal > 0 ? ((sums.mtdColl / sums.mtdProjTotal) * 100).toFixed(1) : '0.0';
                     sums.achievement = sums.targetAmt > 0 ? ((sums.mtdColl / sums.targetAmt) * 100).toFixed(1) : '0.0';
                     sums.lastDayAch = sums.yestProjAmt > 0 ? ((sums.yestCollAmt / sums.yestProjAmt) * 100).toFixed(1) : '0.0';
 
@@ -1195,7 +1195,7 @@
                         
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-brand-600' : ''}">${parseInt(t.mtdProjTotal).toLocaleString()}</td>
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-green-600' : ''}">${parseInt(t.mtdColl).toLocaleString()}</td>
-                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold bg-blue-50 dark:bg-blue-900/20">${t.achievement}%</td>
+                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold bg-blue-50 dark:bg-blue-900/20">${t.tillDayAchievement}%</td>
                         
                         <td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'text-slate-500' : ''} border-l-2 border-slate-100 dark:border-slate-600">${parseInt(t.yestProjAmt).toLocaleString()}</td>
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center ${!isTotal ? 'text-slate-500' : ''}">${t.yestProjFiles}</td>` : ''}
