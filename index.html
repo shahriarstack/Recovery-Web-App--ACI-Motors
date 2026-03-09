@@ -617,6 +617,9 @@
                 if (!arr) return;
                 arr.forEach(item => {
                     for (let key in item) {
+                        if (typeof item[key] === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(item[key])) {
+                            item[key] = item[key].split('T')[0];
+                        }
                         if (key.includes('_')) {
                             const camel = key.replace(/_([a-z])/g, g => g[1].toUpperCase());
                             if (item[camel] === undefined) {
@@ -1951,8 +1954,8 @@
                                                     <div>
                                                         <p class="font-bold text-slate-700 dark:text-slate-200">${item.name}</p>
                                                         <div class="flex items-center text-xs text-slate-500 mt-1 space-x-3">
-                                                            <span><i class="fa-solid fa-money-bill-1-wave text-emerald-500 mr-1"></i> Reg: ${item.proj.regularAmount.toLocaleString()}</span>
-                                                            <span><i class="fa-solid fa-hand-holding-dollar text-blue-500 mr-1"></i> Adv: ${item.proj.advanceAmount.toLocaleString()}</span>
+                                                            <span><i class="fa-solid fa-money-bill-1-wave text-emerald-500 mr-1"></i> Reg: ${Number(item.proj.regularAmount || item.proj.regular_amount || 0).toLocaleString()}</span>
+                                                            <span><i class="fa-solid fa-hand-holding-dollar text-blue-500 mr-1"></i> Adv: ${Number(item.proj.advanceAmount || item.proj.advance_amount || 0).toLocaleString()}</span>
                                                         </div>
                                                     </div>
                                                     <div class="text-right flex flex-col items-end">
@@ -2902,7 +2905,7 @@
 
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Money Receipt No</label>
-                            <input type="text" id="coll-receipt" class="w-full p-4 md:p-3 rounded-xl border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500" required>
+                            <input type="text" id="coll-receipt" class="w-full p-4 md:p-3 rounded-xl border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500">
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -4532,7 +4535,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Money Receipt No</label>
-                            <input type="text" name="receipt" value="${item.receipt || ''}" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 font-mono font-bold">
+                            <input type="text" name="receipt" value="${item.receipt || ''}" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 font-mono font-bold">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Customer ID</label>
