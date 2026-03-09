@@ -613,6 +613,24 @@
             cache: null,
             apiUrl: '/api',
 
+            convertKeys(arr) {
+                if (!arr) return;
+                arr.forEach(item => {
+                    for (let key in item) {
+                        if (key.includes('_')) {
+                            const camel = key.replace(/_([a-z])/g, g => g[1].toUpperCase());
+                            if (item[camel] === undefined) {
+                                Object.defineProperty(item, camel, {
+                                    get: () => item[key],
+                                    set: (v) => item[key] = v,
+                                    enumerable: false
+                                });
+                            }
+                        }
+                    }
+                });
+            },
+
             async init() {
                 try {
                     const res = await fetch(`${this.apiUrl}/db`);
@@ -632,24 +650,8 @@
                     }
 
                     // Bridge database snake_case keys to UI camelCase dynamically
-                    const convertKeys = (arr) => {
-                        arr.forEach(item => {
-                            for (let key in item) {
-                                if (key.includes('_')) {
-                                    const camel = key.replace(/_([a-z])/g, g => g[1].toUpperCase());
-                                    if (item[camel] === undefined) {
-                                        Object.defineProperty(item, camel, {
-                                            get: () => item[key],
-                                            set: (v) => item[key] = v,
-                                            enumerable: false
-                                        });
-                                    }
-                                }
-                            }
-                        });
-                    };
                     ['users', 'targets', 'projections', 'collections', 'offroad_vehicles', 'settlements', 'vehicle_performance'].forEach(collection => {
-                        if (data[collection]) convertKeys(data[collection]);
+                        if (data[collection]) this.convertKeys(data[collection]);
                     });
 
                     this.cache = data;
@@ -724,6 +726,7 @@
                     body: JSON.stringify({ collection, item })
                 });
                 const updatedItem = await res.json();
+                this.convertKeys([updatedItem]);
 
                 // Update local cache for performance
                 const idx = this.cache[collection].findIndex(x => x.id === updatedItem.id);
@@ -3300,25 +3303,53 @@
                     const db = Store.get();
                     const today = new Date().toISOString().split('T')[0];
 
-                    let tId = Auth.currentUser.territoryId;
-                    if (!tId) {
-                        const t = db.territories.find(t => t.name === Auth.currentUser.username || t.officer === Auth.currentUser.username);
-                        if (t) tId = t.id;
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    const originalBtnContent = btn ? btn.innerHTML : '';
+                    if (btn) {
+                        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
+                        btn.disabled = true;
                     }
+                    
+                    try {
+                        let tId = Auth.currentUser.territoryId;
+                        if (!tId) {
+                            const db = Store.get();
+                            const t = db.territories.find(t => t.name === Auth.currentUser.username || t.officer === Auth.currentUser.username);
+                            if (t) tId = t.id;
+                        }
 
-                    // For the backend, we just send the update
-                    await Store.update('projections', {
-                        territory_id: tId,
-                        date: today,
-                        regular_amount: amount,
-                        advance_amount: 0,
-                        amount: amount,
-                        file_count: files
-                    });
+                        // Check if a projection already exists for this territory today
+                        const existingProj = db.projections.find(p => (p.territoryId === tId || p.territory_id === tId) && p.date === today);
 
-                    UI.showSuccess('Projection Submitted!');
-                    Router.navigate('officer-dashboard');
-                    UI.toggleLoader(false);
+                        const payload = {
+                            territory_id: tId,
+                            date: today,
+                            regular_amount: amount,
+                            advance_amount: 0,
+                            amount: amount,
+                            file_count: files
+                        };
+                        
+                        if (existingProj && existingProj.id) {
+                            payload.id = existingProj.id;
+                        } else {
+                            payload.id = 'new_' + Date.now();
+                        }
+
+                        // For the backend, we just send the update
+                        await Store.update('projections', payload);
+
+                        UI.showSuccess('Projection Submitted!');
+                        Router.navigate('officer-dashboard');
+                    } catch (err) {
+                        alert("Error saving projection: " + err.message);
+                    } finally {
+                        if (btn) {
+                            btn.innerHTML = originalBtnContent;
+                            btn.disabled = false;
+                        }
+                        UI.toggleLoader(false);
+                    }
                 })();
             },
 
@@ -3339,26 +3370,43 @@
                         return;
                     }
 
-                    const entry = {
-                        territory_id: tId,
-                        date: todayStr,
-                        customer_code: document.getElementById('coll-code').value,
-                        file_id: 'N/A',
-                        customer_name: 'N/A',
-                        receipt: document.getElementById('coll-receipt').value,
-                        amount: totalAmt,
-                        regular_amount: regAmt,
-                        advance_amount: advAmt,
-                        mode: document.getElementById('coll-mode').value,
-                        is_lm_np: document.getElementById('coll-lmnp').checked,
-                        timestamp: Date.now()
-                    };
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    const originalBtnContent = btn ? btn.innerHTML : '';
+                    if (btn) {
+                        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
+                        btn.disabled = true;
+                    }
 
-                    await Store.update('collections', entry);
-                    UI.showSuccess('Collection Saved Successfully');
-                    document.getElementById('collection-form').reset();
-                    document.getElementById('coll-date').valueAsDate = new Date();
-                    UI.toggleLoader(false);
+                    try {
+                        const entry = {
+                            territory_id: tId,
+                            date: todayStr,
+                            customer_code: document.getElementById('coll-code').value,
+                            file_id: 'N/A',
+                            customer_name: 'N/A',
+                            receipt: document.getElementById('coll-receipt').value,
+                            amount: totalAmt,
+                            regular_amount: regAmt,
+                            advance_amount: advAmt,
+                            mode: document.getElementById('coll-mode').value,
+                            is_lm_np: document.getElementById('coll-lmnp').checked,
+                            timestamp: Date.now()
+                        };
+
+                        await Store.update('collections', entry);
+                        UI.showSuccess('Collection Saved Successfully');
+                        document.getElementById('collection-form').reset();
+                        document.getElementById('coll-date').valueAsDate = new Date();
+                        UI.renderOfficerDashboard();
+                    } catch (err) {
+                        alert("Error saving collection: " + err.message);
+                    } finally {
+                        if (btn) {
+                            btn.innerHTML = originalBtnContent;
+                            btn.disabled = false;
+                        }
+                        UI.toggleLoader(false);
+                    }
                 })();
             },
 
@@ -3776,6 +3824,7 @@
                 const rowCount = tbody.children.length + 1;
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition";
+                tr.setAttribute('data-id', 'new');
                 tr.innerHTML = `
             <td class="p-2 text-center text-slate-400 text-xs" > ${rowCount}</td>
                     <td class="p-1"><select name="part" class="w-full p-2 bg-transparent border border-transparent hover:border-slate-300 rounded outline-none text-center"><option value="A">A</option><option value="B">B</option></select></td>
@@ -4621,49 +4670,60 @@
 
             saveOffroad(e) {
                 e.preventDefault();
-                const formData = new FormData(e.target);
+                const form = e.target;
+                const btn = form.querySelector('button[type="submit"]');
+                const originalText = btn ? btn.innerHTML : '';
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
+                    btn.disabled = true;
+                }
+                const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
-                const db = Store.get();
-
+                
+                let payload = {
+                    in_date: data.inDate,
+                    customer_code: data.customerCode,
+                    reason: data.reason,
+                    location: data.location,
+                    remarks: data.remarks,
+                    territory_id: data.territoryId || Auth.currentUser.territoryId
+                };
+                
                 if (data.id) {
-                    const idx = db.offroad_vehicles.findIndex(v => v.id === data.id);
-                    if (idx !== -1) {
-                        if (data.status === 'Solved' && db.offroad_vehicles[idx].status !== 'Solved') {
-                            data.solveDate = new Date().toISOString().split('T')[0];
-                        }
-                        db.offroad_vehicles[idx] = { ...db.offroad_vehicles[idx], ...data };
+                    payload.id = data.id;
+                    const db = Store.get();
+                    const existing = db.offroad_vehicles.find(v => v.id === data.id);
+                    if (existing && existing.status === 'Solved' && data.status !== 'Solved') payload.solve_date = new Date().toISOString().split('T')[0];
+                } else {
+                    payload.status = 'Active';
+                }
+
+                Store.update('offroad_vehicles', payload).then(() => {
+                    UI.closeModal('generic-modal');
+                    if (Auth.currentUser.role === 'admin') UI.renderAdminOffroadView();
+                    else UI.renderOfficerOffroadTracker();
+                    UI.showSuccess('Offroad Case Saved!');
+                }).catch(err => {
+                    alert('Error saving offroad data: ' + err.message);
+                }).finally(() => {
+                    if (btn) {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
                     }
-                } else {
-                    data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-                    data.status = 'Active';
-                    db.offroad_vehicles.push(data);
-                }
-
-                Store.save(db);
-                UI.closeModal('generic-modal');
-
-                if (Auth.currentUser.role === 'admin') {
-                    UI.renderAdminOffroadView();
-                } else {
-                    UI.renderOfficerOffroadTracker();
-                }
-                UI.showSuccess('Offroad Case Saved!');
+                });
             },
 
             resolveOffroad(id) {
-                const db = Store.get();
-                const idx = db.offroad_vehicles.findIndex(v => v.id === id);
-                if (idx !== -1) {
-                    if (confirm('Mark this case as Solved?')) {
-                        db.offroad_vehicles[idx].status = 'Solved';
-                        db.offroad_vehicles[idx].solveDate = new Date().toISOString().split('T')[0];
-                        Store.save(db);
-                        if (Auth.currentUser.role === 'admin') {
-                            UI.renderAdminOffroadView();
-                        } else {
-                            UI.renderOfficerOffroadTracker();
-                        }
-                    }
+                if (confirm('Mark this case as Solved?')) {
+                    const payload = {
+                        id: id,
+                        status: 'Solved',
+                        solve_date: new Date().toISOString().split('T')[0]
+                    };
+                    Store.update('offroad_vehicles', payload).then(() => {
+                        if (Auth.currentUser.role === 'admin') UI.renderAdminOffroadView();
+                        else UI.renderOfficerOffroadTracker();
+                    });
                 }
             },
 
