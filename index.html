@@ -2001,22 +2001,17 @@
             },
 
             modalEditProjection(tId, reg, adv, files) {
+                const totalAmount = (Number(reg) || 0) + (Number(adv) || 0);
                 const html = `
             <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-white" > Edit Projection</h3 >
                     <p class="text-xs text-slate-500 mb-4">Modifying projection for selected territory.</p>
                     <form onsubmit="UI.handleAdminEditProjection(event, '${tId}')" class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Regular</label>
-                                <input type="number" name="reg" value="${reg}" class="w-full p-2.5 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-blue-500" required>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Advance</label>
-                                <input type="number" name="adv" value="${adv}" class="w-full p-2.5 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-blue-500">
-                            </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Today's Projection Amount (Total)</label>
+                            <input type="number" name="amount" value="${totalAmount}" class="w-full p-2.5 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-blue-500" required>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">File Count</label>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Expected Collection Files</label>
                             <input type="number" name="files" value="${files}" class="w-full p-2.5 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-blue-500" required>
                         </div>
                         <div class="flex justify-end space-x-2 pt-2">
@@ -2037,16 +2032,15 @@
 
                 const existingProj = db.projections.find(p => (p.territoryId === tId || p.territory_id === tId) && p.date === today);
 
-                const regAmt = parseFloat(formData.get('reg')) || 0;
-                const advAmt = parseFloat(formData.get('adv')) || 0;
+                const amount = parseFloat(formData.get('amount')) || 0;
                 const files = parseInt(formData.get('files')) || 0;
 
                 const payload = {
                     territory_id: tId,
                     date: today,
-                    regular_amount: regAmt,
-                    advance_amount: advAmt,
-                    amount: regAmt + advAmt,
+                    regular_amount: amount,
+                    advance_amount: 0,
+                    amount: amount,
                     file_count: files
                 };
                 
