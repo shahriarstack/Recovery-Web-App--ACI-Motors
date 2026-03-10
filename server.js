@@ -90,10 +90,14 @@ app.delete('/api/delete', async (req, res) => {
 
 // Bulk Save for Targets/Territories (from Setup Page)
 app.post('/api/sync-targets', async (req, res) => {
-    const { territories, targets } = req.body;
+    const { territories, targets, deletedTerritoryIds } = req.body;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
+
+        if (deletedTerritoryIds && deletedTerritoryIds.length > 0) {
+            await client.query('DELETE FROM territories WHERE id = ANY($1)', [deletedTerritoryIds]);
+        }
 
         if (territories && territories.length > 0) {
             const values = [];
