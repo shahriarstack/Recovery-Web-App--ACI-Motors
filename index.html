@@ -606,6 +606,12 @@
 
     <!-- SCRIPT SECTION -->
     <script>
+        const Utils = {
+            getLocalDate(d = new Date()) {
+                return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            }
+        };
+
         /**
          * 1. DATA LAYER
          */
@@ -762,11 +768,11 @@
             getMetrics(territoryId = null) {
                 const db = Store.get();
                 const today = new Date();
-                const todayStr = today.toISOString().split('T')[0];
+                const todayStr = Utils.getLocalDate(today);
                 const currentMonth = todayStr.slice(0, 7);
                 const yesterday = new Date(today);
                 yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                const yesterdayStr = Utils.getLocalDate(yesterday);
 
                 let collections = db.collections.filter(c => c.date.startsWith(currentMonth));
                 let targets = db.targets.filter(t => t.month === currentMonth);
@@ -1234,14 +1240,14 @@
                 for (let i = 6; i >= 0; i--) {
                     const d = new Date(today);
                     d.setDate(today.getDate() - i);
-                    const dateStr = d.toISOString().split('T')[0];
+                    const dateStr = Utils.getLocalDate(d);
                     trendLabels.push(dateStr.slice(5));
                     const dailySum = db.collections.filter(c => c.date === dateStr).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
                     trendData.push(dailySum);
                 }
 
                 const modes = ['Bank Transfer', 'bKash', 'Cheque', 'Cash'];
-                const modeData = modes.map(m => db.collections.filter(c => c.date.startsWith(today.toISOString().slice(0, 7)) && c.mode === m).reduce((s, c) => s + parseFloat(c.amount), 0));
+                const modeData = modes.map(m => db.collections.filter(c => c.date.startsWith(Utils.getLocalDate(today).slice(0, 7)) && c.mode === m).reduce((s, c) => s + parseFloat(c.amount), 0));
 
                 const container = document.getElementById('views-container');
                 const isCompact = tableMode === 'compact';
@@ -1889,7 +1895,7 @@
             // --- ADMIN PROJECTION MONITOR (NEW) ---
             renderAdminProjections() {
                 const db = Store.get();
-                const today = new Date().toISOString().split('T')[0];
+                const today = Utils.getLocalDate();
 
                 // Group territories
                 const submitted = [];
@@ -1928,7 +1934,7 @@
                                 
                                 <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg border border-red-100 dark:border-red-900/30 overflow-hidden">
                                     ${missing.length === 0 ?
-                        `<div class="p-8 text-center text-slate-400 italic">All territories have submitted! 🎉</div>` :
+                        `<div class="p-8 text-center text-slate-400 italic">All territories have submitted! ðŸŽ‰</div>` :
                         `<div class="divide-y divide-slate-100 dark:divide-slate-700">
                                             ${missing.map(t => {
                             const isUnlocked = db.unlocks && db.unlocks[t.id] && db.unlocks[t.id] > Date.now();
@@ -2026,7 +2032,7 @@
 
             downloadMissingSubmissions() {
                 const db = Store.get();
-                const today = new Date().toISOString().split('T')[0];
+                const today = Utils.getLocalDate();
                 
                 const missing = db.territories.filter(t => {
                     return !db.projections.some(p => (p.territoryId === t.id || p.territory_id === t.id) && p.date === today);
@@ -2079,7 +2085,7 @@
                 UI.toggleLoader(true);
                 const formData = new FormData(e.target);
                 const db = Store.get();
-                const today = new Date().toISOString().split('T')[0];
+                const today = Utils.getLocalDate();
 
                 const existingProj = db.projections.find(p => (p.territoryId === tId || p.territory_id === tId) && p.date === today);
 
@@ -2203,7 +2209,7 @@
                                                     <span class="px-2 py-1 rounded text-xs font-bold ${badgeClass}">${s.type}</span>
                                                 </td>
                                                 <td class="px-6 py-4 text-right font-mono text-slate-700 dark:text-slate-300">
-                                                    ৳${Number(s.amount || 0).toLocaleString()}
+                                                    à§³${Number(s.amount || 0).toLocaleString()}
                                                 </td>
                                                 <td class="px-6 py-4 text-slate-500 italic truncate max-w-xs">${s.remarks || '-'}</td>
                                                 <td class="px-6 py-4 text-center">
@@ -2241,7 +2247,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `Settlement_Closures_${new Date().toISOString().slice(0, 10)}.csv`;
+                a.download = `Settlement_Closures_${Utils.getLocalDate()}.csv`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -2249,8 +2255,8 @@
 
             renderAdminHistory() {
                 const today = new Date();
-                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-                const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+                const startOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth(), 1));
+                const endOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
 
                 document.getElementById('views-container').innerHTML = `
             <div class="animate-entry max-w-6xl mx-auto" >
@@ -2358,7 +2364,7 @@
                             <i class="fa-solid fa-sack-dollar text-6xl text-brand-600"></i>
                          </div>
                         <p class="text-xs font-bold text-brand-600 uppercase tracking-wider mb-1">Total Collection</p>
-                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">৳ ${Math.round(totalAmt).toLocaleString()}</h3>
+                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">à§³ ${Math.round(totalAmt).toLocaleString()}</h3>
                     </div>
 
                     <div class="glass-panel p-5 rounded-2xl border-l-4 border-blue-500 shadow-sm relative overflow-hidden group hover-lift">
@@ -2374,7 +2380,7 @@
                              <i class="fa-solid fa-building-columns text-6xl text-purple-600"></i>
                         </div>
                         <p class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">Bank Deposit</p>
-                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">৳ ${Math.round(bankAmt).toLocaleString()}</h3>
+                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">à§³ ${Math.round(bankAmt).toLocaleString()}</h3>
                     </div>
         `;
 
@@ -2434,7 +2440,7 @@
                 }
 
                 const metrics = Calc.getMetrics(linkedTId);
-                const currentMonth = new Date().toISOString().slice(0, 7);
+                const currentMonth = Utils.getLocalDate().slice(0, 7);
                 const targetData = db.targets.find(t => t.territoryId === linkedTId && t.month === currentMonth) || {};
 
                 // Calculate Today Achievement for the new layout
@@ -2674,7 +2680,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                        ${metrics.rawCollections.filter(c => c.date === new Date().toISOString().split('T')[0]).map(c => `
+                        ${metrics.rawCollections.filter(c => c.date === Utils.getLocalDate()).map(c => `
                                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-800">
                                         <td class="px-4 py-2 sm:px-6 sm:py-3">
                                             <div class="font-medium text-slate-800 dark:text-slate-200">#${c.receipt}</div>
@@ -2696,7 +2702,7 @@
                                         </td>
                                     </tr>
                                 `).join('')}
-                        ${metrics.rawCollections.filter(c => c.date === new Date().toISOString().split('T')[0]).length === 0 ? '<tr><td colspan="4" class="px-6 py-6 text-center text-slate-400 text-sm">No collections today</td></tr>' : ''}
+                        ${metrics.rawCollections.filter(c => c.date === Utils.getLocalDate()).length === 0 ? '<tr><td colspan="4" class="px-6 py-6 text-center text-slate-400 text-sm">No collections today</td></tr>' : ''}
                     </tbody>
                 </table>
                 </div>
@@ -2849,7 +2855,7 @@
                 let isLate = hour >= 10;
 
                 const db = Store.get();
-                const today = new Date().toISOString().split('T')[0];
+                const today = Utils.getLocalDate();
 
                 // Resolve tId
                 const tId = this.getCurrentTerritoryId();
@@ -3004,7 +3010,7 @@
             // --- DATA ENTRY PANEL ---
             renderDataEntry(externalData = null) {
                 const db = Store.get();
-                const currentMonth = new Date().toISOString().slice(0, 7);
+                const currentMonth = Utils.getLocalDate().slice(0, 7);
                 let displayData = [];
 
                 // Load existing data or create dummy rows if empty
@@ -3358,7 +3364,7 @@
                     const files = filesInput.value;
 
                     const db = Store.get();
-                    const today = new Date().toISOString().split('T')[0];
+                    const today = Utils.getLocalDate();
 
                     const btn = e.target.querySelector('button[type="submit"]');
                     const originalBtnContent = btn ? btn.innerHTML : '';
@@ -3414,7 +3420,7 @@
                 e.preventDefault();
                 UI.toggleLoader(true);
                 (async () => {
-                    const todayStr = new Date().toISOString().split('T')[0];
+                    const todayStr = Utils.getLocalDate();
                     const tId = this.getCurrentTerritoryId();
 
                     const regAmt = parseFloat(document.getElementById('coll-reg-amount').value) || 0;
@@ -3535,7 +3541,7 @@
                                                     <td class="px-6 py-4">
                                                         <span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${badgeClass}">${s.type}</span>
                                                     </td>
-                                                    <td class="px-6 py-4 text-right font-mono font-bold">৳${Number(s.amount || 0).toLocaleString()}</td>
+                                                    <td class="px-6 py-4 text-right font-mono font-bold">à§³${Number(s.amount || 0).toLocaleString()}</td>
                                                     <td class="px-6 py-4 text-xs italic text-slate-500 truncate max-w-xs">${s.remarks || '-'}</td>
                                                 </tr>
                                             `;
@@ -3578,8 +3584,8 @@
             renderOfficerHistory() {
                 const today = new Date();
                 // Default to current month
-                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-                const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+                const startOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth(), 1));
+                const endOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
 
                 document.getElementById('views-container').innerHTML = `
             <div class="animate-entry max-w-5xl mx-auto" >
@@ -3738,8 +3744,8 @@
             },
 
             openRawExportModal() {
-                const today = new Date().toISOString().split('T')[0];
-                const firstDay = new Date().toISOString().slice(0, 7) + '-01';
+                const today = Utils.getLocalDate();
+                const firstDay = Utils.getLocalDate().slice(0, 7) + '-01';
 
                 const html = `
             <div class="text-left" >
@@ -3861,7 +3867,7 @@
                 for (let i = 6; i >= 0; i--) {
                     const d = new Date(today);
                     d.setDate(today.getDate() - i);
-                    const dateStr = d.toISOString().split('T')[0];
+                    const dateStr = Utils.getLocalDate(d);
                     labels.push(dateStr.slice(5));
                     const sum = db.collections.filter(c => c.territoryId === tId && c.date === dateStr).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
                     data.push(sum);
@@ -3922,7 +3928,7 @@
 
             saveBulkData() {
                 const db = Store.get();
-                const currentMonth = new Date().toISOString().slice(0, 7);
+                const currentMonth = Utils.getLocalDate().slice(0, 7);
                 const rows = document.querySelectorAll('#data-entry-table tbody tr');
 
                 (async () => {
@@ -4394,7 +4400,7 @@
                                     <div class="flex items-center justify-between mb-8 p-5 bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-800/30">
                                         <div>
                                             <p class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-1">Estimated Earning</p>
-                                            <h4 class="text-3xl font-black text-amber-600">à§³ ${parseFloat(vehicle.earning || 0).toLocaleString()}</h4>
+                                            <h4 class="text-3xl font-black text-amber-600">Ã Â§Â³ ${parseFloat(vehicle.earning || 0).toLocaleString()}</h4>
                                         </div>
                                         <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xl">
                                             <i class="fa-solid fa-money-bill-trend-up"></i>
@@ -4484,7 +4490,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
-                                <input type="date" name="date" value="${item.date || new Date().toISOString().split('T')[0]}" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500">
+                                <input type="date" name="date" value="${item.date || Utils.getLocalDate()}" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500">
                             </div>
                             ${isOfficer ? `
                             <div class="flex flex-col justify-end pb-1">
@@ -4570,7 +4576,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
-                                <input type="date" name="date" value="${item.date || new Date().toISOString().split('T')[0]}" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500">
+                                <input type="date" name="date" value="${item.date || Utils.getLocalDate()}" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500">
                             </div>
                             ${isOfficer ? `
                             <div class="flex flex-col justify-end pb-1 text-right">
@@ -4697,7 +4703,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 uppercase mb-1">In Date</label>
-                                <input type="date" name="inDate" value="${item.inDate || new Date().toISOString().split('T')[0]}" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500">
+                                <input type="date" name="inDate" value="${item.inDate || Utils.getLocalDate()}" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Customer Code</label>
@@ -4770,7 +4776,7 @@
                     payload.id = data.id;
                     const db = Store.get();
                     const existing = db.offroad_vehicles.find(v => v.id === data.id);
-                    if (existing && existing.status === 'Solved' && data.status !== 'Solved') payload.solve_date = new Date().toISOString().split('T')[0];
+                    if (existing && existing.status === 'Solved' && data.status !== 'Solved') payload.solve_date = Utils.getLocalDate();
                 } else {
                     payload.status = 'Active';
                 }
@@ -4795,7 +4801,7 @@
                     const payload = {
                         id: id,
                         status: 'Solved',
-                        solve_date: new Date().toISOString().split('T')[0]
+                        solve_date: Utils.getLocalDate()
                     };
                     Store.update('offroad_vehicles', payload).then(() => {
                         if (Auth.currentUser.role === 'admin') UI.renderAdminOffroadView();
@@ -4882,7 +4888,7 @@
                     advanceAmount: adv,
                     amount: total,
                     fileCount: formData.get('fileCount'),
-                    date: new Date().toISOString().split('T')[0]
+                    date: Utils.getLocalDate()
                 };
 
                 const db = Store.get();
@@ -5179,7 +5185,7 @@
 
                     const image = canvas.toDataURL('image/png', 1.0);
                     const link = document.createElement('a');
-                    const fileName = `Formal_Recovery_Report_${new Date().toISOString().slice(0, 10)}.png`;
+                    const fileName = `Formal_Recovery_Report_${Utils.getLocalDate()}.png`;
                     link.download = fileName;
                     link.href = image;
                     link.click();
