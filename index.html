@@ -3968,11 +3968,14 @@
                         });
                     });
 
+                    const activeIds = territories.map(t => t.id);
+                    const deletedTerritoryIds = db.territories.map(t => t.id).filter(id => !activeIds.includes(id));
+
                     try {
                         const response = await fetch(`${Store.apiUrl}/sync-targets`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ territories, targets })
+                            body: JSON.stringify({ territories, targets, deletedTerritoryIds })
                         });
 
                         if (!response.ok) {
