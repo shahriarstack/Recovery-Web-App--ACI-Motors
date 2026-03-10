@@ -1918,7 +1918,12 @@
                             <div class="space-y-4">
                                 <div class="flex justify-between items-center px-2">
                                     <h3 class="font-bold text-red-500 uppercase tracking-wider text-sm">Missing Submissions (${missing.length})</h3>
-                                    <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full animate-pulse">Action Required</span>
+                                    <div class="flex items-center space-x-2">
+                                        <button onclick="UI.downloadMissingSubmissions()" class="text-[10px] sm:text-xs bg-slate-800 text-white hover:bg-slate-900 px-2 sm:px-3 py-1 rounded shadow-md transition-all flex items-center font-bold" title="Download List">
+                                            <i class="fa-solid fa-download mr-1"></i> Snapshot
+                                        </button>
+                                        <span class="text-[10px] sm:text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full animate-pulse font-bold hidden sm:block">Action Required</span>
+                                    </div>
                                 </div>
                                 
                                 <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg border border-red-100 dark:border-red-900/30 overflow-hidden">
@@ -2017,6 +2022,33 @@
                     console.error('Unlock failed', err);
                     alert('Unlock failed: ' + err.message);
                 });
+            },
+
+            downloadMissingSubmissions() {
+                const db = Store.get();
+                const today = new Date().toISOString().split('T')[0];
+                
+                const missing = db.territories.filter(t => {
+                    return !db.projections.some(p => (p.territoryId === t.id || p.territory_id === t.id) && p.date === today);
+                });
+
+                const groupA = missing.filter(t => t.part === 'A');
+                const groupB = missing.filter(t => t.part === 'B');
+
+                const content = 
+                    `Missing Projections Snapshot\n` +
+                    `Date: ${today}\n` +
+                    `===============================\n\n` +
+                    `=== PART A (${groupA.length} missing) ===\n` +
+                    groupA.map(t => `- ${t.name} (${t.officer})`).join('\n') + `\n\n` +
+                    `=== PART B (${groupB.length} missing) ===\n` +
+                    groupB.map(t => `- ${t.name} (${t.officer})`).join('\n');
+
+                const blob = new Blob([content], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `Missing_Submissions_${today}.txt`;
+                a.click();
             },
 
             modalEditProjection(tId, reg, adv, files) {
