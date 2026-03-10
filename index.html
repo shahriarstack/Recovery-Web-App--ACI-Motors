@@ -2519,113 +2519,113 @@
                     <!--COMPACT METRIC TABLE-->
                     <div class="animate-entry mb-6 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card">
                         <div class="overflow-x-auto scrollbar-hide">
-                            <table class="w-full text-xs text-left border-collapse min-w-[500px]">
+                            <table class="w-full text-left border-collapse">
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                                 <!-- Row 1 -->
                                 <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700 w-1/4">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Total Target</span>
-                                            <span class="font-bold text-slate-800 dark:text-white">${parseInt(metrics.targetAmt).toLocaleString()}</span>
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 w-1/4 bg-blue-50/20 dark:bg-blue-900/10">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Target</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-slate-800 dark:text-white mt-0.5 sm:mt-0">${parseInt(metrics.targetAmt).toLocaleString()}</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700 w-1/4">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Total Files</span>
-                                            <span class="font-bold text-slate-800 dark:text-white">${metrics.targetFiles}</span>
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 w-1/4 bg-slate-50/10 dark:bg-slate-800/5">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Files</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-slate-800 dark:text-white mt-0.5 sm:mt-0">${metrics.targetFiles}</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700 w-1/4">
-                                         <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Today Proj</span>
-                                            <span class="font-bold text-slate-800 dark:text-white">${parseInt(metrics.todayProj).toLocaleString()}</span>
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 w-1/4 bg-emerald-50/20 dark:bg-emerald-900/10">
+                                         <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Today Pr</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-slate-800 dark:text-white mt-0.5 sm:mt-0">${parseInt(metrics.todayProj).toLocaleString()}</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5 w-1/4">
-                                         <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Remaining</span>
-                                            <span class="font-bold text-amber-600">${parseInt(metrics.remainingAmt).toLocaleString()}</span>
+                                    <td class="p-1.5 sm:p-2 w-1/4 bg-rose-50/20 dark:bg-rose-900/10">
+                                         <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Remain</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-slate-800 dark:text-white mt-0.5 sm:mt-0">${parseInt(metrics.remainingAmt).toLocaleString()}</span>
                                         </div>
                                     </td>
                                 </tr>
                                 <!-- Row 2 -->
                                 <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Till Date Coll</span>
-                                            <span class="font-bold text-emerald-600">${parseInt(metrics.mtdColl).toLocaleString()}</span>
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-blue-50/20 dark:bg-blue-900/10">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">TD Coll</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-emerald-600 mt-0.5 sm:mt-0">${parseInt(metrics.mtdColl).toLocaleString()}</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Coll Files</span>
-                                            <span class="font-bold text-emerald-600">${metrics.uniquePaidCodes}</span>
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-slate-50/10 dark:bg-slate-800/5">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">C. Files</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-emerald-600 mt-0.5 sm:mt-0">${metrics.uniquePaidCodes}</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Collection</span>
-                                            <span class="font-bold text-emerald-600">${parseInt(metrics.todayColl).toLocaleString()}</span>
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-emerald-50/20 dark:bg-emerald-900/10">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Today C.</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-emerald-600 mt-0.5 sm:mt-0">${parseInt(metrics.todayColl).toLocaleString()}</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Daily Req</span>
-                                            <span class="font-bold text-red-600">${parseInt(Math.round(metrics.rdrr)).toLocaleString()}</span>
+                                    <td class="p-1.5 sm:p-2 bg-rose-50/20 dark:bg-rose-900/10">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Daily Rq</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-red-600 mt-0.5 sm:mt-0">${parseInt(Math.round(metrics.rdrr)).toLocaleString()}</span>
                                         </div>
                                     </td>
                                 </tr>
                                 <!-- Row 3 -->
                                 <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Ach % (MTD)</span>
-                                            <span class="font-bold text-indigo-600">${metrics.achievement}%</span>
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-blue-50/20 dark:bg-blue-900/10">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Ach (M)</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-indigo-600 mt-0.5 sm:mt-0">${metrics.achievement}%</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700">
-                                         <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Uncollected</span>
-                                            <span class="font-bold text-rose-600">${metrics.tillDateNonPayFiles}</span>
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-slate-50/10 dark:bg-slate-800/5">
+                                         <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Uncoll</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-rose-600 mt-0.5 sm:mt-0">${metrics.tillDateNonPayFiles}</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700">
-                                         <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Ach % (Today)</span>
-                                            <span class="font-bold text-fuchsia-600">${todayAch}%</span>
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-emerald-50/20 dark:bg-emerald-900/10">
+                                         <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Ach (T)</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-fuchsia-600 mt-0.5 sm:mt-0">${todayAch}%</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">Run Rate</span>
-                                            <span class="font-bold text-brand-600">${metrics.rpi} RPI</span>
+                                    <td class="p-1.5 sm:p-2 bg-rose-50/20 dark:bg-rose-900/10">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Run Rate</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-brand-600 mt-0.5 sm:mt-0">${metrics.rpi}</span>
                                         </div>
                                     </td>
                                 </tr>
                                 <!-- Row 4 (LMNP Recovery) -->
-                                <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition bg-slate-50/50 dark:bg-slate-800/20">
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">LM NP Target</span>
-                                            <span class="font-bold text-slate-800 dark:text-white">${parseInt(metrics.lmNpTargetAmt).toLocaleString()}</span>
+                                <tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition border-t border-slate-200 dark:border-slate-700">
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-blue-50/20 dark:bg-blue-900/10">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">LM NP</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-slate-800 dark:text-white mt-0.5 sm:mt-0">${parseInt(metrics.lmNpTargetAmt).toLocaleString()}</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">LM NP Rec</span>
-                                            <span class="font-bold text-emerald-600">${parseInt(metrics.mtdLmNpColl).toLocaleString()}</span>
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-slate-50/10 dark:bg-slate-800/5">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">NP Rec</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-emerald-600 mt-0.5 sm:mt-0">${parseInt(metrics.mtdLmNpColl).toLocaleString()}</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5 border-r border-slate-100 dark:border-slate-700">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">NP Files (T)</span>
-                                            <span class="font-bold text-slate-800 dark:text-white">${metrics.lmNpTargetFiles}</span>
+                                    <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-emerald-50/20 dark:bg-emerald-900/10">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">NP F(T)</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-slate-800 dark:text-white mt-0.5 sm:mt-0">${metrics.lmNpTargetFiles}</span>
                                         </div>
                                     </td>
-                                    <td class="p-2.5">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tight">NP Files (R)</span>
-                                            <span class="font-bold text-emerald-600">${metrics.mtdLmNpFiles}</span>
+                                    <td class="p-1.5 sm:p-2 bg-rose-50/20 dark:bg-rose-900/10">
+                                        <div class="flex flex-col sm:flex-row justify-between items-center">
+                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">NP F(R)</span>
+                                            <span class="font-bold text-[10px] sm:text-xs text-emerald-600 mt-0.5 sm:mt-0">${metrics.mtdLmNpFiles}</span>
                                         </div>
                                     </td>
                                 </tr>
