@@ -2602,29 +2602,33 @@
                                         </div>
                                     </td>
                                 </tr>
+                                <!-- Gap Spacer -->
+                                <tr class="border-t-0 bg-transparent">
+                                    <td colspan="4" class="h-3 sm:h-4 p-0 border-none"></td>
+                                </tr>
                                 <!-- Row 4 (LMNP Recovery) -->
-                                <tr class="group hover:bg-purple-100/50 dark:hover:bg-purple-900/40 transition bg-purple-50/40 dark:bg-purple-900/20 border-y-2 border-purple-200 dark:border-purple-800/50">
-                                    <td class="p-1.5 sm:p-2 border-r border-purple-100 dark:border-purple-800/30">
+                                <tr class="group hover:bg-amber-100/50 dark:hover:bg-amber-900/40 transition bg-amber-50/40 dark:bg-amber-900/20 border-[3px] border-dashed border-amber-400 dark:border-amber-600 shadow-sm relative">
+                                    <td class="p-1.5 sm:p-2 border-r border-amber-200 dark:border-amber-800/30">
                                         <div class="flex flex-col sm:flex-row justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">LM NP</span>
+                                            <span class="text-amber-800 dark:text-amber-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">LM NP</span>
                                             <span class="font-bold text-[10px] sm:text-xs text-slate-800 dark:text-white mt-0.5 sm:mt-0">${parseInt(metrics.lmNpTargetAmt).toLocaleString()}</span>
                                         </div>
                                     </td>
-                                    <td class="p-1.5 sm:p-2 border-r border-purple-100 dark:border-purple-800/30">
+                                    <td class="p-1.5 sm:p-2 border-r border-amber-200 dark:border-amber-800/30">
                                         <div class="flex flex-col sm:flex-row justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">NP Rec</span>
+                                            <span class="text-amber-800 dark:text-amber-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">NP Rec</span>
                                             <span class="font-bold text-[10px] sm:text-xs text-emerald-600 mt-0.5 sm:mt-0">${parseInt(metrics.mtdLmNpColl).toLocaleString()}</span>
                                         </div>
                                     </td>
-                                    <td class="p-1.5 sm:p-2 border-r border-purple-100 dark:border-purple-800/30">
+                                    <td class="p-1.5 sm:p-2 border-r border-amber-200 dark:border-amber-800/30">
                                         <div class="flex flex-col sm:flex-row justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">NP F(T)</span>
+                                            <span class="text-amber-800 dark:text-amber-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">NP F(T)</span>
                                             <span class="font-bold text-[10px] sm:text-xs text-slate-800 dark:text-white mt-0.5 sm:mt-0">${metrics.lmNpTargetFiles}</span>
                                         </div>
                                     </td>
                                     <td class="p-1.5 sm:p-2">
                                         <div class="flex flex-col sm:flex-row justify-between items-center">
-                                            <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">NP F(R)</span>
+                                            <span class="text-amber-800 dark:text-amber-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">NP F(R)</span>
                                             <span class="font-bold text-[10px] sm:text-xs text-emerald-600 mt-0.5 sm:mt-0">${metrics.mtdLmNpFiles}</span>
                                         </div>
                                     </td>
