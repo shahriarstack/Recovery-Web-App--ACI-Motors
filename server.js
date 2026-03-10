@@ -228,7 +228,7 @@ app.delete('/api/delete', async (req, res) => {
     const { collection, id } = req.body;
     
     // Prevent SQL injection by validating the collection name against known tables
-    const validTables = ['collections', 'projections', 'offroad_vehicles', 'settlements'];
+    const validTables = ['collections', 'projections', 'offroad_vehicles', 'settlements', 'territories'];
     if (!validTables.includes(collection)) {
         return res.status(400).json({ error: "Invalid collection specified for deletion" });
     }
