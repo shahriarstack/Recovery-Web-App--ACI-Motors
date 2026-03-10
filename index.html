@@ -835,7 +835,7 @@
                 const now = new Date();
                 const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
                 const dayOfMonth = now.getDate();
-                const remainingAmt = Math.max(0, targetAmt - mtdColl);
+                const remainingAmt = Math.max(0, presetProjTotal - mtdColl);
                 const daysLeft = daysInMonth - dayOfMonth;
                 const rdrr = daysLeft > 0 ? remainingAmt / daysLeft : remainingAmt;
 
