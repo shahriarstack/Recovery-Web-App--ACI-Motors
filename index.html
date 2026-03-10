@@ -805,16 +805,15 @@
                 const mtdProjTotal = mtdProjRegular + mtdProjAdvance;
                 const mtdProjFiles = projections.reduce((sum, p) => sum + (parseInt(p.fileCount) || 0), 0);
 
-                const yestProj = projections.find(p => p.date === yesterdayStr) || {};
-                const yestProjAmt = (parseFloat(yestProj.regularAmount) || 0) + (parseFloat(yestProj.advanceAmount) || 0) + (parseFloat(yestProj.amount) || 0);
-                const yestProjFiles = parseInt(yestProj.fileCount) || 0;
-
+                const yestProjEntries = projections.filter(p => p.date === yesterdayStr);
+                const yestProjAmt = yestProjEntries.reduce((sum, p) => sum + (parseFloat(p.regularAmount) || 0) + (parseFloat(p.advanceAmount) || 0) + (parseFloat(p.amount) || 0), 0);
+                const yestProjFiles = yestProjEntries.reduce((sum, p) => sum + (parseInt(p.fileCount) || 0), 0);
                 const yestCollEntries = collections.filter(c => c.date === yesterdayStr);
                 const yestCollAmt = yestCollEntries.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
                 const yestCollFiles = new Set(yestCollEntries.map(c => c.customerCode)).size;
 
-                const todayProjEntry = projections.find(p => p.date === todayStr);
-                const todayProj = todayProjEntry ? (parseFloat(todayProjEntry.regularAmount) || 0) + (parseFloat(todayProjEntry.advanceAmount) || 0) : 0;
+                const todayProjEntries = projections.filter(p => p.date === todayStr);
+                const todayProj = todayProjEntries.reduce((sum, p) => sum + (parseFloat(p.regularAmount) || 0) + (parseFloat(p.advanceAmount) || 0), 0);
                 const todayColl = collections.filter(c => c.date === todayStr).reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
 
                 const achievement = targetAmt > 0 ? (mtdColl / targetAmt) * 100 : 0;
@@ -1286,7 +1285,7 @@
                                         <td class="p-2 border-r border-slate-100 dark:border-slate-700 w-1/4">
                                             <div class="flex justify-between items-center">
                                                 <span class="text-slate-500 font-bold uppercase tracking-tight">Total Target</span>
-                                                <span class="font-bold text-slate-800 dark:text-white">${parseInt(metrics.targetAmt).toLocaleString()}</span>
+                                                <span class="font-bold text-slate-800 dark:text-white">${parseInt(metrics.presetProjTotal).toLocaleString()}</span>
                                             </div>
                                         </td>
                                         <td class="p-2 border-r border-slate-100 dark:border-slate-700 w-1/4">
