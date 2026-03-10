@@ -3941,7 +3941,7 @@
                         const getVal = (name) => row.querySelector(`[name="${name}"]`).value;
                         const getNum = (name) => parseFloat(getVal(name)) || 0;
 
-                        const tId = id === 'new' ? 't' + Date.now().toString(36) + Math.random().toString(36).substr(2) : id;
+                        const tId = (!id || id === 'new' || id === 'null') ? 't' + Date.now().toString(36) + Math.random().toString(36).substr(2) : id;
 
                         territories.push({
                             id: tId,
