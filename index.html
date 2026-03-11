@@ -598,9 +598,9 @@
 
     <!-- MODALS -->
     <div id="generic-modal"
-        class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300">
+        class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300">
         <div id="modal-content"
-            class="bg-white dark:bg-dark-card rounded-xl shadow-2xl p-6 w-full max-w-lg transform transition-all scale-95 opacity-0 duration-300">
+            class="bg-white dark:bg-dark-card rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-lg transform transition-all scale-95 opacity-0 duration-300 max-h-[90vh] overflow-y-auto">
             <!-- Content injected via JS -->
         </div>
     </div>
@@ -2038,7 +2038,7 @@
             downloadMissingSubmissions() {
                 const db = Store.get();
                 const today = Utils.getLocalDate();
-                
+
                 const missing = db.territories.filter(t => {
                     return !db.projections.some(p => (p.territoryId === t.id || p.territory_id === t.id) && p.date === today);
                 });
@@ -2046,7 +2046,7 @@
                 const groupA = missing.filter(t => t.part === 'A');
                 const groupB = missing.filter(t => t.part === 'B');
 
-                const content = 
+                const content =
                     `Missing Projections Snapshot\n` +
                     `Date: ${today}\n` +
                     `===============================\n\n` +
@@ -2105,7 +2105,7 @@
                     amount: amount,
                     file_count: files
                 };
-                
+
                 if (existingProj && existingProj.id) {
                     payload.id = existingProj.id;
                 } else {
@@ -2943,8 +2943,8 @@
 
             renderCollectionForm() {
                 document.getElementById('views-container').innerHTML = `
-            <div class="animate-entry max-w-xl mx-auto mt-6" >
-                <div class="glass-panel p-8 rounded-2xl shadow-xl dark:bg-dark-card relative overflow-hidden">
+            <div class="animate-entry max-w-xl mx-auto mt-6 w-full px-4 sm:px-0" >
+                <div class="glass-panel p-5 sm:p-8 rounded-2xl shadow-xl dark:bg-dark-card relative overflow-hidden">
                     <!-- Decorative bg element -->
                     <div class="absolute -top-12 -right-12 w-40 h-40 bg-brand-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -3381,7 +3381,7 @@
                         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
                         btn.disabled = true;
                     }
-                    
+
                     try {
                         let tId = Auth.currentUser.territoryId;
                         if (!tId) {
@@ -3401,7 +3401,7 @@
                             amount: amount,
                             file_count: files
                         };
-                        
+
                         if (existingProj && existingProj.id) {
                             payload.id = existingProj.id;
                         } else {
@@ -3975,7 +3975,7 @@
                             });
 
                             if (!response.ok) throw new Error('Failed to delete territory permanently');
-                            
+
                             await Store.init(); // System Refresh Cache Flow Hook
                             tr.remove();
                             UI.closeModal();
@@ -4744,7 +4744,7 @@
 
             deleteCollection(id) {
                 if (!confirm('Are you sure you want to permanently delete this collection? This will immediately affect MTD statistics for all users.')) return;
-                
+
                 UI.toggleLoader(true);
                 Store.delete('collections', id).then(() => {
                     if (document.getElementById('admin-history-table-body')) {
@@ -4834,7 +4834,7 @@
                 }
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
-                
+
                 let payload = {
                     in_date: data.inDate,
                     customer_code: data.customerCode,
@@ -4843,7 +4843,7 @@
                     remarks: data.remarks,
                     territory_id: data.territoryId || Auth.currentUser.territoryId
                 };
-                
+
                 if (data.id) {
                     payload.id = data.id;
                     const db = Store.get();
@@ -5272,12 +5272,12 @@
                     });
 
                     const image = canvas.toDataURL('image/png', 1.0);
-                    
+
                     const { jsPDF } = window.jspdf;
                     const pdf = new jsPDF('p', 'mm', 'a4');
                     const pdfWidth = pdf.internal.pageSize.getWidth();
                     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                    
+
                     pdf.addImage(image, 'PNG', 0, 0, pdfWidth, pdfHeight);
                     pdf.save(`Formal_Recovery_Report_${Utils.getLocalDate()}.pdf`);
 
