@@ -2961,38 +2961,38 @@
                         </button>
                     </div>
 
-                    <form id="collection-form" onsubmit="UI.handleCollectionSubmit(event)" class="space-y-4 relative z-10">
-                        <div class="grid grid-cols-2 gap-4">
+                    <form id="collection-form" onsubmit="UI.handleCollectionSubmit(event)" class="space-y-3 sm:space-y-4 relative z-10">
+                        <div class="grid grid-cols-2 gap-3 sm:gap-4">
                             <div>
-                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1 flex items-center h-4">Date <span class="hidden sm:inline ml-1">(Locked)</span></label>
-                                <input type="date" id="coll-date" class="w-full px-2 sm:px-3 py-2 sm:py-3 h-11 sm:h-12 rounded-xl border bg-slate-100 text-slate-500 dark:bg-slate-700 dark:border-slate-600 cursor-not-allowed text-xs sm:text-sm" disabled>
+                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Date <span class="hidden sm:inline">(Locked)</span></label>
+                                <input type="date" id="coll-date" class="w-full px-3 py-0 h-10 rounded-lg border bg-slate-100 text-slate-500 dark:bg-slate-700 dark:border-slate-600 cursor-not-allowed text-xs sm:text-sm appearance-none block m-0" disabled>
                             </div>
                             <div>
-                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1 flex items-center h-4">Customer Code</label>
-                                <input type="text" id="coll-code" class="w-full px-2 sm:px-3 py-2 sm:py-3 h-11 sm:h-12 rounded-xl border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-xs sm:text-sm" placeholder="C-1052" required>
+                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Customer Code</label>
+                                <input type="text" id="coll-code" class="w-full px-3 py-0 h-10 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-xs sm:text-sm appearance-none block m-0" placeholder="C-1052" required>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Money Receipt No</label>
-                            <input type="text" id="coll-receipt" class="w-full p-4 md:p-3 rounded-xl border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500">
+                            <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Money Receipt No</label>
+                            <input type="text" id="coll-receipt" class="w-full px-3 py-0 h-10 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-xs sm:text-sm appearance-none block m-0">
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 gap-3 sm:gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Regular Amount</label>
-                                <input type="number" id="coll-reg-amount" class="w-full p-4 md:p-3 rounded-xl border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-lg font-bold text-slate-700 dark:text-slate-200" placeholder="0.00">
+                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Regular Amount</label>
+                                <input type="number" id="coll-reg-amount" class="w-full px-3 py-0 h-10 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200 appearance-none block m-0" placeholder="0.00">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Advance Amount</label>
-                                <input type="number" id="coll-adv-amount" class="w-full p-4 md:p-3 rounded-xl border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-lg font-bold text-slate-700 dark:text-slate-200" placeholder="0.00">
+                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Advance Amount</label>
+                                <input type="number" id="coll-adv-amount" class="w-full px-3 py-0 h-10 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200 appearance-none block m-0" placeholder="0.00">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Payment Mode</label>
-                                <select id="coll-mode" class="w-full p-4 md:p-3 rounded-xl border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 bg-white dark:bg-slate-800">
+                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Payment Mode</label>
+                                <select id="coll-mode" class="w-full px-3 py-0 h-10 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 bg-white dark:bg-slate-800 text-xs sm:text-sm appearance-none block m-0">
                                     <option>Bank Transfer</option>
                                     <option>bKash</option>
                                     <option>Cheque</option>
@@ -3000,14 +3000,14 @@
                                 </select>
                             </div>
                             <div class="flex items-end">
-                                <label class="flex items-center space-x-3 p-4 border rounded-xl w-full cursor-pointer hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800 transition">
-                                    <input type="checkbox" id="coll-lmnp" class="w-6 h-6 text-brand-600 rounded focus:ring-brand-500">
-                                        <span class="text-sm font-medium">Last Month NP Recovery?</span>
+                                <label class="flex items-center space-x-2 px-3 h-10 border rounded-lg w-full cursor-pointer hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800 transition">
+                                    <input type="checkbox" id="coll-lmnp" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 shadow-sm m-0">
+                                    <span class="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300">Last Month NP Recovery?</span>
                                 </label>
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg mt-4 transition transform active:scale-95 hover-lift text-lg">
+                        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold h-12 rounded-lg shadow-lg mt-4 transition transform active:scale-95 text-sm sm:text-base flex items-center justify-center">
                             Save Entry
                         </button>
                     </form>
@@ -4771,23 +4771,23 @@
                 const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
 
                 const html = `
-                    <form onsubmit="UI.saveOffroad(event)" class="space-y-4">
+                    <form onsubmit="UI.saveOffroad(event)" class="space-y-3 sm:space-y-4">
                         <input type="hidden" name="id" value="${id || ''}">
                         <div class="grid grid-cols-2 gap-3 sm:gap-4">
                             <div>
                                 <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">In Date</label>
-                                <input type="date" name="inDate" value="${item.inDate || Utils.getLocalDate()}" required class="w-full px-2 py-2 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 text-xs sm:text-sm">
+                                <input type="date" name="inDate" value="${item.inDate || Utils.getLocalDate()}" required class="w-full px-3 py-0 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 text-xs sm:text-sm appearance-none block m-0">
                             </div>
                             <div>
                                 <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Customer Code</label>
-                                <input type="text" name="customerCode" value="${item.customerCode || ''}" required placeholder="C-XXXX" class="w-full px-2 py-2 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 font-mono font-bold text-xs sm:text-sm">
+                                <input type="text" name="customerCode" value="${item.customerCode || ''}" required placeholder="C-XXXX" class="w-full px-3 py-0 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 font-mono font-bold text-xs sm:text-sm appearance-none block m-0">
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 gap-3 sm:gap-4">
                             <div class="col-span-2">
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Reason</label>
-                                <select name="reason" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500">
+                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Reason</label>
+                                <select name="reason" required class="w-full px-3 py-0 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 text-xs sm:text-sm appearance-none block m-0">
                                     <option value="">Select Reason</option>
                                     <option value="Accident" ${item.reason === 'Accident' ? 'selected' : ''}>Accident</option>
                                     <option value="Capture" ${item.reason === 'Capture' ? 'selected' : ''}>Capture</option>
@@ -4799,24 +4799,24 @@
 
                         ${isOfficer ? `<input type="hidden" name="territoryId" value="${currentTId}">` : `
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Territory</label>
-                            <select name="territoryId" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500">
+                            <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Territory</label>
+                            <select name="territoryId" required class="w-full px-3 py-0 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 text-xs sm:text-sm appearance-none block m-0">
                                 <option value="">Select Territory</option>
                                 ${territories}
                             </select>
                         </div>`}
                         
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Vehicle currently in location</label>
-                            <input type="text" name="location" value="${item.location || ''}" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500">
+                            <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Vehicle currently in location</label>
+                            <input type="text" name="location" value="${item.location || ''}" required class="w-full px-3 py-0 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 text-xs sm:text-sm appearance-none block m-0">
                         </div>
                         
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Remarks</label>
-                            <textarea name="remarks" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 h-20">${item.remarks || ''}</textarea>
+                            <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Remarks</label>
+                            <textarea name="remarks" class="w-full px-3 py-2 h-20 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 text-xs sm:text-sm appearance-none block resize-none m-0">${item.remarks || ''}</textarea>
                         </div>
 
-                        <button type="submit" class="w-full py-4 bg-red-600 text-white font-bold rounded-xl shadow-lg hover:bg-red-700 transition transform active:scale-95">
+                        <button type="submit" class="w-full h-12 bg-red-600 text-white font-bold rounded-lg shadow-lg hover:bg-red-700 transition transform active:scale-95 text-sm sm:text-base mt-2 flex items-center justify-center">
                             <i class="fa-solid fa-save mr-2"></i> Submit Offroad Report
                         </button>
                     </form>
