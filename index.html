@@ -738,7 +738,7 @@
                 this.convertKeys([updatedItem]);
 
                 // Update local cache for performance
-                const idx = this.cache[collection].findIndex(x => x.id === updatedItem.id);
+                const idx = this.cache[collection].findIndex(x => String(x.id) === String(updatedItem.id));
                 if (idx !== -1) this.cache[collection][idx] = updatedItem;
                 else this.cache[collection].push(updatedItem);
 
@@ -1193,6 +1193,8 @@
                 // Row HTML Generator
                 const createRow = (t, isTotal = false, label = '') => {
                     const isCompact = tableMode === 'compact';
+                    const achColorClass = (!isTotal && parseFloat(t.tillDayAchievement) < parseFloat(totalGrand.tillDayAchievement)) ? 'text-red-600' : '';
+                    const lastAchColorClass = (!isTotal && parseFloat(t.lastDayAch) < parseFloat(totalGrand.lastDayAch)) ? 'text-red-600' : 'text-orange-500';
                     return `
                     <tr class="${isTotal ? 'bg-slate-200 dark:bg-slate-700 font-bold border-y-2 border-slate-300 dark:border-slate-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition interactive-row border-b border-slate-100 dark:border-slate-700'} text-slate-700 dark:text-slate-300">
                         <td class="p-1.5 border dark:border-slate-600 ${isTotal ? '' : 'sticky left-0 bg-white dark:bg-dark-card'} text-center">${isTotal ? '' : t.part}</td>
@@ -1211,7 +1213,7 @@
                         
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-brand-600' : ''}">${parseInt(t.presetProjTotal).toLocaleString()}</td>
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-green-600' : ''}">${parseInt(t.mtdColl).toLocaleString()}</td>
-                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold bg-blue-50 dark:bg-blue-900/20">${t.tillDayAchievement}%</td>
+                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold bg-blue-50 dark:bg-blue-900/20 ${achColorClass}">${t.tillDayAchievement}%</td>
                         
                         <td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'font-medium text-slate-700 dark:text-slate-300' : ''}">${parseInt(t.todayProj).toLocaleString()}</td>
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-green-600' : ''}">${parseInt(t.todayColl).toLocaleString()}</td>
@@ -1221,7 +1223,7 @@
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center ${!isTotal ? 'text-slate-500' : ''}">${t.yestProjFiles}</td>` : ''}
                         <td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'text-slate-500' : ''}">${parseInt(t.yestCollAmt).toLocaleString()}</td>
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center ${!isTotal ? 'text-slate-500' : ''}">${t.yestCollFiles}</td>` : ''}
-                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold text-orange-500">${t.lastDayAch}%</td>
+                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold ${lastAchColorClass}">${t.lastDayAch}%</td>
                         
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'text-rose-800 bg-rose-50 dark:bg-rose-900/20' : ''} border-l-2 border-slate-100 dark:border-slate-600">${parseInt(t.lmNpTargetAmt).toLocaleString()}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center ${!isTotal ? 'text-rose-800 bg-rose-50 dark:bg-rose-900/20' : ''}">${t.lmNpTargetFiles}</td>` : ''}
@@ -2211,7 +2213,7 @@
                                                     <span class="px-2 py-1 rounded text-xs font-bold ${badgeClass}">${s.type}</span>
                                                 </td>
                                                 <td class="px-6 py-4 text-right font-mono text-slate-700 dark:text-slate-300">
-                                                    à§³${Number(s.amount || 0).toLocaleString()}
+                                                    ৳${Number(s.amount || 0).toLocaleString()}
                                                 </td>
                                                 <td class="px-6 py-4 text-slate-500 italic truncate max-w-xs">${s.remarks || '-'}</td>
                                                 <td class="px-6 py-4 text-center">
@@ -2366,7 +2368,7 @@
                             <i class="fa-solid fa-sack-dollar text-6xl text-brand-600"></i>
                          </div>
                         <p class="text-xs font-bold text-brand-600 uppercase tracking-wider mb-1">Total Collection</p>
-                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">à§³ ${Math.round(totalAmt).toLocaleString()}</h3>
+                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">৳ ${Math.round(totalAmt).toLocaleString()}</h3>
                     </div>
 
                     <div class="glass-panel p-5 rounded-2xl border-l-4 border-blue-500 shadow-sm relative overflow-hidden group hover-lift">
@@ -2382,7 +2384,7 @@
                              <i class="fa-solid fa-building-columns text-6xl text-purple-600"></i>
                         </div>
                         <p class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">Bank Deposit</p>
-                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">à§³ ${Math.round(bankAmt).toLocaleString()}</h3>
+                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">৳ ${Math.round(bankAmt).toLocaleString()}</h3>
                     </div>
         `;
 
@@ -3547,7 +3549,7 @@
                                                     <td class="px-6 py-4">
                                                         <span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${badgeClass}">${s.type}</span>
                                                     </td>
-                                                    <td class="px-6 py-4 text-right font-mono font-bold">à§³${Number(s.amount || 0).toLocaleString()}</td>
+                                                    <td class="px-6 py-4 text-right font-mono font-bold">৳${Number(s.amount || 0).toLocaleString()}</td>
                                                     <td class="px-6 py-4 text-xs italic text-slate-500 truncate max-w-xs">${s.remarks || '-'}</td>
                                                 </tr>
                                             `;
@@ -4543,7 +4545,7 @@
 
             openSettlementModal(id = null) {
                 const db = Store.get();
-                const item = id ? db.settlements.find(s => s.id === id) : {};
+                const item = id ? db.settlements.find(s => String(s.id) === String(id)) : {};
                 const isOfficer = Auth.currentUser.role === 'officer';
                 const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
                 const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
@@ -4607,7 +4609,7 @@
                 const db = Store.get();
 
                 if (data.id) {
-                    const idx = db.settlements.findIndex(s => s.id === data.id);
+                    const idx = db.settlements.findIndex(s => String(s.id) === String(data.id));
                     if (idx !== -1) db.settlements[idx] = { ...db.settlements[idx], ...data };
                 } else {
                     data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -4685,6 +4687,10 @@
                             <option value="Bkash/Nagad" ${item.mode === 'Bkash/Nagad' ? 'selected' : ''}>Bkash/Nagad</option>
                         </select>
                     </div>
+                    <div class="col-span-2 flex items-center pt-2 border-t border-slate-200 dark:border-slate-700 mt-2">
+                        <input type="checkbox" id="isLmNp" name="isLmNp" value="true" ${item.isLmNp || item.is_lmnp ? 'checked' : ''} class="w-4 h-4 text-brand-600 bg-slate-50 dark:bg-slate-800 border-slate-300 rounded focus:ring-brand-500 mr-2 cursor-pointer shadow-sm">
+                        <label for="isLmNp" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Mark as Last Month Non-Pay (LMNP) Collection</label>
+                    </div>
                     <button type="submit" class="w-full py-3 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 shadow-lg hover-lift transition">
                         <i class="fa-solid fa-save mr-2"></i> Save Collection
                     </button>
@@ -4709,6 +4715,7 @@
                     advance_amount: adv,
                     amount: reg + adv,
                     mode: formData.get('mode'),
+                    is_lmnp: formData.get('isLmNp') === 'true',
                     timestamp: Date.now()
                 };
 
@@ -4756,7 +4763,7 @@
 
             openOffroadModal(id = null) {
                 const db = Store.get();
-                const item = id ? db.offroad_vehicles.find(v => v.id === id) : {};
+                const item = id ? db.offroad_vehicles.find(v => String(v.id) === String(id)) : {};
                 const isOfficer = Auth.currentUser.role === 'officer';
                 const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
                 const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
@@ -4839,7 +4846,7 @@
                 if (data.id) {
                     payload.id = data.id;
                     const db = Store.get();
-                    const existing = db.offroad_vehicles.find(v => v.id === data.id);
+                    const existing = db.offroad_vehicles.find(v => String(v.id) === String(data.id));
                     if (existing && existing.status === 'Solved' && data.status !== 'Solved') payload.solve_date = Utils.getLocalDate();
                 } else {
                     payload.status = 'Active';
@@ -4892,7 +4899,7 @@
 
             openProjectionModal(id = null) {
                 const db = Store.get();
-                const item = id ? db.projections.find(p => p.id === id) : {};
+                const item = id ? db.projections.find(p => String(p.id) === String(id)) : {};
                 const isOfficer = Auth.currentUser.role === 'officer';
                 const currentTId = isOfficer ? this.getCurrentTerritoryId() : (item.territoryId || '');
                 const territories = db.territories.map(t => `<option value="${t.id}" ${item.territoryId === t.id ? 'selected' : ''}>${t.name}</option>`).join('');
@@ -4973,7 +4980,7 @@
 
                 const db = Store.get();
                 if (data.id) {
-                    const idx = db.projections.findIndex(p => p.id === data.id);
+                    const idx = db.projections.findIndex(p => String(p.id) === String(data.id));
                     if (idx !== -1) {
                         if (!data.territoryId) data.territoryId = db.projections[idx].territoryId;
                         db.projections[idx] = { ...db.projections[idx], ...data };
