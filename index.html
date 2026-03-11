@@ -2962,14 +2962,15 @@
                     </div>
 
                     <form id="collection-form" onsubmit="UI.handleCollectionSubmit(event)" class="space-y-4 relative z-10">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date (Locked)</label>
-                            <input type="date" id="coll-date" class="w-full p-4 md:p-3 rounded-xl border bg-slate-100 text-slate-500 dark:bg-slate-700 dark:border-slate-600 cursor-not-allowed" disabled>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Customer Code</label>
-                            <input type="text" id="coll-code" class="w-full p-4 md:p-3 rounded-xl border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500" placeholder="e.g., C-1052" required>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1 flex items-center h-4">Date <span class="hidden sm:inline ml-1">(Locked)</span></label>
+                                <input type="date" id="coll-date" class="w-full px-2 sm:px-3 py-2 sm:py-3 h-11 sm:h-12 rounded-xl border bg-slate-100 text-slate-500 dark:bg-slate-700 dark:border-slate-600 cursor-not-allowed text-xs sm:text-sm" disabled>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1 flex items-center h-4">Customer Code</label>
+                                <input type="text" id="coll-code" class="w-full px-2 sm:px-3 py-2 sm:py-3 h-11 sm:h-12 rounded-xl border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-xs sm:text-sm" placeholder="C-1052" required>
+                            </div>
                         </div>
 
                         <div>
@@ -4772,14 +4773,14 @@
                 const html = `
                     <form onsubmit="UI.saveOffroad(event)" class="space-y-4">
                         <input type="hidden" name="id" value="${id || ''}">
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 gap-3 sm:gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">In Date</label>
-                                <input type="date" name="inDate" value="${item.inDate || Utils.getLocalDate()}" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500">
+                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">In Date</label>
+                                <input type="date" name="inDate" value="${item.inDate || Utils.getLocalDate()}" required class="w-full px-2 py-2 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 text-xs sm:text-sm">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Customer Code</label>
-                                <input type="text" name="customerCode" value="${item.customerCode || ''}" required placeholder="C-XXXX" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 font-mono font-bold">
+                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Customer Code</label>
+                                <input type="text" name="customerCode" value="${item.customerCode || ''}" required placeholder="C-XXXX" class="w-full px-2 py-2 h-10 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 font-mono font-bold text-xs sm:text-sm">
                             </div>
                         </div>
                         
