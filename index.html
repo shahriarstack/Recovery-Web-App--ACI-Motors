@@ -14,6 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -5271,13 +5272,16 @@
                     });
 
                     const image = canvas.toDataURL('image/png', 1.0);
-                    const link = document.createElement('a');
-                    const fileName = `Formal_Recovery_Report_${Utils.getLocalDate()}.png`;
-                    link.download = fileName;
-                    link.href = image;
-                    link.click();
+                    
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    
+                    pdf.addImage(image, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save(`Formal_Recovery_Report_${Utils.getLocalDate()}.pdf`);
 
-                    UI.showSuccess('Excel-Style Formal Report Ready!');
+                    UI.showSuccess('Formal PDF Report Ready!');
                 } catch (error) {
                     console.error('Report failed:', error);
                     UI.showSuccess('Error in Report Generation.');
