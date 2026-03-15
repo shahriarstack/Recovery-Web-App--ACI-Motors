@@ -2273,7 +2273,10 @@
                             
                             <form onsubmit="UI.updateAdminHistory(event)" class="flex items-center bg-white dark:bg-dark-card p-1.5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                                 <div class="px-2 border-r border-slate-100 dark:border-slate-700 mr-2">
-                                    <input type="text" name="territorySearch" placeholder="Search Territory..." class="bg-transparent border-none text-xs font-bold text-slate-700 dark:text-slate-300 focus:ring-0 w-32 outline-none">
+                                    <input type="text" name="territorySearch" placeholder="Search Territory..." class="bg-transparent border-none text-xs font-bold text-slate-700 dark:text-slate-300 focus:ring-0 w-28 sm:w-32 outline-none">
+                                </div>
+                                <div class="px-2 border-r border-slate-100 dark:border-slate-700 mr-2">
+                                    <input type="text" name="customerSearch" placeholder="Customer ID..." class="bg-transparent border-none text-xs font-bold text-slate-700 dark:text-slate-300 focus:ring-0 w-24 sm:w-28 outline-none">
                                 </div>
                                 <div class="flex items-center px-2">
                                     <i class="fa-regular fa-calendar text-slate-400 mr-2"></i>
@@ -2326,22 +2329,24 @@
                     </div>
             `;
 
-                this.updateAdminHistory(null, startOfMonth, endOfMonth, '');
+                this.updateAdminHistory(null, startOfMonth, endOfMonth, '', '');
             },
 
-            updateAdminHistory(e, startOverride, endOverride, searchOverride) {
+            updateAdminHistory(e, startOverride, endOverride, searchOverride, customerSearchOverride) {
                 if (e) e.preventDefault();
 
-                let start, end, search;
+                let start, end, search, customerSearch;
                 if (e) {
                     const formData = new FormData(e.target);
                     start = formData.get('startDate');
                     end = formData.get('endDate');
                     search = formData.get('territorySearch');
+                    customerSearch = formData.get('customerSearch');
                 } else {
                     start = startOverride;
                     end = endOverride;
                     search = searchOverride || '';
+                    customerSearch = customerSearchOverride || '';
                 }
 
                 const db = Store.get();
@@ -2353,7 +2358,8 @@
                 }).filter(c =>
                     c.date >= start &&
                     c.date <= end &&
-                    (search === '' || c.territoryName.toLowerCase().includes(search.toLowerCase()))
+                    (search === '' || c.territoryName.toLowerCase().includes(search.toLowerCase())) &&
+                    (customerSearch === '' || c.customerCode.toLowerCase().includes(customerSearch.toLowerCase()))
                 ).sort((a, b) => new Date(b.date) - new Date(a.date));
 
                 // Calc Totals
@@ -4731,7 +4737,7 @@
                 Store.update('collections', payload).then(() => {
                     UI.closeModal('generic-modal');
                     if (document.getElementById('admin-history-table-body')) {
-                        UI.updateAdminHistory(null, payload.date.substring(0, 8) + '01', payload.date.substring(0, 8) + '31');
+                        UI.updateAdminHistory(null, payload.date.substring(0, 8) + '01', payload.date.substring(0, 8) + '31', '', '');
                     } else if (document.getElementById('views-container').innerHTML.includes('Projection Monitor')) {
                         UI.renderAdminProjections();
                     }
@@ -4751,7 +4757,7 @@
                     if (document.getElementById('admin-history-table-body')) {
                         const formData = new FormData(document.querySelector('form[onsubmit="UI.updateAdminHistory(event)"]'));
                         // Reload history using the existing date range in the filters
-                        UI.updateAdminHistory(null, formData.get('startDate'), formData.get('endDate'), formData.get('territorySearch'));
+                        UI.updateAdminHistory(null, formData.get('startDate'), formData.get('endDate'), formData.get('territorySearch'), formData.get('customerSearch'));
                     } else if (document.getElementById('views-container').innerHTML.includes('Projection Monitor')) {
                         UI.renderAdminProjections();
                     }
