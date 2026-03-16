@@ -342,7 +342,7 @@
 
     <!-- LOGIN SCREEN -->
     <div id="login-view"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-white sm:bg-slate-100 dark:bg-[#202124] animate-fade-in overflow-hidden">
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-white sm:bg-slate-100 dark:bg-[#202124] animate-fade-in overflow-hidden">
 
         <div class="relative z-10 w-full max-w-[450px] px-4 sm:p-6 animate-entry">
             <!-- Google Style Clean Background -->
@@ -736,6 +736,7 @@
                     body: JSON.stringify({ collection, item })
                 });
                 const updatedItem = await res.json();
+                if (updatedItem.error) throw new Error(updatedItem.error);
                 this.convertKeys([updatedItem]);
 
                 // Update local cache for performance
@@ -911,9 +912,11 @@
                 const stored = localStorage.getItem('currentUser');
                 if (stored) {
                     this.currentUser = JSON.parse(stored);
-                    await Store.init();
+                    // Store.init is already handled in window.onload
                     UI.initApp();
+                    return true;
                 }
+                return false;
             },
 
             logout() {
@@ -4696,7 +4699,7 @@
                         </select>
                     </div>
                     <div class="col-span-2 flex items-center pt-2 border-t border-slate-200 dark:border-slate-700 mt-2">
-                        <input type="checkbox" id="isLmNp" name="isLmNp" value="true" ${item.isLmNp || item.is_lmnp ? 'checked' : ''} class="w-4 h-4 text-brand-600 bg-slate-50 dark:bg-slate-800 border-slate-300 rounded focus:ring-brand-500 mr-2 cursor-pointer shadow-sm">
+                        <input type="checkbox" id="isLmNp" name="isLmNp" value="true" ${item.isLmNp || item.is_lm_np ? 'checked' : ''} class="w-4 h-4 text-brand-600 bg-slate-50 dark:bg-slate-800 border-slate-300 rounded focus:ring-brand-500 mr-2 cursor-pointer shadow-sm">
                         <label for="isLmNp" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Mark as Last Month Non-Pay (LMNP) Collection</label>
                     </div>
                     <button type="submit" class="w-full py-3 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 shadow-lg hover-lift transition">
@@ -4723,7 +4726,7 @@
                     advance_amount: adv,
                     amount: reg + adv,
                     mode: formData.get('mode'),
-                    is_lmnp: formData.get('isLmNp') === 'true',
+                    is_lm_np: formData.get('isLmNp') === 'true',
                     timestamp: Date.now()
                 };
 
@@ -5455,10 +5458,25 @@
         });
 
         window.onload = async () => {
+            const hasSession = !!localStorage.getItem('currentUser');
+            if (hasSession) {
+                // Session exists, keep login hidden and show loader
+                UI.toggleLoader(true);
+            } else {
+                // No session, show login immediately
+                document.getElementById('login-view').classList.remove('hidden');
+            }
+
             await Store.init();
-            await Auth.checkSession();
-            UI.setLoginTab('officer');
+            const loggedIn = await Auth.checkSession();
+            
+            if (!loggedIn) {
+                document.getElementById('login-view').classList.remove('hidden');
+                UI.setLoginTab('officer');
+            }
+            
             ParticleEngine.init();
+            UI.toggleLoader(false);
         };
 
     </script>
