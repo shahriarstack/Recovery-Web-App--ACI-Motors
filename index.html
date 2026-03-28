@@ -1933,6 +1933,9 @@
                                 <div class="flex justify-between items-center px-2">
                                     <h3 class="font-bold text-red-500 uppercase tracking-wider text-sm">Missing Submissions (${missing.length})</h3>
                                     <div class="flex items-center space-x-2">
+                                        <button onclick="UI.unlockAllProjections()" class="text-[10px] sm:text-xs bg-orange-600 text-white hover:bg-orange-700 px-2 sm:px-3 py-1 rounded shadow-md transition-all flex items-center font-bold" title="Unlock All for 30m">
+                                            <i class="fa-solid fa-key mr-1"></i> Unlock All
+                                        </button>
                                         <button onclick="UI.downloadMissingSubmissions()" class="text-[10px] sm:text-xs bg-slate-800 text-white hover:bg-slate-900 px-2 sm:px-3 py-1 rounded shadow-md transition-all flex items-center font-bold" title="Download List">
                                             <i class="fa-solid fa-download mr-1"></i> Snapshot
                                         </button>
@@ -2036,6 +2039,43 @@
                     console.error('Unlock failed', err);
                     alert('Unlock failed: ' + err.message);
                 });
+            },
+
+            async unlockAllProjections() {
+                const db = Store.get();
+                const today = Utils.getLocalDate();
+                const missing = db.territories.filter(t => {
+                    return !db.projections.some(p => (p.territoryId === t.id || p.territory_id === t.id) && p.date === today);
+                });
+
+                if (missing.length === 0) {
+                    UI.showSuccess('All territories already submitted');
+                    return;
+                }
+
+                if (!confirm(`Are you sure you want to unlock all ${missing.length} missing territories for 30 minutes?`)) return;
+
+                UI.toggleLoader(true);
+                const unlockUntil = Date.now() + (30 * 60 * 1000);
+                if (!db.unlocks) db.unlocks = {};
+
+                try {
+                    for (const t of missing) {
+                        db.unlocks[t.id] = unlockUntil;
+                        await fetch(`${Store.apiUrl}/unlock`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ territoryId: t.id, unlockUntil: unlockUntil })
+                        });
+                    }
+                    UI.showSuccess(`Successfully unlocked ${missing.length} territories`);
+                    this.renderAdminProjections();
+                } catch (err) {
+                    console.error('Bulk unlock failed', err);
+                    alert('Some unlocks might have failed: ' + err.message);
+                } finally {
+                    UI.toggleLoader(false);
+                }
             },
 
             downloadMissingSubmissions() {
@@ -4265,11 +4305,6 @@
             renderAdminVehiclePerf() {
                 const db = Store.get();
                 const data = db.vehicle_performance || [];
-                // Migration: Ensure IDs
-                let dirty = false;
-                data.forEach(d => { if (!d.id) { d.id = Math.random().toString(36).substring(2); dirty = true; } });
-                if (dirty) Store.save(db);
-
                 // Extract all IDs for Select All
                 const allIds = data.map(d => d.id);
 
@@ -4615,29 +4650,44 @@
 
             saveSettlement(e) {
                 e.preventDefault();
-                const formData = new FormData(e.target);
+                const form = e.target;
+                const btn = form.querySelector('button[type="submit"]');
+                const originalText = btn ? btn.innerHTML : '';
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
+                    btn.disabled = true;
+                }
+
+                const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
-                const db = Store.get();
 
-                if (data.id) {
-                    const idx = db.settlements.findIndex(s => String(s.id) === String(data.id));
-                    if (idx !== -1) db.settlements[idx] = { ...db.settlements[idx], ...data };
-                } else {
-                    data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-                    data.timestamp = Date.now();
-                    db.settlements.push(data);
-                }
+                const payload = {
+                    date: data.date,
+                    territory_id: data.territoryId,
+                    customer_code: data.customerCode,
+                    type: data.type,
+                    amount: parseFloat(data.amount) || 0,
+                    remarks: data.remarks
+                };
 
-                Store.save(db);
-                UI.closeModal('generic-modal');
+                if (data.id) payload.id = data.id;
 
-                if (Auth.currentUser.role === 'admin') {
-                    UI.renderAdminSettlementsView();
-                } else {
-                    UI.renderOfficerSettlementsView();
-                }
-
-                UI.showSuccess('Settlement Saved!');
+                Store.update('settlements', payload).then(() => {
+                    UI.closeModal('generic-modal');
+                    if (Auth.currentUser.role === 'admin') {
+                        UI.renderAdminSettlementsView();
+                    } else {
+                        UI.renderOfficerSettlementsView();
+                    }
+                    UI.showSuccess('Settlement Saved!');
+                }).catch(err => {
+                    alert('Error saving settlement: ' + err.message);
+                }).finally(() => {
+                    if (btn) {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                });
             },
 
             openCollectionModal(id = null, prefillTId = null) {
@@ -4966,7 +5016,15 @@
 
             saveProjection(e) {
                 e.preventDefault();
-                const formData = new FormData(e.target);
+                const form = e.target;
+                const btn = form.querySelector('button[type="submit"]');
+                const originalText = btn ? btn.innerHTML : '';
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
+                    btn.disabled = true;
+                }
+
+                const formData = new FormData(form);
                 const isOfficer = Auth.currentUser.role === 'officer';
 
                 let reg = parseFloat(formData.get('regularAmount')) || 0;
@@ -4979,38 +5037,41 @@
                     adv = 0;
                 }
 
-                const data = {
-                    id: formData.get('id'),
-                    territoryId: formData.get('territoryId'), // Might be missing if disabled
-                    regularAmount: reg,
-                    advanceAmount: adv,
+                const payload = {
+                    territory_id: formData.get('territoryId'),
+                    regular_amount: reg,
+                    advance_amount: adv,
                     amount: total,
-                    fileCount: formData.get('fileCount'),
+                    file_count: parseInt(formData.get('fileCount')) || 0,
                     date: Utils.getLocalDate()
                 };
 
-                const db = Store.get();
-                if (data.id) {
-                    const idx = db.projections.findIndex(p => String(p.id) === String(data.id));
-                    if (idx !== -1) {
-                        if (!data.territoryId) data.territoryId = db.projections[idx].territoryId;
-                        db.projections[idx] = { ...db.projections[idx], ...data };
-                    }
-                } else {
-                    const existing = db.projections.find(p => p.territoryId === data.territoryId && p.date === data.date);
-                    if (existing) {
-                        if (!confirm('Projection for this territory already exists today. Overwrite?')) return;
-                        Object.assign(existing, data);
-                    } else {
-                        data.id = Date.now().toString(36) + Math.random().toString(36).substr(2);
-                        db.projections.push(data);
+                const dataId = formData.get('id');
+                if (dataId) {
+                    payload.id = dataId;
+                    if (!payload.territory_id) {
+                        const db = Store.get();
+                        const existing = db.projections.find(p => String(p.id) === String(dataId));
+                        if (existing) payload.territory_id = existing.territoryId || existing.territory_id;
                     }
                 }
 
-                Store.save(db);
-                UI.closeModal('generic-modal');
-                UI.renderAdminProjections();
-                UI.showSuccess('Projection Saved!');
+                Store.update('projections', payload).then(() => {
+                    UI.closeModal('generic-modal');
+                    if (Auth.currentUser.role === 'admin') {
+                        UI.renderAdminProjections();
+                    } else {
+                        UI.renderOfficerDashboard();
+                    }
+                    UI.showSuccess('Projection Saved!');
+                }).catch(err => {
+                    alert('Error saving projection: ' + err.message);
+                }).finally(() => {
+                    if (btn) {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                });
             },
 
             // --- HELPERS ---
@@ -5460,14 +5521,17 @@
         window.onload = async () => {
             const hasSession = !!localStorage.getItem('currentUser');
             if (hasSession) {
-                // Session exists, keep login hidden and show loader
+                // If we have a session, keep login hidden and show generic loader
                 UI.toggleLoader(true);
             } else {
                 // No session, show login immediately
                 document.getElementById('login-view').classList.remove('hidden');
             }
 
+            // Load data from backend
             await Store.init();
+            
+            // Validate session and init UI
             const loggedIn = await Auth.checkSession();
             
             if (!loggedIn) {
