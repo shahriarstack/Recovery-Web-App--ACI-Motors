@@ -5175,8 +5175,8 @@
 
                 // Helper: Robust text extraction by label
                 const findValueByLabel = (label, root = dashboard) => {
-                    const spans = Array.from(root.querySelectorAll('span, td, th'));
-                    const target = spans.find(s => s.innerText.trim().toUpperCase() === label.toUpperCase());
+                    const elements = Array.from(root.querySelectorAll('span, td, th, p'));
+                    const target = elements.find(s => s.innerText.trim().toUpperCase() === label.toUpperCase());
                     if (!target) return 'N/A';
 
                     // Check next sibling for metric-style layout
@@ -5235,20 +5235,22 @@
                 report.id = 'excel-report-render';
                 report.style.cssText = `
                     position: fixed; left: -9999px; top: 0; 
-                    width: 900px; padding: 40px; background: #ffffff; 
+                    width: 794px; padding: 20px 30px; background: #ffffff; 
                     font-family: 'Segoe UI', Arial, sans-serif; color: #1f2937;
+                    box-sizing: border-box;
                 `;
 
-                const tableStyle = 'width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px;';
-                const headerStyle = 'background-color: #f8fafc; font-weight: bold; border: 1px solid #cbd5e1; padding: 4px 8px; color: #475569; text-align: left;';
-                const cellStyle = 'border: 1px solid #cbd5e1; padding: 4px 8px; text-align: left;';
-                const mainTitle = 'font-size: 22px; font-weight: 800; color: #1e40af; letter-spacing: -0.5px; border-bottom: 3px solid #1e40af; padding-bottom: 10px; margin-bottom: 5px;';
+                const tableStyle = 'width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 10px;';
+                const headerStyle = 'background-color: #f8fafc; font-weight: bold; border: 0.5px solid #cbd5e1; padding: 4px 6px; color: #475569; text-align: left;';
+                const cellStyle = 'border: 0.5px solid #cbd5e1; padding: 4px 6px; text-align: left;';
+                const mainTitle = 'font-size: 18px; font-weight: 800; color: #1e40af; letter-spacing: -0.5px; border-bottom: 2px solid #1e40af; padding-bottom: 6px; margin-bottom: 8px;';
+                const sectionTitle = 'font-weight: 800; margin-bottom: 8px; font-size: 12px; color: #334155; text-transform: uppercase;';
 
                 let html = `
                     <div style="${mainTitle}">OFFICIAL RECOVERY PERFORMANCE REPORT</div>
-                    <div style="margin-bottom: 25px; font-size: 12px; color: #64748b; font-weight: 600;">REPORTING DATE: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}</div>
+                    <div style="margin-bottom: 15px; font-size: 10px; color: #64748b; font-weight: 600;">REPORTING DATE: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}</div>
                     
-                    <div style="font-weight: 800; margin-bottom: 12px; font-size: 15px; color: #334155; text-transform: uppercase;">1. Executive Summary Aggregate</div>
+                    <div style="${sectionTitle}">1. Executive Summary Aggregate</div>
                     <table style="${tableStyle}">
                         <tr>
                             <td style="${headerStyle}">TOTAL TARGET (AMT)</td><td style="${cellStyle}; font-weight:700;">${metrics.totalTarget}</td>
@@ -5268,14 +5270,14 @@
                         </tr>
                     </table>
 
-                    <div style="font-weight: 800; margin-bottom: 12px; font-size: 15px; color: #334155; text-transform: uppercase;">2. Portfolio Performance Segmentation</div>
+                    <div style="${sectionTitle}">2. Portfolio Performance Segmentation</div>
                     <table style="${tableStyle}">
                         <tr style="background-color: #1e40af; color: #ffffff;">
-                            <th style="padding: 4px 8px; border: 1px solid #1e3a8a;">PORTFOLIO SEGMENT</th>
-                            <th style="padding: 4px 8px; border: 1px solid #1e3a8a; text-align: center;">RPI SCORE</th>
-                            <th style="padding: 4px 8px; border: 1px solid #1e3a8a; text-align: right;">TARGET</th>
-                            <th style="padding: 4px 8px; border: 1px solid #1e3a8a; text-align: right;">COLLECTION</th>
-                            <th style="padding: 4px 8px; border: 1px solid #1e3a8a; text-align: center;">ACHIEVEMENT</th>
+                            <th style="padding: 4px 6px; border: 0.5px solid #1e3a8a;">PORTFOLIO SEGMENT</th>
+                            <th style="padding: 4px 6px; border: 0.5px solid #1e3a8a; text-align: center;">RPI SCORE</th>
+                            <th style="padding: 4px 6px; border: 0.5px solid #1e3a8a; text-align: right;">TARGET</th>
+                            <th style="padding: 4px 6px; border: 0.5px solid #1e3a8a; text-align: right;">COLLECTION</th>
+                            <th style="padding: 4px 6px; border: 0.5px solid #1e3a8a; text-align: center;">ACHIEVEMENT</th>
                         </tr>
                         <tr>
                             <td style="${cellStyle}"><b>PART A</b> (North & Central)</td>
@@ -5297,13 +5299,13 @@
                 // Ranking Table Section
                 const rankingTable = dashboard.querySelector('#ranking-table-body')?.closest('table');
                 if (rankingTable) {
-                    html += `<div style="font-weight: 800; margin-bottom: 12px; font-size: 15px; color: #334155; text-transform: uppercase;">3. Territory Performance Ranking Details</div>`;
+                    html += `<div style="${sectionTitle}">3. Territory Performance Ranking Details</div>`;
                     const clone = rankingTable.cloneNode(true);
                     clone.style.cssText = tableStyle;
 
                     // Cleanup and formalize
                     clone.querySelectorAll('thead th').forEach(th => {
-                        th.style.cssText = headerStyle + 'background: #f1f5f9; position: static; white-space: normal; font-size: 11px;';
+                        th.style.cssText = headerStyle + 'background: #f1f5f9; position: static; white-space: normal; font-size: 9px; padding: 4px;';
                         th.className = '';
                     });
                     clone.querySelectorAll('tbody tr').forEach(tr => {
@@ -5311,7 +5313,7 @@
                         tr.style.backgroundColor = '';
                     });
                     clone.querySelectorAll('tbody td').forEach(td => {
-                        td.style.cssText = cellStyle + 'font-size: 11px; white-space: normal;';
+                        td.style.cssText = cellStyle + 'font-size: 9px; white-space: normal; padding: 4px;';
                         td.className = '';
                         // Highlight Total rows
                         if (td.innerText.includes('Total')) {
@@ -5321,11 +5323,11 @@
                     });
                     clone.querySelectorAll('.sticky').forEach(el => el.style.position = 'static');
 
-                    html += `<div style="width: 100%; border: 1px solid #cbd5e1;">${clone.outerHTML}</div>`;
+                    html += `<div style="width: 100%; border: 0.5px solid #cbd5e1;">${clone.outerHTML}</div>`;
                 }
 
                 html += `
-                    <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #94a3b8; font-weight: 600;">
+                    <div style="margin-top: 20px; border-top: 0.5px solid #e2e8f0; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #94a3b8; font-weight: 600;">
                         <span>GENERATED BY RECOVERY INTELLIGENCE PORTAL V3.0</span>
                         <span>STRICTLY CONFIDENTIAL - INTERNAL DISTRIBUTION</span>
                     </div>
@@ -5336,7 +5338,7 @@
 
                 try {
                     const canvas = await html2canvas(report, {
-                        scale: 1.5,
+                        scale: 2,
                         backgroundColor: '#ffffff',
                         useCORS: true,
                         logging: false
@@ -5347,11 +5349,23 @@
                     const { jsPDF } = window.jspdf;
                     const pdf = new jsPDF('p', 'mm', 'a4');
                     const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    let pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    const pageHeight = pdf.internal.pageSize.getHeight();
 
-                    pdf.addImage(image, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    let drawWidth = pdfWidth;
+                    let drawHeight = pdfHeight;
+                    
+                    if (pdfHeight > pageHeight) {
+                        const ratio = pageHeight / pdfHeight;
+                        drawWidth = pdfWidth * ratio;
+                        drawHeight = pageHeight;
+                    }
+                    
+                    const xOffset = (pdfWidth - drawWidth) / 2;
+                    const yOffset = (pageHeight > drawHeight) ? 5 : 0; // Add top margin if fits inside
+
+                    pdf.addImage(image, 'PNG', xOffset, yOffset, drawWidth, drawHeight);
                     pdf.save(`Formal_Recovery_Report_${Utils.getLocalDate()}.pdf`);
-
                     UI.showSuccess('Formal PDF Report Ready!');
                 } catch (error) {
                     console.error('Report failed:', error);
