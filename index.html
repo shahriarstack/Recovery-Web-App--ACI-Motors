@@ -5241,8 +5241,8 @@
                 `;
 
                 const tableStyle = 'width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 10px;';
-                const headerStyle = 'background-color: #f8fafc; font-weight: bold; border: 0.5px solid #cbd5e1; padding: 4px 6px; color: #475569; text-align: left;';
-                const cellStyle = 'border: 0.5px solid #cbd5e1; padding: 4px 6px; text-align: left;';
+                const headerStyle = 'background-color: #f8fafc; font-weight: bold; border: 0.5px solid #cbd5e1; padding: 1.5px 6px; color: #475569; text-align: left;';
+                const cellStyle = 'border: 0.5px solid #cbd5e1; padding: 1.5px 6px; text-align: left;';
                 const mainTitle = 'font-size: 18px; font-weight: 800; color: #1e40af; letter-spacing: -0.5px; border-bottom: 2px solid #1e40af; padding-bottom: 6px; margin-bottom: 8px;';
                 const sectionTitle = 'font-weight: 800; margin-bottom: 8px; font-size: 12px; color: #334155; text-transform: uppercase;';
 
@@ -5305,7 +5305,7 @@
 
                     // Cleanup and formalize
                     clone.querySelectorAll('thead th').forEach(th => {
-                        th.style.cssText = headerStyle + 'background: #f1f5f9; position: static; white-space: normal; font-size: 9px; padding: 4px;';
+                        th.style.cssText = headerStyle + 'background: #f1f5f9; position: static; white-space: normal; font-size: 9px; padding: 1.5px;';
                         th.className = '';
                     });
                     clone.querySelectorAll('tbody tr').forEach(tr => {
@@ -5313,7 +5313,7 @@
                         tr.style.backgroundColor = '';
                     });
                     clone.querySelectorAll('tbody td').forEach(td => {
-                        td.style.cssText = cellStyle + 'font-size: 9px; white-space: normal; padding: 4px;';
+                        td.style.cssText = cellStyle + 'font-size: 9px; white-space: normal; padding: 1.5px;';
                         td.className = '';
                         // Highlight Total rows
                         if (td.innerText.includes('Total')) {
