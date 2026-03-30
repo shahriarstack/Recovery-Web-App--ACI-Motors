@@ -808,14 +808,14 @@
                 const mtdProjFiles = projections.reduce((sum, p) => sum + (parseInt(p.fileCount) || 0), 0);
 
                 const yestProjEntries = projections.filter(p => p.date === yesterdayStr);
-                const yestProjAmt = yestProjEntries.reduce((sum, p) => sum + (parseFloat(p.regularAmount) || 0) + (parseFloat(p.advanceAmount) || 0) + (parseFloat(p.amount) || 0), 0);
+                const yestProjAmt = yestProjEntries.reduce((sum, p) => sum + (parseFloat(p.regularAmount) || parseFloat(p.amount) || 0) + (parseFloat(p.advanceAmount) || 0), 0);
                 const yestProjFiles = yestProjEntries.reduce((sum, p) => sum + (parseInt(p.fileCount) || 0), 0);
                 const yestCollEntries = collections.filter(c => c.date === yesterdayStr);
                 const yestCollAmt = yestCollEntries.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
                 const yestCollFiles = new Set(yestCollEntries.map(c => c.customerCode)).size;
 
                 const todayProjEntries = projections.filter(p => p.date === todayStr);
-                const todayProj = todayProjEntries.reduce((sum, p) => sum + (parseFloat(p.regularAmount) || 0) + (parseFloat(p.advanceAmount) || 0), 0);
+                const todayProj = todayProjEntries.reduce((sum, p) => sum + (parseFloat(p.regularAmount) || parseFloat(p.amount) || 0) + (parseFloat(p.advanceAmount) || 0), 0);
                 const todayColl = collections.filter(c => c.date === todayStr).reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
 
                 const achievement = targetAmt > 0 ? (mtdColl / targetAmt) * 100 : 0;
