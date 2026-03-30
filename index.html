@@ -1901,9 +1901,9 @@
             },
 
             // --- ADMIN PROJECTION MONITOR (NEW) ---
-            renderAdminProjections() {
+            renderAdminProjections(targetDate) {
                 const db = Store.get();
-                const today = Utils.getLocalDate();
+                const today = targetDate || Utils.getLocalDate();
 
                 // Group territories
                 const submitted = [];
@@ -1920,11 +1920,18 @@
 
                 document.getElementById('views-container').innerHTML = `
                     <div class="animate-entry max-w-6xl mx-auto">
-                         <div class="mb-8">
-                            <h2 class="text-2xl font-bold text-slate-800 dark:text-white flex items-center">
-                                <i class="fa-solid fa-stopwatch text-brand-500 mr-3"></i> Projection Monitor
-                            </h2>
-                            <p class="text-sm text-slate-500">Monitor and manage daily target submissions. <span class="font-bold text-slate-700 dark:text-slate-300">Date: ${today}</span></p>
+                        <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800 dark:text-white flex items-center">
+                                    <i class="fa-solid fa-stopwatch text-brand-500 mr-3"></i> Projection Monitor
+                                </h2>
+                                <p class="text-sm text-slate-500">Monitor and manage target submissions.</p>
+                            </div>
+                            <div class="flex items-center bg-white dark:bg-dark-card p-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                                <i class="fa-regular fa-calendar text-slate-400 mr-2 ml-1"></i>
+                                <span class="text-xs font-bold text-slate-400 uppercase mr-2">Viewing Date:</span>
+                                <input type="date" value="${today}" onchange="UI.renderAdminProjections(this.value)" class="bg-transparent border-none text-xs font-bold text-brand-600 dark:text-brand-400 focus:ring-0 outline-none cursor-pointer">
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1956,7 +1963,7 @@
                                                         <p class="text-xs text-slate-500">${t.officer}</p>
                                                     </div>
                                                     <div class="flex items-center space-x-2">
-                                                        <button onclick="UI.modalEditProjection('${t.id}', 0, 0, 0)" class="text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg shadow-sm transition transform">
+                                                        <button onclick="UI.modalEditProjection('${t.id}', 0, 0, 0, '${today}')" class="text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg shadow-sm transition transform">
                                                             <i class="fa-solid fa-plus mr-1"></i> Proj
                                                         </button>
                                                         <button onclick="UI.openCollectionModal(null, '${t.id}')" class="text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg shadow-sm transition transform">
@@ -2005,7 +2012,7 @@
                                                             <button onclick="UI.openCollectionModal(null, '${item.proj.territoryId || item.proj.territory_id}')" class="text-xs text-emerald-500 hover:text-emerald-700 font-bold flex items-center">
                                                                 <i class="fa-solid fa-plus mr-1"></i> Coll
                                                             </button>
-                                                            <button onclick="UI.modalEditProjection('${item.proj.territoryId || item.proj.territory_id}', '${item.proj.regularAmount || item.proj.regular_amount || 0}', '${item.proj.advanceAmount || item.proj.advance_amount || 0}', '${item.proj.fileCount || item.proj.file_count || 0}')" class="text-xs text-blue-500 hover:text-blue-700 font-bold flex items-center">
+                                                            <button onclick="UI.modalEditProjection('${item.proj.territoryId || item.proj.territory_id}', '${item.proj.regularAmount || item.proj.regular_amount || 0}', '${item.proj.advanceAmount || item.proj.advance_amount || 0}', '${item.proj.fileCount || item.proj.file_count || 0}', '${today}')" class="text-xs text-blue-500 hover:text-blue-700 font-bold flex items-center">
                                                                 <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
                                                             </button>
                                                         </div>
@@ -2105,12 +2112,13 @@
                 a.click();
             },
 
-            modalEditProjection(tId, reg, adv, files) {
+            modalEditProjection(tId, reg, adv, files, date) {
                 const totalAmount = (Number(reg) || 0) + (Number(adv) || 0);
                 const html = `
             <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-white" > Edit Projection</h3 >
-                    <p class="text-xs text-slate-500 mb-4">Modifying projection for selected territory.</p>
-                    <form onsubmit="UI.handleAdminEditProjection(event, '${tId}')" class="space-y-4">
+                    <p class="text-xs text-slate-500 mb-2">Modifying projection for selected territory.</p>
+                    <p class="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded inline-block mb-4">Date: ${date}</p>
+                    <form onsubmit="UI.handleAdminEditProjection(event, '${tId}', '${date}')" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Today's Projection Amount (Total)</label>
                             <input type="number" name="amount" value="${totalAmount}" class="w-full p-2.5 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-blue-500" required>
@@ -2128,12 +2136,12 @@
                 this.renderHtmlModal(html);
             },
 
-            handleAdminEditProjection(e, tId) {
+            handleAdminEditProjection(e, tId, date) {
                 e.preventDefault();
                 UI.toggleLoader(true);
                 const formData = new FormData(e.target);
                 const db = Store.get();
-                const today = Utils.getLocalDate();
+                const today = date || Utils.getLocalDate();
 
                 const existingProj = db.projections.find(p => (p.territoryId === tId || p.territory_id === tId) && p.date === today);
 
@@ -2158,7 +2166,7 @@
                 Store.update('projections', payload).then(() => {
                     UI.toggleLoader(false);
                     document.getElementById('generic-modal').classList.add('hidden');
-                    UI.renderAdminProjections();
+                    UI.renderAdminProjections(today);
                 }).catch(err => {
                     UI.toggleLoader(false);
                     alert("Error saving projection: " + err.message);
@@ -5354,13 +5362,13 @@
 
                     let drawWidth = pdfWidth;
                     let drawHeight = pdfHeight;
-                    
+
                     if (pdfHeight > pageHeight) {
                         const ratio = pageHeight / pdfHeight;
                         drawWidth = pdfWidth * ratio;
                         drawHeight = pageHeight;
                     }
-                    
+
                     const xOffset = (pdfWidth - drawWidth) / 2;
                     const yOffset = (pageHeight > drawHeight) ? 5 : 0; // Add top margin if fits inside
 
@@ -5544,15 +5552,15 @@
 
             // Load data from backend
             await Store.init();
-            
+
             // Validate session and init UI
             const loggedIn = await Auth.checkSession();
-            
+
             if (!loggedIn) {
                 document.getElementById('login-view').classList.remove('hidden');
                 UI.setLoginTab('officer');
             }
-            
+
             ParticleEngine.init();
             UI.toggleLoader(false);
         };
