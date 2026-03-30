@@ -2409,8 +2409,8 @@
                 }).filter(c =>
                     c.date >= start &&
                     c.date <= end &&
-                    (search === '' || c.territoryName.toLowerCase().includes(search.toLowerCase())) &&
-                    (customerSearch === '' || c.customerCode.toLowerCase().includes(customerSearch.toLowerCase()))
+                    (search === '' || (c.territoryName && c.territoryName.toLowerCase().includes(search.toLowerCase()))) &&
+                    (customerSearch === '' || (c.customerCode && String(c.customerCode).toLowerCase().includes(customerSearch.toLowerCase())))
                 ).sort((a, b) => new Date(b.date) - new Date(a.date));
 
                 // Calc Totals
