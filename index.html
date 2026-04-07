@@ -2762,10 +2762,12 @@
                                             <span class="inline-block px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[9px] sm:text-xs bg-slate-100 dark:bg-slate-700 font-medium">${c.mode === 'Cash' || c.mode.toLowerCase().includes('cash') ? '<i class="fa-solid fa-money-bill text-green-500 mr-1"></i>' : c.mode === 'Cheque' ? '<i class="fa-solid fa-money-check text-blue-500 mr-1"></i>' : '<i class="fa-solid fa-building-columns text-yellow-500 mr-1"></i>'} 
                                             ${c.mode}</span>
                                         </td>
-                                        <td class="px-4 py-2 sm:px-6 sm:py-3 text-right">
-                                            <div class="font-bold tracking-tight">${parseFloat(c.amount).toLocaleString()}</div>
-                                            <div class="text-[9px] text-slate-400 italic">Locked</div>
-                                        </td>
+                                            <td class="px-4 py-2 sm:px-6 sm:py-3 text-right">
+                                                <div class="font-bold tracking-tight">${parseFloat(c.amount).toLocaleString()}</div>
+                                                <button onclick="UI.openCollectionModal('${c.id}', '${c.territoryId}')" class="text-[10px] text-brand-600 font-bold hover:underline py-1 transition flex items-center justify-end ml-auto">
+                                                    <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+                                                </button>
+                                            </td>
                                     </tr>
                                 `).join('')}
                         ${metrics.rawCollections.filter(c => c.date === Utils.getLocalDate()).length === 0 ? '<tr><td colspan="4" class="px-6 py-6 text-center text-slate-400 text-sm">No collections today</td></tr>' : ''}
@@ -4801,6 +4803,8 @@
                         UI.updateAdminHistory(null, payload.date.substring(0, 8) + '01', payload.date.substring(0, 8) + '31', '', '');
                     } else if (document.getElementById('views-container').innerHTML.includes('Projection Monitor')) {
                         UI.renderAdminProjections();
+                    } else if (document.getElementById('officer-dashboard-panel')) {
+                        UI.renderOfficerDashboard();
                     }
                     UI.showSuccess('Collection Saved!');
                     UI.toggleLoader(false);
