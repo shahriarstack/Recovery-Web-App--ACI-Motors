@@ -14,6 +14,9 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
 });
 
+// Ensure territory_id can hold multiple comma-separated IDs for Area Heads
+pool.query('ALTER TABLE users ALTER COLUMN territory_id TYPE VARCHAR(1000)').catch(err => console.error("Migration Error:", err));
+
 // GET complete database state (mirrors Store.get())
 app.get('/api/db', async (req, res) => {
     try {
