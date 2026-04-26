@@ -8,6 +8,7 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Increase limit for bulk operations
+app.use(express.static(__dirname));
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
