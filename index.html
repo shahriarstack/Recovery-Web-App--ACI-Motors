@@ -4177,18 +4177,31 @@
             renderAreaHeadDashboard() {
                 const db = Store.get();
                 const assignedIds = (Auth.currentUser.territoryId || Auth.currentUser.territory_id || '').split(',').map(s => s.trim()).filter(s => s);
+                const currentMonth = Utils.getLocalDate().slice(0, 7);
 
                 const territoryData = db.territories.filter(t => assignedIds.includes(t.id)).map(t => {
                     const m = Calc.getMetrics(t.id);
+                    const tTarget = db.targets.find(tgt => (tgt.territoryId === t.id || tgt.territory_id === t.id) && tgt.month === currentMonth) || {};
                     const ldAch = m.yestProjAmt > 0 ? ((m.yestCollAmt / m.yestProjAmt) * 100).toFixed(1) : '0.0';
                     const tdAch = m.todayProj > 0 ? ((m.todayColl / m.todayProj) * 100).toFixed(1) : (m.todayColl > 0 ? '100+' : '0.0');
-                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch };
+                    return { 
+                        ...t, 
+                        ...m, 
+                        lastDayAch: ldAch, 
+                        todayAch: tdAch,
+                        totalOd: parseFloat(tTarget.totalOd || tTarget.total_od) || 0,
+                        odGrowthSply: parseFloat(tTarget.odGrowthSply || tTarget.od_growth_sply) || 0,
+                        perFileOd: parseFloat(tTarget.perFileOd || tTarget.per_file_od) || 0,
+                        sixPlusOdFiles: parseInt(tTarget.sixPlusOdFiles || tTarget.six_plus_od_files) || 0,
+                        sixPlusOdGrowthSplm: parseFloat(tTarget.sixPlusOdGrowthSplm || tTarget.six_plus_od_growth_splm) || 0
+                    };
                 }).sort((a, b) => parseFloat(b.rpi) - parseFloat(a.rpi));
 
                 const sums = {
                     targetAmt: 0, mtdColl: 0, targetFiles: 0, uniquePaidCodes: 0, remainingAmt: 0,
                     todayProj: 0, todayColl: 0, rdrr: 0, presetProjTotal: 0,
-                    lmNpTargetAmt: 0, lmNpTargetFiles: 0, mtdLmNpColl: 0, mtdLmNpFiles: 0
+                    lmNpTargetAmt: 0, lmNpTargetFiles: 0, mtdLmNpColl: 0, mtdLmNpFiles: 0,
+                    totalOd: 0, odGrowthSply: 0, perFileOd: 0, sixPlusOdFiles: 0, sixPlusOdGrowthSplm: 0
                 };
                 territoryData.forEach(t => {
                     sums.targetAmt += parseFloat(t.targetAmt) || 0;
@@ -4203,7 +4216,18 @@
                     sums.lmNpTargetFiles += parseInt(t.lmNpTargetFiles) || 0;
                     sums.mtdLmNpColl += parseFloat(t.mtdLmNpColl) || 0;
                     sums.mtdLmNpFiles += parseInt(t.mtdLmNpFiles) || 0;
+
+                    sums.totalOd += t.totalOd;
+                    sums.sixPlusOdFiles += t.sixPlusOdFiles;
+                    sums.odGrowthSply += t.odGrowthSply;
+                    sums.perFileOd += t.perFileOd;
+                    sums.sixPlusOdGrowthSplm += t.sixPlusOdGrowthSplm;
                 });
+
+                const areaCount = territoryData.length || 1;
+                sums.odGrowthSply = (sums.odGrowthSply / areaCount).toFixed(1);
+                sums.perFileOd = (sums.perFileOd / areaCount).toFixed(0);
+                sums.sixPlusOdGrowthSplm = (sums.sixPlusOdGrowthSplm / areaCount).toFixed(1);
 
                 sums.achievement = sums.targetAmt > 0 ? ((sums.mtdColl / sums.targetAmt) * 100).toFixed(1) : '0.0';
                 sums.todayAch = sums.todayProj > 0 ? ((sums.todayColl / sums.todayProj) * 100).toFixed(1) : (sums.todayColl > 0 ? '100+' : '0.0');
@@ -4225,6 +4249,36 @@
                         </div>
                         <div class="px-4 py-2 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-xl font-bold text-xs border border-brand-500/20 flex items-center shadow-sm">
                             <i class="fa-solid fa-user-tie mr-2"></i> Area Head
+                        </div>
+                    </div>
+                    
+                    <!-- Area Portfolio Health Strip (New) -->
+                    <div class="animate-entry mb-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 shadow-lg text-white hover-lift overflow-hidden">
+                        <div class="grid grid-cols-2 md:grid-cols-5 md:divide-x divide-white/20 bg-white/10 backdrop-blur-sm">
+                            <div class="p-4 bg-black/10 md:bg-transparent col-span-2 md:col-span-1 border-b md:border-b-0 border-white/20">
+                                <p class="text-[10px] uppercase tracking-wider opacity-80 mb-1">Month Start Total OD</p>
+                                <p class="text-2xl font-black font-mono">৳${parseInt(sums.totalOd || 0).toLocaleString()}</p>
+                            </div>
+                            <div class="p-4 border-r md:border-r-0 border-white/20">
+                                <p class="text-[10px] uppercase tracking-wider opacity-80 mb-1">OD Growth (SPLY)</p>
+                                <p class="text-xl font-black leading-tight ${parseFloat(sums.odGrowthSply) > 0 ? 'text-rose-200' : 'text-emerald-200'}">
+                                    ${sums.odGrowthSply || 0}% <i class="fa-solid fa-arrow-${parseFloat(sums.odGrowthSply) > 0 ? 'up' : 'down'} text-xs"></i>
+                                </p>
+                            </div>
+                            <div class="p-4 border-b md:border-b-0 border-white/20">
+                                <p class="text-[10px] uppercase tracking-wider opacity-80 mb-1">Per File OD (Avg)</p>
+                                <p class="text-xl font-black font-mono leading-tight">৳${parseInt(sums.perFileOd || 0).toLocaleString()}</p>
+                            </div>
+                            <div class="p-4 border-r md:border-r-0 border-white/20">
+                                <p class="text-[10px] uppercase tracking-wider opacity-80 mb-1">6+ OD Files</p>
+                                <p class="text-xl font-bold font-mono leading-tight">${sums.sixPlusOdFiles || 0}</p>
+                            </div>
+                            <div class="p-4">
+                                <p class="text-[10px] uppercase tracking-wider opacity-80 mb-1">6+ Growth (SPLM)</p>
+                                <p class="text-xl font-black leading-tight ${parseFloat(sums.sixPlusOdGrowthSplm) > 0 ? 'text-rose-200' : 'text-emerald-200'}">
+                                    ${sums.sixPlusOdGrowthSplm || 0}%
+                                </p>
+                            </div>
                         </div>
                     </div>
                     
@@ -4353,11 +4407,14 @@
                                 <p class="text-xs text-slate-400 font-medium mt-0.5">${territoryData.length} Active Regions</p>
                             </div>
                             <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700/50">
-                                <button id="ah-tab-current" onclick="document.getElementById('ah-current-month-table').classList.remove('hidden'); document.getElementById('ah-last-month-table').classList.add('hidden'); this.className='px-4 py-2 text-xs font-black rounded-lg transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-md'; document.getElementById('ah-tab-last').className='px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300';" class="px-4 py-2 text-xs font-black rounded-lg transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-md">
+                                <button id="ah-tab-current" onclick="document.getElementById('ah-current-month-table').classList.remove('hidden'); document.getElementById('ah-last-month-table').classList.add('hidden'); document.getElementById('ah-od-table').classList.add('hidden'); this.className='px-4 py-2 text-xs font-black rounded-lg transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-md'; document.getElementById('ah-tab-last').className='px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'; document.getElementById('ah-tab-od').className='px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300';" class="px-4 py-2 text-xs font-black rounded-lg transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-md">
                                     Current Month
                                 </button>
-                                <button id="ah-tab-last" onclick="document.getElementById('ah-last-month-table').classList.remove('hidden'); document.getElementById('ah-current-month-table').classList.add('hidden'); this.className='px-4 py-2 text-xs font-black rounded-lg transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-md'; document.getElementById('ah-tab-current').className='px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300';" class="px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                                <button id="ah-tab-last" onclick="document.getElementById('ah-last-month-table').classList.remove('hidden'); document.getElementById('ah-current-month-table').classList.add('hidden'); document.getElementById('ah-od-table').classList.add('hidden'); this.className='px-4 py-2 text-xs font-black rounded-lg transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-md'; document.getElementById('ah-tab-current').className='px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'; document.getElementById('ah-tab-od').className='px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300';" class="px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
                                     Last Month (LMNP)
+                                </button>
+                                <button id="ah-tab-od" onclick="document.getElementById('ah-od-table').classList.remove('hidden'); document.getElementById('ah-current-month-table').classList.add('hidden'); document.getElementById('ah-last-month-table').classList.add('hidden'); this.className='px-4 py-2 text-xs font-black rounded-lg transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-md'; document.getElementById('ah-tab-current').className='px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'; document.getElementById('ah-tab-last').className='px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300';" class="px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                                    OD Health Strip
                                 </button>
                             </div>
                         </div>
@@ -4471,6 +4528,47 @@
                                     }).join('')}
                                 </tbody>
                             </table>
+
+                            <!-- OD Health Tracker Table (New) -->
+                            <table class="w-full text-sm text-left whitespace-nowrap hidden" id="ah-od-table">
+                                <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs uppercase tracking-wider">
+                                    <tr class="divide-x divide-slate-200 dark:divide-slate-700">
+                                        <th class="px-6 py-4" rowspan="2">Territory</th>
+                                        <th class="px-6 py-4 text-center bg-emerald-50/40 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-400" colspan="3">Month Start OD Status</th>
+                                        <th class="px-6 py-4 text-center bg-rose-50/40 dark:bg-rose-900/10 text-rose-700 dark:text-rose-400" colspan="2">6+ OD Files Metrics</th>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-200 dark:divide-slate-700 border-t border-slate-200 dark:border-slate-700 text-[10px]">
+                                        <th class="px-4 py-2 text-right bg-emerald-50/20 dark:bg-emerald-900/5">Total OD</th>
+                                        <th class="px-4 py-2 text-center bg-emerald-50/20 dark:bg-emerald-900/5">OD Growth (SPLY)</th>
+                                        <th class="px-4 py-2 text-right bg-emerald-50/20 dark:bg-emerald-900/5">Per File OD</th>
+                                        <th class="px-4 py-2 text-center bg-rose-50/20 dark:bg-rose-900/5">6+ Files</th>
+                                        <th class="px-4 py-2 text-center bg-rose-50/20 dark:bg-rose-900/5">6+ Growth (SPLM)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs">
+                                    ${territoryData.map(t => {
+                                        return `
+                                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition divide-x divide-slate-100 dark:divide-slate-700">
+                                                <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
+                                                    <div class="flex flex-col gap-1">
+                                                        <span>${t.name}</span>
+                                                        <span class="text-[10px] font-normal text-slate-400 italic">${t.officer || 'No Officer'}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-4 text-right font-mono">৳${parseInt(t.totalOd || 0).toLocaleString()}</td>
+                                                <td class="px-4 py-4 text-center font-bold ${parseFloat(t.odGrowthSply) > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
+                                                    ${t.odGrowthSply || 0}%
+                                                </td>
+                                                <td class="px-4 py-4 text-right font-mono">৳${parseInt(t.perFileOd || 0).toLocaleString()}</td>
+                                                <td class="px-4 py-4 text-center font-mono">${t.sixPlusOdFiles || 0}</td>
+                                                <td class="px-4 py-4 text-center font-bold ${parseFloat(t.sixPlusOdGrowthSplm) > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
+                                                    ${t.sixPlusOdGrowthSplm || 0}%
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -4557,6 +4655,23 @@
                                                     <span class="font-bold text-sm text-indigo-600 dark:text-indigo-400">
                                                         ${parseFloat(t.lmNpTargetAmt) > 0 ? ((parseFloat(t.mtdLmNpColl) / parseFloat(t.lmNpTargetAmt)) * 100).toFixed(1) : '0.0'}%
                                                     </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Month Start OD Health Strip (New Mobile) -->
+                                        <div class="bg-teal-500/5 dark:bg-teal-500/10 p-3 rounded-xl border border-teal-500/10">
+                                            <span class="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                                                <i class="fa-solid fa-shield-halved text-[11px]"></i> Month Start OD Health
+                                            </span>
+                                            <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                                                <div>Total OD: <span class="font-mono font-bold text-slate-800 dark:text-white">৳${parseInt(t.totalOd || 0).toLocaleString()}</span></div>
+                                                <div>OD Growth: <span class="font-bold ${parseFloat(t.odGrowthSply) > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">${t.odGrowthSply || 0}%</span></div>
+                                                <div>Per File OD: <span class="font-mono font-bold text-slate-800 dark:text-white">৳${parseInt(t.perFileOd || 0).toLocaleString()}</span></div>
+                                                <div>6+ Files: <span class="font-mono font-bold text-slate-800 dark:text-white">${t.sixPlusOdFiles || 0}</span></div>
+                                                <div class="col-span-2 mt-1 pt-1 border-t border-teal-500/10 flex justify-between items-center">
+                                                    <span>6+ Growth (SPLM):</span>
+                                                    <span class="font-bold ${parseFloat(t.sixPlusOdGrowthSplm) > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">${t.sixPlusOdGrowthSplm || 0}%</span>
                                                 </div>
                                             </div>
                                         </div>
