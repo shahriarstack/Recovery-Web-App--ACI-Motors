@@ -361,13 +361,15 @@
 
                 <!-- Tabs -->
                 <div class="flex border-b border-slate-200 dark:border-[#3c4043] mb-8 relative">
-                    <div id="login-tab-indicator"
-                        class="absolute bottom-[0px] left-0 w-1/2 h-[3px] bg-[#1a73e8] dark:bg-[#8ab4f8] transition-transform duration-300 rounded-t-sm">
+                    <div id="login-tab-indicator" style="width: 33.33%"
+                        class="absolute bottom-[0px] left-0 h-[3px] bg-[#1a73e8] dark:bg-[#8ab4f8] transition-transform duration-300 rounded-t-sm">
                     </div>
                     <button type="button" onclick="UI.setLoginTab('officer')" id="btn-officer"
-                        class="w-1/2 pb-3 text-[14px] font-bold text-[#1a73e8] dark:text-[#8ab4f8] focus:outline-none transition-colors">Officer</button>
+                        class="w-1/3 pb-3 text-[14px] font-bold text-[#1a73e8] dark:text-[#8ab4f8] focus:outline-none transition-colors">Officer</button>
+                    <button type="button" onclick="UI.setLoginTab('area_head')" id="btn-areahead"
+                        class="w-1/3 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none rounded-t-sm">Area Head</button>
                     <button type="button" onclick="UI.setLoginTab('admin')" id="btn-admin"
-                        class="w-1/2 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none rounded-t-sm">Admin</button>
+                        class="w-1/3 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none rounded-t-sm">Admin</button>
                 </div>
 
                 <form id="login-form" class="space-y-6">
@@ -389,6 +391,12 @@
                             <label id="lbl-username"
                                 class="absolute left-3 -top-2.5 bg-white dark:bg-[#202124] px-1 text-xs text-[#1a73e8] dark:text-[#8ab4f8] transition-all">Select
                                 Territory</label>
+
+                            <!-- Area Head Dropdown -->
+                            <select id="area-head-select"
+                                class="hidden w-full px-4 py-3.5 bg-transparent border border-slate-300 dark:border-[#5f6368] rounded focus:border-[#1a73e8] dark:focus:border-[#8ab4f8] focus:border-2 outline-none transition-all appearance-none cursor-pointer text-[#202124] dark:text-[#e8eaed] peer">
+                                <option value="" class="dark:bg-[#202124]">Select Area Head</option>
+                            </select>
 
                             <div id="officer-dropdown-arrow"
                                 class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-[#5f6368] dark:text-[#9aa0a6]">
@@ -460,6 +468,11 @@
                         class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg transition-all duration-200">
                         <i class="fa-solid fa-users-gear mr-3 w-5"></i> User Management
                     </a>
+                    <!-- Area Head Management -->
+                    <a href="#" onclick="Router.navigate('admin-area-heads')"
+                        class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg transition-all duration-200">
+                        <i class="fa-solid fa-user-tie mr-3 w-5"></i> Area Heads
+                    </a>
                     <!-- NEW ADMIN TAB -->
                     <a href="#" onclick="Router.navigate('admin-offroad')"
                         class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg transition-all duration-200">
@@ -484,6 +497,14 @@
                     <a href="#" onclick="Router.navigate('admin-vehicle-perf')"
                         class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg transition-all duration-200">
                         <i class="fa-solid fa-truck-fast mr-3 w-5"></i> Vehicle Performance
+                    </a>
+                </div>
+
+                <div id="areahead-nav" class="hidden space-y-1">
+                    <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Area Management</p>
+                    <a href="#" onclick="Router.navigate('area-head-dashboard')"
+                        class="nav-item flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-400 transition-all duration-200">
+                        <i class="fa-solid fa-chart-pie mr-3 w-5"></i> Dashboard
                     </a>
                 </div>
 
@@ -781,9 +802,20 @@
                 let projections = db.projections.filter(p => p.date.startsWith(currentMonth));
 
                 if (territoryId) {
-                    collections = collections.filter(c => c.territoryId === territoryId);
-                    targets = targets.filter(t => t.territoryId === territoryId);
-                    projections = projections.filter(p => p.territoryId === territoryId);
+                    if (Array.isArray(territoryId)) {
+                        collections = collections.filter(c => territoryId.includes(c.territoryId) || territoryId.includes(c.territory_id));
+                        targets = targets.filter(t => territoryId.includes(t.territoryId) || territoryId.includes(t.territory_id));
+                        projections = projections.filter(p => territoryId.includes(p.territoryId) || territoryId.includes(p.territory_id));
+                    } else if (String(territoryId).includes(',')) {
+                        const ids = String(territoryId).split(',').filter(Boolean);
+                        collections = collections.filter(c => ids.includes(c.territoryId) || ids.includes(c.territory_id));
+                        targets = targets.filter(t => ids.includes(t.territoryId) || ids.includes(t.territory_id));
+                        projections = projections.filter(p => ids.includes(p.territoryId) || ids.includes(p.territory_id));
+                    } else {
+                        collections = collections.filter(c => c.territoryId === territoryId || c.territory_id === territoryId);
+                        targets = targets.filter(t => t.territoryId === territoryId || t.territory_id === territoryId);
+                        projections = projections.filter(p => p.territoryId === territoryId || p.territory_id === territoryId);
+                    }
                 }
 
                 const targetAmt = targets.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
@@ -985,54 +1017,57 @@
                 this.currentLoginRole = role;
                 const indicator = document.getElementById('login-tab-indicator');
                 const btnOfficer = document.getElementById('btn-officer');
+                const btnAreaHead = document.getElementById('btn-areahead');
                 const btnAdmin = document.getElementById('btn-admin');
                 const lblUsername = document.getElementById('lbl-username');
-                const lblPassword = document.getElementById('lbl-password');
+                const lblAdmin = document.getElementById('lbl-username-admin');
                 const inpUsername = document.getElementById('username');
                 const selOfficer = document.getElementById('officer-select');
+                const selAreaHead = document.getElementById('area-head-select');
                 const arrow = document.getElementById('officer-dropdown-arrow');
 
+                if (btnOfficer) {
+                    btnOfficer.className = "w-1/3 pb-3 text-[14px] focus:outline-none transition-colors " + (role === 'officer' ? "font-bold text-[#1a73e8] dark:text-[#8ab4f8]" : "font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30");
+                }
+                if (btnAreaHead) {
+                    btnAreaHead.className = "w-1/3 pb-3 text-[14px] focus:outline-none transition-colors " + (role === 'area_head' ? "font-bold text-[#1a73e8] dark:text-[#8ab4f8]" : "font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30");
+                }
+                if (btnAdmin) {
+                    btnAdmin.className = "w-1/3 pb-3 text-[14px] focus:outline-none transition-colors " + (role === 'admin' ? "font-bold text-[#1a73e8] dark:text-[#8ab4f8]" : "font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30");
+                }
+
+                inpUsername.classList.add('hidden');
+                selOfficer.classList.add('hidden');
+                if (selAreaHead) selAreaHead.classList.add('hidden');
+                lblAdmin.classList.add('hidden');
+                lblUsername.classList.add('hidden');
+                arrow.classList.add('hidden');
+
                 if (role === 'officer') {
-                    indicator.classList.remove('translate-x-[100%]', 'translate-x-full');
-                    indicator.classList.add('translate-x-0');
-
-                    btnOfficer.classList.add('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnOfficer.classList.remove('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
-                    btnAdmin.classList.remove('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnAdmin.classList.add('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
-
+                    indicator.style.transform = 'translateX(0%)';
                     lblUsername.innerText = 'Select Territory';
-                    const lblAdmin = document.getElementById('lbl-username-admin');
-                    if (lblAdmin) lblAdmin.classList.add('hidden');
-                    if (lblUsername) lblUsername.classList.remove('hidden');
-
-                    inpUsername.classList.add('hidden');
+                    lblUsername.classList.remove('hidden');
                     selOfficer.classList.remove('hidden');
                     arrow.classList.remove('hidden');
                     this.populateLoginDropdown();
+                } else if (role === 'area_head') {
+                    indicator.style.transform = 'translateX(100%)';
+                    lblUsername.innerText = 'Select Area Head';
+                    lblUsername.classList.remove('hidden');
+                    if (selAreaHead) selAreaHead.classList.remove('hidden');
+                    arrow.classList.remove('hidden');
+                    this.populateAreaHeadDropdown();
                 } else {
-                    indicator.classList.remove('translate-x-0');
-                    indicator.classList.add('translate-x-[100%]');
-
-                    btnAdmin.classList.add('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnAdmin.classList.remove('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
-                    btnOfficer.classList.remove('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnOfficer.classList.add('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
-
-                    const lblAdmin = document.getElementById('lbl-username-admin');
-                    if (lblAdmin) lblAdmin.classList.remove('hidden');
-                    if (lblUsername) lblUsername.classList.add('hidden');
-
+                    indicator.style.transform = 'translateX(200%)';
+                    lblAdmin.classList.remove('hidden');
                     inpUsername.classList.remove('hidden');
-                    selOfficer.classList.add('hidden');
-                    arrow.classList.add('hidden');
                     inpUsername.placeholder = '';
                 }
             },
 
             populateLoginDropdown() {
-                Store.init();
                 const db = Store.get();
+                if (!db) return;
                 const select = document.getElementById('officer-select');
                 select.innerHTML = '<option value="">-- Select Your Territory --</option>';
 
@@ -1042,6 +1077,23 @@
                     const opt = document.createElement('option');
                     opt.value = u.username;
                     opt.text = `${u.username}`;
+                    select.appendChild(opt);
+                });
+            },
+
+            populateAreaHeadDropdown() {
+                const db = Store.get();
+                if (!db) return;
+                const select = document.getElementById('area-head-select');
+                if (!select) return;
+                select.innerHTML = '<option value="">-- Select Area Head --</option>';
+
+                const areaHeads = db.users.filter(u => u.role === 'area_head').sort((a, b) => (a.officerName || a.username).localeCompare(b.officerName || b.username));
+
+                areaHeads.forEach(u => {
+                    const opt = document.createElement('option');
+                    opt.value = u.username;
+                    opt.text = `${u.officerName || u.username}`;
                     select.appendChild(opt);
                 });
             },
@@ -1056,9 +1108,21 @@
 
                 if (Auth.currentUser.role === 'admin') {
                     document.getElementById('admin-nav').classList.remove('hidden');
+                    const ahNav = document.getElementById('areahead-nav');
+                    if (ahNav) ahNav.classList.add('hidden');
+                    document.getElementById('officer-nav').classList.add('hidden');
                     Router.navigate('admin-dashboard');
+                } else if (Auth.currentUser.role === 'area_head') {
+                    const ahNav = document.getElementById('areahead-nav');
+                    if (ahNav) ahNav.classList.remove('hidden');
+                    document.getElementById('admin-nav').classList.add('hidden');
+                    document.getElementById('officer-nav').classList.add('hidden');
+                    Router.navigate('area-head-dashboard');
                 } else {
                     document.getElementById('officer-nav').classList.remove('hidden');
+                    document.getElementById('admin-nav').classList.add('hidden');
+                    const ahNav = document.getElementById('areahead-nav');
+                    if (ahNav) ahNav.classList.add('hidden');
                     Router.navigate('officer-dashboard');
                 }
 
@@ -1109,6 +1173,295 @@
                 sb.classList.add('-translate-x-full');
                 overlay.classList.add('opacity-0');
                 setTimeout(() => overlay.classList.add('hidden'), 300);
+            },
+
+            // --- AREA HEAD VIEWS & MANAGEMENT ---
+            renderAdminAreaHeads() {
+                const db = Store.get();
+                if (!db.users) db.users = [];
+                const areaHeads = db.users.filter(u => u.role === 'area_head');
+
+                document.getElementById('views-container').innerHTML = `
+                    <div class="animate-entry">
+                        <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Area Head Management</h2>
+                                <p class="text-sm text-slate-500">Create and manage Area Heads and their assigned territories</p>
+                            </div>
+                            <button onclick="UI.openAreaHeadModal()" class="px-4 py-2 bg-brand-600 text-white rounded-lg shadow-md hover:bg-brand-700 transition-all font-bold text-sm">
+                                <i class="fa-solid fa-plus mr-2"></i> Add Area Head
+                            </button>
+                        </div>
+
+                        <div class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 uppercase font-bold">
+                                        <tr>
+                                            <th class="px-6 py-4">Area Head Name</th>
+                                            <th class="px-6 py-4">Username</th>
+                                            <th class="px-6 py-4">Password</th>
+                                            <th class="px-6 py-4">Assigned Territories</th>
+                                            <th class="px-6 py-4 text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
+                                        ${areaHeads.map(ah => {
+                                            const territories = (ah.territoryId || '').split(',').filter(Boolean);
+                                            const names = territories.map(tId => {
+                                                const t = db.territories.find(ter => ter.id === tId);
+                                                return t ? t.name : tId;
+                                            }).join(', ');
+                                            return `
+                                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                                                    <td class="px-6 py-4 font-bold">${ah.officerName || '-'}</td>
+                                                    <td class="px-6 py-4 font-mono">${ah.username}</td>
+                                                    <td class="px-6 py-4 font-mono">${ah.password}</td>
+                                                    <td class="px-6 py-4 text-xs italic">${names || 'None'}</td>
+                                                    <td class="px-6 py-4 text-center">
+                                                        <div class="flex justify-center items-center gap-2">
+                                                            <button onclick="UI.openAreaHeadModal('${ah.id}')" class="text-blue-500 hover:text-blue-600 transition" title="Edit">
+                                                                <i class="fa-solid fa-pen-to-square"></i>
+                                                            </button>
+                                                            <button onclick="UI.deleteUser('${ah.id}')" class="text-red-500 hover:text-red-600 transition" title="Delete">
+                                                                <i class="fa-solid fa-trash-can"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                        ${areaHeads.length === 0 ? '<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">No Area Heads registered yet.</td></tr>' : ''}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            openAreaHeadModal(userId = null) {
+                const db = Store.get();
+                let user = { id: '', username: '', password: '', officerName: '', territoryId: '' };
+                if (userId) {
+                    const found = db.users.find(u => String(u.id) === String(userId));
+                    if (found) user = found;
+                }
+
+                const userTerritories = (user.territoryId || '').split(',').filter(Boolean);
+
+                const html = `
+                    <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-white">${userId ? 'Edit' : 'Add'} Area Head</h3>
+                    <form onsubmit="UI.saveAreaHead(event, '${userId || ''}')" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Name</label>
+                            <input type="text" name="officerName" value="${user.officerName}" class="w-full p-2.5 rounded-lg border dark:bg-slate-800 dark:border-slate-600 text-sm focus:ring-2 focus:ring-brand-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Username / Code</label>
+                            <input type="text" name="username" value="${user.username}" class="w-full p-2.5 rounded-lg border dark:bg-slate-800 dark:border-slate-600 text-sm focus:ring-2 focus:ring-brand-500" required ${userId ? 'readonly' : ''}>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Password / Employee ID</label>
+                            <input type="text" name="password" value="${user.password}" class="w-full p-2.5 rounded-lg border dark:bg-slate-800 dark:border-slate-600 text-sm focus:ring-2 focus:ring-brand-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Assign Territories</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-slate-200 dark:border-slate-700 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                                ${db.territories.map(t => {
+                                    const checked = userTerritories.includes(t.id) ? 'checked' : '';
+                                    return `
+                                        <label class="flex items-center space-x-2 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
+                                            <input type="checkbox" name="assignedTerritories" value="${t.id}" ${checked} class="rounded text-brand-500 border-slate-300">
+                                            <span>${t.name}</span>
+                                        </label>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-2 pt-2">
+                            <button type="button" onclick="document.getElementById('generic-modal').classList.add('hidden')" class="px-4 py-2 text-slate-500 hover:text-slate-700 transition text-sm font-bold">Cancel</button>
+                            <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg shadow-md font-bold text-sm">Save</button>
+                        </div>
+                    </form>
+                `;
+                this.renderHtmlModal(html);
+            },
+
+            saveAreaHead(e, userId) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                const officerName = formData.get('officerName');
+                const username = formData.get('username');
+                const password = formData.get('password');
+                
+                const checkboxes = e.target.querySelectorAll('input[name="assignedTerritories"]:checked');
+                const territoryId = Array.from(checkboxes).map(cb => cb.value).join(',');
+
+                const payload = {
+                    officerName,
+                    username,
+                    password,
+                    role: 'area_head',
+                    territoryId
+                };
+
+                if (userId) {
+                    payload.id = userId;
+                } else {
+                    payload.id = 'ah_' + Date.now();
+                }
+
+                UI.toggleLoader(true);
+                Store.update('users', payload).then(() => {
+                    UI.toggleLoader(false);
+                    document.getElementById('generic-modal').classList.add('hidden');
+                    UI.renderAdminAreaHeads();
+                }).catch(err => {
+                    UI.toggleLoader(false);
+                    alert('Failed to save Area Head: ' + err.message);
+                });
+            },
+
+            deleteUser(id) {
+                if (!confirm('Are you sure you want to delete this user?')) return;
+                UI.toggleLoader(true);
+                Store.delete('users', id).then(() => {
+                    UI.toggleLoader(false);
+                    UI.renderAdminAreaHeads();
+                }).catch(err => {
+                    UI.toggleLoader(false);
+                    alert('Failed to delete user: ' + err.message);
+                });
+            },
+
+            renderAreaHeadDashboard() {
+                const db = Store.get();
+                const currentAh = Auth.currentUser;
+                const ahTerritories = (currentAh.territoryId || '').split(',').filter(Boolean);
+                
+                if (ahTerritories.length === 0) {
+                    document.getElementById('views-container').innerHTML = `
+                        <div class="animate-entry flex flex-col items-center justify-center h-full p-10 text-slate-400">
+                            <i class="fa-solid fa-circle-nodes text-6xl mb-4 text-slate-300"></i>
+                            <h3 class="text-xl font-bold mb-1">No Territories Assigned</h3>
+                            <p class="text-sm text-slate-500 text-center max-w-md">Contact the system administrator to assign territories to your Area Head account.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const metrics = Calc.getMetrics(ahTerritories);
+                const todayAch = metrics.todayProj > 0 ? ((metrics.todayColl / metrics.todayProj) * 100).toFixed(1) : (metrics.todayColl > 0 ? '100+' : '0.0');
+
+                const assignedTerritoryData = db.territories.filter(t => ahTerritories.includes(t.id)).map(t => {
+                    const m = Calc.getMetrics(t.id);
+                    const ldAch = m.yestProjAmt > 0 ? ((m.yestCollAmt / m.yestProjAmt) * 100).toFixed(1) : '0.0';
+                    const tdAch = m.todayProj > 0 ? ((m.todayColl / m.todayProj) * 100).toFixed(1) : (m.todayColl > 0 ? '100+' : '0.0');
+                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch };
+                }).sort((a, b) => parseFloat(b.rpi) - parseFloat(a.rpi));
+
+                document.getElementById('views-container').innerHTML = `
+                    <div class="animate-entry space-y-6">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 class="text-2xl font-black text-slate-800 dark:text-white">Area Intelligence Suite</h2>
+                                <p class="text-xs text-slate-500 font-medium">Performance summary for assigned operational regions</p>
+                            </div>
+                            <div class="px-4 py-2 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-xl font-bold text-xs border border-brand-500/20 flex items-center shadow-sm">
+                                <i class="fa-solid fa-user-tie mr-2"></i> Area Head: ${currentAh.officerName || currentAh.username}
+                            </div>
+                        </div>
+
+                        <div class="p-5 rounded-2xl border ${Calc.getRPIBg(metrics.rpi)} flex items-center justify-between shadow-sm hover-lift">
+                            <div>
+                                <h3 class="text-base font-bold text-slate-800 dark:text-white leading-tight">Area Recovery Index (RPI)</h3>
+                                <p class="text-[11px] opacity-80">Aggregate assigned portfolio health status</p>
+                            </div>
+                            <div class="text-4xl font-black ${Calc.getRPIColor(metrics.rpi)}">${metrics.rpi}</div>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="glass-panel p-5 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-dark-card hover-lift relative overflow-hidden group">
+                                <div class="absolute right-0 top-0 opacity-5 text-brand-600 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-money-bill-trend-up text-6xl"></i>
+                                </div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Target (proj)</p>
+                                <p class="text-xl font-bold text-slate-800 dark:text-white">৳${parseInt(metrics.presetProjTotal).toLocaleString()}</p>
+                                <p class="text-[9px] text-slate-400 mt-1">Target Amt: ৳${parseInt(metrics.targetAmt).toLocaleString()}</p>
+                            </div>
+
+                            <div class="glass-panel p-5 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-dark-card hover-lift relative overflow-hidden group">
+                                <div class="absolute right-0 top-0 opacity-5 text-emerald-600 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-wallet text-6xl"></i>
+                                </div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Till Date Coll</p>
+                                <p class="text-xl font-bold text-emerald-600">৳${parseInt(metrics.mtdColl).toLocaleString()}</p>
+                                <p class="text-[9px] text-emerald-500 mt-1">Ach: ${metrics.tillDayAchievement}%</p>
+                            </div>
+
+                            <div class="glass-panel p-5 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-dark-card hover-lift relative overflow-hidden group">
+                                <div class="absolute right-0 top-0 opacity-5 text-blue-600 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-bullseye text-6xl"></i>
+                                </div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Today Projection</p>
+                                <p class="text-xl font-bold text-blue-600">৳${parseInt(metrics.todayProj).toLocaleString()}</p>
+                                <p class="text-[9px] text-blue-500 mt-1">Coll: ৳${parseInt(metrics.todayColl).toLocaleString()}</p>
+                            </div>
+
+                            <div class="glass-panel p-5 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-dark-card hover-lift relative overflow-hidden group">
+                                <div class="absolute right-0 top-0 opacity-5 text-amber-600 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-hourglass-half text-6xl"></i>
+                                </div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Remaining Amount</p>
+                                <p class="text-xl font-bold text-amber-600">৳${parseInt(metrics.remainingAmt).toLocaleString()}</p>
+                                <p class="text-[9px] text-amber-500 mt-1">Cure Rate: ${((metrics.uniquePaidCodes / metrics.targetFiles) * 100).toFixed(1)}%</p>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700">
+                            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
+                                <h3 class="text-base font-bold text-slate-800 dark:text-white flex items-center">
+                                    <i class="fa-solid fa-map-location-dot text-brand-500 mr-2"></i> Territory Performance Breakdown
+                                </h3>
+                                <span class="text-xs font-bold text-slate-400">${assignedTerritoryData.length} regions</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left border-collapse">
+                                    <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase text-xs font-bold">
+                                        <tr>
+                                            <th class="p-4">Territory</th>
+                                            <th class="p-4 text-center">Cure Files</th>
+                                            <th class="p-4 text-right">Target (proj)</th>
+                                            <th class="p-4 text-right">MTD Coll</th>
+                                            <th class="p-4 text-center">MTD Ach %</th>
+                                            <th class="p-4 text-right">Today Proj</th>
+                                            <th class="p-4 text-right">Today Coll</th>
+                                            <th class="p-4 text-center">Today Ach%</th>
+                                            <th class="p-4 text-center">RPI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
+                                        ${assignedTerritoryData.map(t => `
+                                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                                                <td class="p-4 font-bold">${t.name}</td>
+                                                <td class="p-4 text-center font-medium text-blue-600">${t.uniquePaidCodes} / ${t.targetFiles}</td>
+                                                <td class="p-4 text-right font-mono">৳${parseInt(t.presetProjTotal).toLocaleString()}</td>
+                                                <td class="p-4 text-right font-mono font-bold text-emerald-600">৳${parseInt(t.mtdColl).toLocaleString()}</td>
+                                                <td class="p-4 text-center font-bold bg-emerald-500/10 text-emerald-600 rounded">${t.tillDayAchievement}%</td>
+                                                <td class="p-4 text-right font-mono">৳${parseInt(t.todayProj).toLocaleString()}</td>
+                                                <td class="p-4 text-right font-mono font-bold text-blue-600">৳${parseInt(t.todayColl).toLocaleString()}</td>
+                                                <td class="p-4 text-center font-bold bg-blue-500/10 text-blue-600 rounded">${t.todayAch}%</td>
+                                                <td class="p-4 text-center font-black ${Calc.getRPIColor(t.rpi)}">${t.rpi}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
             },
 
             // --- ADMIN VIEWS ---
@@ -5757,7 +6110,9 @@
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const role = UI.currentLoginRole;
-            const username = role === 'officer' ? document.getElementById('officer-select').value : document.getElementById('username').value;
+            const username = role === 'officer' ? document.getElementById('officer-select').value : 
+                             (role === 'area_head' ? document.getElementById('area-head-select').value : 
+                             document.getElementById('username').value);
             const password = document.getElementById('password').value;
             Auth.login(username, password, role);
         });
