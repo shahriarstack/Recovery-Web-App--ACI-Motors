@@ -367,7 +367,8 @@
                     <button type="button" onclick="UI.setLoginTab('officer')" id="btn-officer"
                         class="w-1/3 pb-3 text-[14px] font-bold text-[#1a73e8] dark:text-[#8ab4f8] focus:outline-none transition-colors">Officer</button>
                     <button type="button" onclick="UI.setLoginTab('area_head')" id="btn-areahead"
-                        class="w-1/3 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none rounded-t-sm">Area Head</button>
+                        class="w-1/3 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none rounded-t-sm">Area
+                        Head</button>
                     <button type="button" onclick="UI.setLoginTab('admin')" id="btn-admin"
                         class="w-1/3 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none rounded-t-sm">Admin</button>
                 </div>
@@ -501,7 +502,8 @@
                 </div>
 
                 <div id="areahead-nav" class="hidden space-y-1">
-                    <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Area Management</p>
+                    <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Area Management
+                    </p>
                     <a href="#" onclick="Router.navigate('area-head-dashboard')"
                         class="nav-item flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-400 transition-all duration-200">
                         <i class="fa-solid fa-chart-pie mr-3 w-5"></i> Dashboard
@@ -1207,12 +1209,12 @@
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
                                         ${areaHeads.map(ah => {
-                                            const territories = (ah.territoryId || '').split(',').filter(Boolean);
-                                            const names = territories.map(tId => {
-                                                const t = db.territories.find(ter => ter.id === tId);
-                                                return t ? t.name : tId;
-                                            }).join(', ');
-                                            return `
+                    const territories = (ah.territoryId || ah.territory_id || '').split(',').filter(Boolean);
+                    const names = territories.map(tId => {
+                        const t = db.territories.find(ter => ter.id === tId);
+                        return t ? t.name : tId;
+                    }).join(', ');
+                    return `
                                                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                                                     <td class="px-6 py-4 font-bold">${ah.officerName || '-'}</td>
                                                     <td class="px-6 py-4 font-mono">${ah.username}</td>
@@ -1230,7 +1232,7 @@
                                                     </td>
                                                 </tr>
                                             `;
-                                        }).join('')}
+                }).join('')}
                                         ${areaHeads.length === 0 ? '<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">No Area Heads registered yet.</td></tr>' : ''}
                                     </tbody>
                                 </table>
@@ -1246,7 +1248,7 @@
                 const db = Store.get();
                 const container = document.getElementById('ah-territory-tags');
                 if (!container) return;
-                
+
                 if (this.selectedAhTerritories.length === 0) {
                     container.innerHTML = '<span class="text-xs italic text-slate-400 select-none">No territories selected yet.</span>';
                 } else {
@@ -1263,7 +1265,7 @@
                         `;
                     }).join('');
                 }
-                
+
                 const input = document.getElementById('ah-territories-input');
                 if (input) input.value = this.selectedAhTerritories.join(',');
             },
@@ -1273,7 +1275,7 @@
                 if (!picker) return;
                 const val = picker.value;
                 if (!val) return;
-                
+
                 if (!this.selectedAhTerritories.includes(val)) {
                     this.selectedAhTerritories.push(val);
                     this.renderAhTerritoryTags();
@@ -1294,7 +1296,7 @@
                     if (found) user = found;
                 }
 
-                this.selectedAhTerritories = (user.territoryId || '').split(',').filter(Boolean);
+                this.selectedAhTerritories = (user.territoryId || user.territory_id || '').split(',').filter(Boolean);
 
                 const html = `
                     <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-white">${userId ? 'Edit' : 'Add'} Area Head</h3>
@@ -1325,7 +1327,7 @@
                             <div id="ah-territory-tags" class="flex flex-wrap gap-2 p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/50 min-h-[48px] shadow-inner">
                                 <!-- Pills injected here via JS -->
                             </div>
-                            <input type="hidden" name="assignedTerritories" id="ah-territories-input" value="${user.territoryId || ''}">
+                            <input type="hidden" name="assignedTerritories" id="ah-territories-input" value="${user.territoryId || user.territory_id || ''}">
                         </div>
                         <div class="flex justify-end space-x-2 pt-2">
                             <button type="button" onclick="document.getElementById('generic-modal').classList.add('hidden')" class="px-4 py-2 text-slate-500 hover:text-slate-700 transition text-sm font-bold">Cancel</button>
@@ -1340,7 +1342,7 @@
             saveAreaHead(e, userId) {
                 e.preventDefault();
                 const formData = new FormData(e.target);
-                
+
                 const officerName = formData.get('officerName');
                 const username = formData.get('username');
                 const password = formData.get('password');
@@ -1386,8 +1388,8 @@
             renderAreaHeadDashboard() {
                 const db = Store.get();
                 const currentAh = Auth.currentUser;
-                const ahTerritories = (currentAh.territoryId || '').split(',').filter(Boolean);
-                
+                const ahTerritories = (currentAh.territoryId || currentAh.territory_id || '').split(',').filter(Boolean);
+
                 if (ahTerritories.length === 0) {
                     document.getElementById('views-container').innerHTML = `
                         <div class="animate-entry flex flex-col items-center justify-center h-full p-10 text-slate-400">
@@ -2815,7 +2817,7 @@
                 }).filter(c => {
                     const matchesDate = c.date >= start && c.date <= end;
                     const matchesTerritory = search === '' || (c.territoryName && c.territoryName.toLowerCase().includes(search.toLowerCase()));
-                    
+
                     let matchesCustomer = true;
                     if (searchTerms.length > 0) {
                         matchesCustomer = searchTerms.some(term => {
@@ -2823,11 +2825,11 @@
                             const cName = String(c.customerName || c.customer_name || '').toLowerCase();
                             const cReceipt = String(c.receipt || '').toLowerCase();
                             const cFile = String(c.fileId || c.file_id || '').toLowerCase();
-                            
+
                             return cCode.includes(term) || cName.includes(term) || cReceipt.includes(term) || cFile.includes(term);
                         });
                     }
-                    
+
                     return matchesDate && matchesTerritory && matchesCustomer;
                 }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -3646,14 +3648,14 @@
             renderAdminAreaHeads() {
                 const db = Store.get();
                 const areaHeads = db.users.filter(u => u.role === 'area_head');
-                
+
                 let tbody = '';
                 areaHeads.forEach(ah => {
                     tbody += `
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition interactive-row border-b border-slate-100 dark:border-slate-700">
                         <td class="p-3 border-r dark:border-slate-600 font-medium text-slate-800 dark:text-white">${ah.username}</td>
                         <td class="p-3 border-r dark:border-slate-600 text-slate-700 dark:text-slate-300">${ah.officerName || ''}</td>
-                        <td class="p-3 border-r dark:border-slate-600 text-brand-600 font-medium">${ah.territoryId || ''}</td>
+                        <td class="p-3 border-r dark:border-slate-600 text-brand-600 font-medium">${ah.territoryId || ah.territory_id || ''}</td>
                         <td class="p-3 border-r dark:border-slate-600 text-slate-500">${ah.password}</td>
                         <td class="p-3 text-center">
                             <button onclick="UI.openAreaHeadModal('${ah.id}')" class="text-blue-500 hover:text-blue-700 mr-3"><i class="fa-solid fa-edit"></i></button>
@@ -3690,36 +3692,107 @@
                     </div>
                 </div>`;
             },
-            
+
             openAreaHeadModal(id = null) {
                 const db = Store.get();
                 const item = id ? db.users.find(u => String(u.id) === String(id)) : {};
-                
+                const currentTerritories = item.territoryId || item.territory_id || '';
+
                 const html = `
                     <form onsubmit="UI.saveAreaHead(event)" class="space-y-4 relative">
                         <input type="hidden" name="id" value="${item.id || ''}">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Area Name (Login Username)</label>
-                            <input type="text" name="username" value="${item.username || ''}" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg">
+                            <input type="text" name="username" value="${item.username || ''}" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-brand-500">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Head Name</label>
-                            <input type="text" name="officerName" value="${item.officerName || ''}" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg">
+                            <input type="text" name="officerName" value="${item.officerName || ''}" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-brand-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Assigned Territories (Comma Separated IDs)</label>
-                            <input type="text" name="territoryId" value="${item.territoryId || ''}" placeholder="E.g., north, south" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg">
-                            <p class="text-[10px] text-slate-400 mt-1">Use exact territory IDs, separated by commas. E.g. bogura, dinajpur</p>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Assigned Territories</label>
+                            <div class="flex gap-2 mb-2">
+                                <select id="ah-territory-picker" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg text-sm focus:ring-2 focus:ring-brand-500">
+                                    <option value="">-- Select Territory to Add --</option>
+                                    ${db.territories.map(t => `<option value="${t.id}">${t.name} (${t.id})</option>`).join('')}
+                                </select>
+                                <button type="button" onclick="UI.addAhTerritory()" class="px-4 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition font-bold text-sm flex items-center justify-center shadow-sm">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                            <div id="ah-territory-tags" class="flex flex-wrap gap-2 p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/50 min-h-[48px] shadow-inner">
+                                <!-- Pills injected via JS -->
+                            </div>
+                            <input type="hidden" name="territoryId" id="ah-territories-input" value="${currentTerritories}">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label>
-                            <input type="text" name="password" value="${item.password || '1234'}" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg">
+                            <input type="text" name="password" value="${item.password || '1234'}" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-brand-500">
                         </div>
-                        <button type="submit" class="w-full h-12 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg mt-2">Save Area Head</button>
+                        <button type="submit" class="w-full h-12 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-bold rounded-lg mt-2 shadow-lg transition transform active:scale-[0.98]">Save Area Head</button>
                     </form>`;
                 this.renderModal(id ? 'Edit Area Head' : 'New Area Head', html);
+
+                setTimeout(() => {
+                    this.renderAhTerritoryTags();
+                }, 50);
             },
-            
+
+            addAhTerritory() {
+                const picker = document.getElementById('ah-territory-picker');
+                const input = document.getElementById('ah-territories-input');
+                if (!picker || !input) return;
+
+                const selectedId = picker.value;
+                if (!selectedId) return;
+
+                let currentIds = input.value.split(',').map(s => s.trim()).filter(Boolean);
+                if (!currentIds.includes(selectedId)) {
+                    currentIds.push(selectedId);
+                    input.value = currentIds.join(',');
+                    this.renderAhTerritoryTags();
+                }
+                picker.value = '';
+            },
+
+            removeAhTerritory(id) {
+                const input = document.getElementById('ah-territories-input');
+                if (!input) return;
+
+                let currentIds = input.value.split(',').map(s => s.trim()).filter(Boolean);
+                currentIds = currentIds.filter(tId => tId !== id);
+                input.value = currentIds.join(',');
+                this.renderAhTerritoryTags();
+            },
+
+            renderAhTerritoryTags() {
+                const input = document.getElementById('ah-territories-input');
+                const tagsContainer = document.getElementById('ah-territory-tags');
+                if (!input || !tagsContainer) return;
+
+                const db = Store.get();
+                const currentIds = input.value.split(',').map(s => s.trim()).filter(Boolean);
+
+                if (currentIds.length === 0) {
+                    tagsContainer.innerHTML = `<span class="text-xs text-slate-400 italic flex items-center justify-center w-full">No territories assigned. Select from the dropdown.</span>`;
+                    return;
+                }
+
+                tagsContainer.innerHTML = currentIds.map(id => {
+                    const territory = db.territories.find(t => t.id === id);
+                    const name = territory ? territory.name : id;
+                    return `
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-xs font-bold border border-brand-200 dark:border-brand-800 shadow-sm animate-fade-in">
+                            <i class="fa-solid fa-location-dot text-brand-500 text-[10px]"></i>
+                            <span>${name}</span>
+                            <button type="button" onclick="UI.removeAhTerritory('${id}')" class="w-4 h-4 rounded-full flex items-center justify-center bg-brand-200 dark:bg-brand-800/60 hover:bg-rose-500 hover:text-white transition-colors">
+                                <i class="fa-solid fa-xmark text-[8px]"></i>
+                            </button>
+                        </span>
+                    `;
+                }).join('');
+            },
+
             saveAreaHead(e) {
                 e.preventDefault();
                 const data = Object.fromEntries(new FormData(e.target).entries());
@@ -3731,23 +3804,23 @@
                     password: data.password,
                     territory_id: data.territoryId
                 };
-                
+
                 Store.update('users', payload).then(() => {
                     UI.closeModal('generic-modal');
                     UI.renderAdminAreaHeads();
                 }).catch(err => alert(err.message));
             },
-            
+
             deleteAreaHead(id) {
                 if (confirm('Delete this Area Head?')) {
                     Store.delete('users', id).then(() => UI.renderAdminAreaHeads());
                 }
             },
-            
+
             renderAreaHeadDashboard() {
                 const db = Store.get();
-                const assignedIds = (Auth.currentUser.territoryId || '').split(',').map(s => s.trim()).filter(s => s);
-                
+                const assignedIds = (Auth.currentUser.territoryId || Auth.currentUser.territory_id || '').split(',').map(s => s.trim()).filter(s => s);
+
                 const territoryData = db.territories.filter(t => assignedIds.includes(t.id)).map(t => {
                     const m = Calc.getMetrics(t.id);
                     const ldAch = m.yestProjAmt > 0 ? ((m.yestCollAmt / m.yestProjAmt) * 100).toFixed(1) : '0.0';
@@ -3768,10 +3841,10 @@
                     sums.todayColl += parseFloat(t.todayColl) || 0;
                     sums.presetProjTotal += parseFloat(t.presetProjTotal) || 0;
                 });
-                
+
                 sums.achievement = sums.targetAmt > 0 ? ((sums.mtdColl / sums.targetAmt) * 100).toFixed(1) : '0.0';
                 sums.todayAch = sums.todayProj > 0 ? ((sums.todayColl / sums.todayProj) * 100).toFixed(1) : (sums.todayColl > 0 ? '100+' : '0.0');
-                
+
                 const now = new Date();
                 const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
                 const remainingAmt = Math.max(0, sums.presetProjTotal - sums.mtdColl);
@@ -4176,7 +4249,7 @@
             // --- OFFICER EXTRAS ---
             getCurrentTerritoryId() {
                 const db = Store.get();
-                let linkedTId = Auth.currentUser.territoryId;
+                let linkedTId = Auth.currentUser.territoryId || Auth.currentUser.territory_id;
                 if (!linkedTId) {
                     const t = db.territories.find(t => t.name === Auth.currentUser.username || t.officer === Auth.currentUser.username);
                     if (t) linkedTId = t.id;
@@ -6157,9 +6230,9 @@
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const role = UI.currentLoginRole;
-            const username = role === 'officer' ? document.getElementById('officer-select').value : 
-                             (role === 'area_head' ? document.getElementById('area-head-select').value : 
-                             document.getElementById('username').value);
+            const username = role === 'officer' ? document.getElementById('officer-select').value :
+                (role === 'area_head' ? document.getElementById('area-head-select').value :
+                    document.getElementById('username').value);
             const password = document.getElementById('password').value;
             Auth.login(username, password, role);
         });
