@@ -1422,10 +1422,10 @@
                                     <div class="space-y-1.5">
                                         <div class="flex justify-between text-[11px] font-bold">
                                             <span class="text-slate-600 dark:text-slate-400">Achievement</span>
-                                            <span class="text-emerald-600">${totalA.achievement}%</span>
+                                            <span class="text-emerald-600">${totalA.tillDayAchievement}%</span>
                                         </div>
                                         <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden shadow-inner">
-                                            <div class="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full rounded-full transition-all duration-1000 shadow-lg" style="width: ${Math.min(totalA.achievement, 100)}%"></div>
+                                            <div class="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full rounded-full transition-all duration-1000 shadow-lg" style="width: ${Math.min(parseFloat(totalA.tillDayAchievement), 100)}%"></div>
                                         </div>
                                     </div>
                                  </div>
@@ -1481,10 +1481,10 @@
                                     <div class="space-y-1.5">
                                         <div class="flex justify-between text-[11px] font-bold">
                                             <span class="text-slate-600 dark:text-slate-400">Achievement</span>
-                                            <span class="text-blue-600">${totalB.achievement}%</span>
+                                            <span class="text-blue-600">${totalB.tillDayAchievement}%</span>
                                         </div>
                                         <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden shadow-inner">
-                                            <div class="bg-gradient-to-r from-blue-400 to-blue-600 h-full rounded-full transition-all duration-1000 shadow-lg" style="width: ${Math.min(totalB.achievement, 100)}%"></div>
+                                            <div class="bg-gradient-to-r from-blue-400 to-blue-600 h-full rounded-full transition-all duration-1000 shadow-lg" style="width: ${Math.min(parseFloat(totalB.tillDayAchievement), 100)}%"></div>
                                         </div>
                                     </div>
                                  </div>
