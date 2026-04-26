@@ -4187,7 +4187,8 @@
 
                 const sums = {
                     targetAmt: 0, mtdColl: 0, targetFiles: 0, uniquePaidCodes: 0, remainingAmt: 0,
-                    todayProj: 0, todayColl: 0, rdrr: 0, presetProjTotal: 0
+                    todayProj: 0, todayColl: 0, rdrr: 0, presetProjTotal: 0,
+                    lmNpTargetAmt: 0, lmNpTargetFiles: 0, mtdLmNpColl: 0, mtdLmNpFiles: 0
                 };
                 territoryData.forEach(t => {
                     sums.targetAmt += parseFloat(t.targetAmt) || 0;
@@ -4197,10 +4198,16 @@
                     sums.todayProj += parseFloat(t.todayProj) || 0;
                     sums.todayColl += parseFloat(t.todayColl) || 0;
                     sums.presetProjTotal += parseFloat(t.presetProjTotal) || 0;
+
+                    sums.lmNpTargetAmt += parseFloat(t.lmNpTargetAmt) || 0;
+                    sums.lmNpTargetFiles += parseInt(t.lmNpTargetFiles) || 0;
+                    sums.mtdLmNpColl += parseFloat(t.mtdLmNpColl) || 0;
+                    sums.mtdLmNpFiles += parseInt(t.mtdLmNpFiles) || 0;
                 });
 
                 sums.achievement = sums.targetAmt > 0 ? ((sums.mtdColl / sums.targetAmt) * 100).toFixed(1) : '0.0';
                 sums.todayAch = sums.todayProj > 0 ? ((sums.todayColl / sums.todayProj) * 100).toFixed(1) : (sums.todayColl > 0 ? '100+' : '0.0');
+                sums.lmNpRecPct = sums.lmNpTargetAmt > 0 ? ((sums.mtdLmNpColl / sums.lmNpTargetAmt) * 100).toFixed(1) : '0.0';
 
                 const now = new Date();
                 const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -4218,6 +4225,44 @@
                         </div>
                         <div class="px-4 py-2 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-xl font-bold text-xs border border-brand-500/20 flex items-center shadow-sm">
                             <i class="fa-solid fa-user-tie mr-2"></i> Area Head
+                        </div>
+                    </div>
+                    
+                    <!-- Last Month Executive Summary (New) -->
+                    <div class="glass-panel p-4 rounded-2xl bg-slate-900 dark:bg-slate-800 text-white shadow-lg hover-lift flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-white/10 border border-white/20 text-brand-400 flex items-center justify-center text-2xl shadow-inner">
+                                <i class="fa-solid fa-circle-nodes"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                                    Last Month Summary (LMNP)
+                                </h3>
+                                <p class="text-xs text-slate-400 font-medium mt-0.5">Aggregated performance diagnostics across assigned regions.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 p-3 bg-white/5 rounded-xl border border-white/10 shadow-inner">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Target Amt</span>
+                                <span class="font-mono font-bold text-base text-white">৳${parseInt(sums.lmNpTargetAmt).toLocaleString()}</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Target Files</span>
+                                <span class="font-mono font-bold text-base text-white">${sums.lmNpTargetFiles}</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Rec. Amt</span>
+                                <span class="font-mono font-bold text-base text-emerald-400">৳${parseInt(sums.mtdLmNpColl).toLocaleString()}</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Rec. Files</span>
+                                <span class="font-mono font-bold text-base text-emerald-400">${sums.mtdLmNpFiles}</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">LMNP Ach%</span>
+                                <span class="text-xl font-black ${parseFloat(sums.lmNpRecPct) >= 90 ? 'text-emerald-400' : parseFloat(sums.lmNpRecPct) >= 70 ? 'text-amber-400' : 'text-rose-400'}">${sums.lmNpRecPct}%</span>
+                            </div>
                         </div>
                     </div>
 
@@ -4300,14 +4345,25 @@
                     <!-- Interactive Breakdown Table -->
                     <!-- Desktop View Table (hidden on mobile) -->
                     <div class="hidden md:block glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700 mt-8 animate-entry">
-                        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
-                            <h3 class="text-base font-bold text-slate-800 dark:text-white flex items-center">
-                                <i class="fa-solid fa-map-location-dot text-brand-500 mr-2"></i> Territory Performance Breakdown
-                            </h3>
-                            <span class="text-xs font-bold bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 px-3 py-1 rounded-full border border-brand-200 dark:border-brand-800 shadow-sm">${territoryData.length} Active Regions</span>
+                        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div>
+                                <h3 class="text-base font-bold text-slate-800 dark:text-white flex items-center">
+                                    <i class="fa-solid fa-map-location-dot text-brand-500 mr-2"></i> Territory Breakdown
+                                </h3>
+                                <p class="text-xs text-slate-400 font-medium mt-0.5">${territoryData.length} Active Regions</p>
+                            </div>
+                            <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700/50">
+                                <button id="ah-tab-current" onclick="document.getElementById('ah-current-month-table').classList.remove('hidden'); document.getElementById('ah-last-month-table').classList.add('hidden'); this.className='px-4 py-2 text-xs font-black rounded-lg transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-md'; document.getElementById('ah-tab-last').className='px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300';" class="px-4 py-2 text-xs font-black rounded-lg transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-md">
+                                    Current Month
+                                </button>
+                                <button id="ah-tab-last" onclick="document.getElementById('ah-last-month-table').classList.remove('hidden'); document.getElementById('ah-current-month-table').classList.add('hidden'); this.className='px-4 py-2 text-xs font-black rounded-lg transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-md'; document.getElementById('ah-tab-current').className='px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300';" class="px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                                    Last Month (LMNP)
+                                </button>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left whitespace-nowrap">
+                            <!-- Current Month Table -->
+                            <table class="w-full text-sm text-left whitespace-nowrap" id="ah-current-month-table">
                                 <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs uppercase tracking-wider">
                                     <tr class="divide-x divide-slate-200 dark:divide-slate-700">
                                         <th class="px-6 py-4" rowspan="2">Territory</th>
@@ -4363,6 +4419,53 @@
                                                         ${t.todayAch}%
                                                     </span>
                                                 </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+
+                            <!-- Last Month Table -->
+                            <table class="w-full text-sm text-left whitespace-nowrap hidden" id="ah-last-month-table">
+                                <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs uppercase tracking-wider">
+                                    <tr class="divide-x divide-slate-200 dark:divide-slate-700">
+                                        <th class="px-6 py-4" rowspan="2">Territory</th>
+                                        <th class="px-6 py-4 text-center bg-indigo-50/40 dark:bg-indigo-900/10 text-indigo-700 dark:text-indigo-400" colspan="3">LMNP Financials</th>
+                                        <th class="px-6 py-4 text-center bg-cyan-50/40 dark:bg-cyan-900/10 text-cyan-700 dark:text-cyan-400" colspan="3">LMNP File Details</th>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-200 dark:divide-slate-700 border-t border-slate-200 dark:border-slate-700 text-[10px]">
+                                        <th class="px-4 py-2 text-right bg-indigo-50/20 dark:bg-indigo-900/5">LMNP Target</th>
+                                        <th class="px-4 py-2 text-right bg-indigo-50/20 dark:bg-indigo-900/5">LMNP Rec. (MTD)</th>
+                                        <th class="px-4 py-2 text-center bg-indigo-50/20 dark:bg-indigo-900/5">Ach%</th>
+                                        <th class="px-4 py-2 text-center bg-cyan-50/20 dark:bg-cyan-900/5">Total Files</th>
+                                        <th class="px-4 py-2 text-center bg-cyan-50/20 dark:bg-cyan-900/5">Rec. Files</th>
+                                        <th class="px-4 py-2 text-center bg-cyan-50/20 dark:bg-cyan-900/5">Uncollected</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs">
+                                    ${territoryData.map(t => {
+                                        const lmAch = parseFloat(t.lmNpTargetAmt) > 0 ? ((parseFloat(t.mtdLmNpColl) / parseFloat(t.lmNpTargetAmt)) * 100).toFixed(1) : '0.0';
+                                        const lmUncoll = Math.max(0, parseInt(t.lmNpTargetFiles) - parseInt(t.mtdLmNpFiles));
+                                        const lmBad = parseFloat(lmAch) < 60;
+
+                                        return `
+                                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition divide-x divide-slate-100 dark:divide-slate-700 ${lmBad ? 'bg-rose-500/5 dark:bg-rose-500/10' : ''}">
+                                                <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
+                                                    <div class="flex flex-col gap-1">
+                                                        <span>${t.name}</span>
+                                                        <span class="text-[10px] font-normal text-slate-400 italic">${t.officer || 'No Officer'}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-4 text-right font-mono">৳${parseInt(t.lmNpTargetAmt).toLocaleString()}</td>
+                                                <td class="px-4 py-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">৳${parseInt(t.mtdLmNpColl).toLocaleString()}</td>
+                                                <td class="px-4 py-4 text-center">
+                                                    <span class="px-2 py-1 rounded-md font-bold ${parseFloat(lmAch) >= 90 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : parseFloat(lmAch) >= 70 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'}">
+                                                        ${lmAch}%
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-4 text-center font-mono">${t.lmNpTargetFiles}</td>
+                                                <td class="px-4 py-4 text-center font-mono text-blue-600 dark:text-blue-400 font-bold">${t.mtdLmNpFiles}</td>
+                                                <td class="px-4 py-4 text-center font-mono text-slate-400">${lmUncoll}</td>
                                             </tr>
                                         `;
                                     }).join('')}
@@ -4437,6 +4540,23 @@
                                                 <div class="col-span-2 mt-1 pt-1 border-t border-purple-500/10 flex justify-between items-center">
                                                     <span>Today Ach%:</span>
                                                     <span class="font-bold text-sm text-purple-600 dark:text-purple-400">${t.todayAch}%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- New: Last Month Diagnostics (Mobile) -->
+                                        <div class="bg-indigo-500/5 dark:bg-indigo-500/10 p-3 rounded-xl border border-indigo-500/10">
+                                            <span class="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                                                <i class="fa-solid fa-clock-rotate-left text-[11px]"></i> Last Month (LMNP)
+                                            </span>
+                                            <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                                                <div>Target: <span class="font-mono font-bold text-slate-800 dark:text-white">৳${parseInt(t.lmNpTargetAmt).toLocaleString()}</span></div>
+                                                <div>Rec: <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">৳${parseInt(t.mtdLmNpColl).toLocaleString()}</span></div>
+                                                <div class="col-span-2 mt-1 pt-1 border-t border-indigo-500/10 flex justify-between items-center">
+                                                    <span>LMNP Ach%:</span>
+                                                    <span class="font-bold text-sm text-indigo-600 dark:text-indigo-400">
+                                                        ${parseFloat(t.lmNpTargetAmt) > 0 ? ((parseFloat(t.mtdLmNpColl) / parseFloat(t.lmNpTargetAmt)) * 100).toFixed(1) : '0.0'}%
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
