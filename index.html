@@ -1412,99 +1412,175 @@
                 }).sort((a, b) => parseFloat(b.rpi) - parseFloat(a.rpi));
 
                 document.getElementById('views-container').innerHTML = `
-                    <div class="animate-entry space-y-6">
+                    <div class="animate-entry max-w-6xl mx-auto space-y-6">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
-                                <h2 class="text-2xl font-black text-slate-800 dark:text-white">Area Intelligence Suite</h2>
-                                <p class="text-xs text-slate-500 font-medium">Performance summary for assigned operational regions</p>
+                                <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Area Head Dashboard</h2>
+                                <p class="text-sm text-slate-500 font-medium">Welcome, ${currentAh.officerName || currentAh.username}</p>
                             </div>
                             <div class="px-4 py-2 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-xl font-bold text-xs border border-brand-500/20 flex items-center shadow-sm">
-                                <i class="fa-solid fa-user-tie mr-2"></i> Area Head: ${currentAh.officerName || currentAh.username}
+                                <i class="fa-solid fa-user-tie mr-2"></i> Area Head
                             </div>
                         </div>
 
-                        <div class="p-5 rounded-2xl border ${Calc.getRPIBg(metrics.rpi)} flex items-center justify-between shadow-sm hover-lift">
-                            <div>
-                                <h3 class="text-base font-bold text-slate-800 dark:text-white leading-tight">Area Recovery Index (RPI)</h3>
-                                <p class="text-[11px] opacity-80">Aggregate assigned portfolio health status</p>
+                        <!-- Aggregate Overview Categories -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            
+                            <!-- Category 1: Financial Totals -->
+                            <div class="glass-panel p-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card shadow-lg relative overflow-hidden group hover-lift">
+                                <div class="absolute right-0 top-0 opacity-5 text-emerald-600 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-sack-dollar text-9xl"></i>
+                                </div>
+                                <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-4 flex items-center">
+                                    <i class="fa-solid fa-chart-line mr-2"></i> Area Financial Totals
+                                </h3>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-500 dark:text-slate-400">Total Target (Proj):</span>
+                                        <span class="font-mono font-bold text-slate-900 dark:text-white">৳${parseInt(metrics.presetProjTotal).toLocaleString()}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-500 dark:text-slate-400">Till Date Collection:</span>
+                                        <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">৳${parseInt(metrics.mtdColl).toLocaleString()}</span>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
+                                        <span class="text-slate-700 dark:text-slate-300 font-semibold">Collection Ach%:</span>
+                                        <span class="text-lg font-black ${parseFloat(metrics.tillDayAchievement) >= 90 ? 'text-emerald-600' : parseFloat(metrics.tillDayAchievement) >= 70 ? 'text-amber-600' : 'text-rose-600'}">${metrics.tillDayAchievement}%</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-4xl font-black ${Calc.getRPIColor(metrics.rpi)}">${metrics.rpi}</div>
+
+                            <!-- Category 2: File Coverage -->
+                            <div class="glass-panel p-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card shadow-lg relative overflow-hidden group hover-lift">
+                                <div class="absolute right-0 top-0 opacity-5 text-blue-600 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-folder-open text-9xl"></i>
+                                </div>
+                                <h3 class="text-sm font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-4 flex items-center">
+                                    <i class="fa-solid fa-percent mr-2"></i> Area File Coverage
+                                </h3>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-500 dark:text-slate-400">Total Files:</span>
+                                        <span class="font-mono font-bold text-slate-900 dark:text-white">${metrics.targetFiles}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-500 dark:text-slate-400">Collected Files:</span>
+                                        <span class="font-mono font-bold text-blue-600 dark:text-blue-400">${metrics.uniquePaidCodes}</span>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
+                                        <span class="text-slate-700 dark:text-slate-300 font-semibold">Uncollected Files:</span>
+                                        <span class="font-mono font-bold text-slate-400">${Math.max(0, metrics.targetFiles - metrics.uniquePaidCodes)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Category 3: Daily Operations -->
+                            <div class="glass-panel p-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card shadow-lg relative overflow-hidden group hover-lift">
+                                <div class="absolute right-0 top-0 opacity-5 text-purple-600 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-calendar-day text-9xl"></i>
+                                </div>
+                                <h3 class="text-sm font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-4 flex items-center">
+                                    <i class="fa-solid fa-bolt mr-2"></i> Area Daily Operations
+                                </h3>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-500 dark:text-slate-400">Today's Projection:</span>
+                                        <span class="font-mono font-bold text-slate-900 dark:text-white">৳${parseInt(metrics.todayProj).toLocaleString()}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-500 dark:text-slate-400">Today's Collection:</span>
+                                        <span class="font-mono font-bold text-purple-600 dark:text-purple-400">৳${parseInt(metrics.todayColl).toLocaleString()}</span>
+                                    </div>
+                                    <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
+                                        <span class="text-slate-700 dark:text-slate-300 font-semibold">Today's Ach%:</span>
+                                        <span class="text-lg font-black ${parseFloat(todayAch) >= 100 ? 'text-emerald-600' : 'text-amber-600'}">${todayAch}%</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div class="glass-panel p-5 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-dark-card hover-lift relative overflow-hidden group">
-                                <div class="absolute right-0 top-0 opacity-5 text-brand-600 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-money-bill-trend-up text-6xl"></i>
-                                </div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Target (proj)</p>
-                                <p class="text-xl font-bold text-slate-800 dark:text-white">৳${parseInt(metrics.presetProjTotal).toLocaleString()}</p>
-                                <p class="text-[9px] text-slate-400 mt-1">Target Amt: ৳${parseInt(metrics.targetAmt).toLocaleString()}</p>
-                            </div>
-
-                            <div class="glass-panel p-5 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-dark-card hover-lift relative overflow-hidden group">
-                                <div class="absolute right-0 top-0 opacity-5 text-emerald-600 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-wallet text-6xl"></i>
-                                </div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Till Date Coll</p>
-                                <p class="text-xl font-bold text-emerald-600">৳${parseInt(metrics.mtdColl).toLocaleString()}</p>
-                                <p class="text-[9px] text-emerald-500 mt-1">Ach: ${metrics.tillDayAchievement}%</p>
-                            </div>
-
-                            <div class="glass-panel p-5 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-dark-card hover-lift relative overflow-hidden group">
-                                <div class="absolute right-0 top-0 opacity-5 text-blue-600 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-bullseye text-6xl"></i>
-                                </div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Today Projection</p>
-                                <p class="text-xl font-bold text-blue-600">৳${parseInt(metrics.todayProj).toLocaleString()}</p>
-                                <p class="text-[9px] text-blue-500 mt-1">Coll: ৳${parseInt(metrics.todayColl).toLocaleString()}</p>
-                            </div>
-
-                            <div class="glass-panel p-5 rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-dark-card hover-lift relative overflow-hidden group">
-                                <div class="absolute right-0 top-0 opacity-5 text-amber-600 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform">
-                                    <i class="fa-solid fa-hourglass-half text-6xl"></i>
-                                </div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Remaining Amount</p>
-                                <p class="text-xl font-bold text-amber-600">৳${parseInt(metrics.remainingAmt).toLocaleString()}</p>
-                                <p class="text-[9px] text-amber-500 mt-1">Cure Rate: ${((metrics.uniquePaidCodes / metrics.targetFiles) * 100).toFixed(1)}%</p>
-                            </div>
-                        </div>
-
-                        <div class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700">
+                        <div class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700 mt-8">
                             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
                                 <h3 class="text-base font-bold text-slate-800 dark:text-white flex items-center">
                                     <i class="fa-solid fa-map-location-dot text-brand-500 mr-2"></i> Territory Performance Breakdown
                                 </h3>
-                                <span class="text-xs font-bold text-slate-400">${assignedTerritoryData.length} regions</span>
+                                <span class="text-xs font-bold bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 px-3 py-1 rounded-full border border-brand-200 dark:border-brand-800 shadow-sm">${assignedTerritoryData.length} Active Regions</span>
                             </div>
                             <div class="overflow-x-auto">
-                                <table class="w-full text-sm text-left border-collapse">
-                                    <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase text-xs font-bold">
-                                        <tr>
-                                            <th class="p-4">Territory</th>
-                                            <th class="p-4 text-center">Cure Files</th>
-                                            <th class="p-4 text-right">Target (proj)</th>
-                                            <th class="p-4 text-right">MTD Coll</th>
-                                            <th class="p-4 text-center">MTD Ach %</th>
-                                            <th class="p-4 text-right">Today Proj</th>
-                                            <th class="p-4 text-right">Today Coll</th>
-                                            <th class="p-4 text-center">Today Ach%</th>
-                                            <th class="p-4 text-center">RPI</th>
+                                <table class="w-full text-sm text-left whitespace-nowrap">
+                                    <!-- Table Header -->
+                                    <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs uppercase tracking-wider">
+                                        <tr class="divide-x divide-slate-200 dark:divide-slate-700">
+                                            <th class="px-6 py-4" rowspan="2">Territory</th>
+                                            <th class="px-6 py-4 text-center bg-emerald-50/40 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-400" colspan="3">Financial Totals</th>
+                                            <th class="px-6 py-4 text-center bg-blue-50/40 dark:bg-blue-900/10 text-blue-700 dark:text-blue-400" colspan="3">File Coverage</th>
+                                            <th class="px-6 py-4 text-center bg-purple-50/40 dark:bg-purple-900/10 text-purple-700 dark:text-purple-400" colspan="3">Daily Operations</th>
+                                        </tr>
+                                        <tr class="divide-x divide-slate-200 dark:divide-slate-700 border-t border-slate-200 dark:border-slate-700 text-[10px]">
+                                            <!-- Financial -->
+                                            <th class="px-4 py-2 text-right bg-emerald-50/20 dark:bg-emerald-900/5">Target (Proj)</th>
+                                            <th class="px-4 py-2 text-right bg-emerald-50/20 dark:bg-emerald-900/5">MTD Coll</th>
+                                            <th class="px-4 py-2 text-center bg-emerald-50/20 dark:bg-emerald-900/5">Ach%</th>
+                                            
+                                            <!-- File Coverage -->
+                                            <th class="px-4 py-2 text-center bg-blue-50/20 dark:bg-blue-900/5">Total</th>
+                                            <th class="px-4 py-2 text-center bg-blue-50/20 dark:bg-blue-900/5">Coll</th>
+                                            <th class="px-4 py-2 text-center bg-blue-50/20 dark:bg-blue-900/5">Uncoll</th>
+                                            
+                                            <!-- Daily Ops -->
+                                            <th class="px-4 py-2 text-right bg-purple-50/20 dark:bg-purple-900/5">Today Proj</th>
+                                            <th class="px-4 py-2 text-right bg-purple-50/20 dark:bg-purple-900/5">Collection</th>
+                                            <th class="px-4 py-2 text-center bg-purple-50/20 dark:bg-purple-900/5">Ach%</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
-                                        ${assignedTerritoryData.map(t => `
-                                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                                                <td class="p-4 font-bold">${t.name}</td>
-                                                <td class="p-4 text-center font-medium text-blue-600">${t.uniquePaidCodes} / ${t.targetFiles}</td>
-                                                <td class="p-4 text-right font-mono">৳${parseInt(t.presetProjTotal).toLocaleString()}</td>
-                                                <td class="p-4 text-right font-mono font-bold text-emerald-600">৳${parseInt(t.mtdColl).toLocaleString()}</td>
-                                                <td class="p-4 text-center font-bold bg-emerald-500/10 text-emerald-600 rounded">${t.tillDayAchievement}%</td>
-                                                <td class="p-4 text-right font-mono">৳${parseInt(t.todayProj).toLocaleString()}</td>
-                                                <td class="p-4 text-right font-mono font-bold text-blue-600">৳${parseInt(t.todayColl).toLocaleString()}</td>
-                                                <td class="p-4 text-center font-bold bg-blue-500/10 text-blue-600 rounded">${t.todayAch}%</td>
-                                                <td class="p-4 text-center font-black ${Calc.getRPIColor(t.rpi)}">${t.rpi}</td>
-                                            </tr>
-                                        `).join('')}
+                                    
+                                    <!-- Table Body -->
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs">
+                                        ${assignedTerritoryData.map(t => {
+                                            const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
+                                            const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
+                                            const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
+                                            const missingProj = parseInt(t.todayProj) === 0;
+                                            
+                                            return `
+                                                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition divide-x divide-slate-100 dark:divide-slate-700 ${isDoingBad ? 'bg-rose-500/5 dark:bg-rose-500/10' : ''}">
+                                                    <!-- Territory Name -->
+                                                    <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
+                                                        <div class="flex flex-col gap-1">
+                                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                                <span>${t.name}</span>
+                                                                ${isDoingBad ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800 animate-pulse"><i class="fa-solid fa-triangle-exclamation text-[8px]"></i> CRITICAL</span>` : ''}
+                                                                ${missingProj ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800"><i class="fa-solid fa-pencil text-[8px]"></i> NO PROJECTION</span>` : ''}
+                                                            </div>
+                                                            <span class="text-[10px] font-normal text-slate-400 italic">${t.officer || 'No Officer'}</span>
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    <!-- Financial Totals -->
+                                                    <td class="px-4 py-4 text-right font-mono">৳${parseInt(t.presetProjTotal).toLocaleString()}</td>
+                                                    <td class="px-4 py-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">৳${parseInt(t.mtdColl).toLocaleString()}</td>
+                                                    <td class="px-4 py-4 text-center">
+                                                        <span class="px-2 py-1 rounded-md font-bold ${parseFloat(finAch) >= 90 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : parseFloat(finAch) >= 70 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800 animate-pulse'}">
+                                                            ${finAch}%
+                                                        </span>
+                                                    </td>
+                                                    
+                                                    <!-- File Coverage -->
+                                                    <td class="px-4 py-4 text-center font-mono">${t.targetFiles}</td>
+                                                    <td class="px-4 py-4 text-center font-mono text-blue-600 dark:text-blue-400 font-bold">${t.uniquePaidCodes}</td>
+                                                    <td class="px-4 py-4 text-center font-mono text-slate-400">${uncoll}</td>
+                                                    
+                                                    <!-- Daily Operations -->
+                                                    <td class="px-4 py-4 text-right font-mono ${missingProj ? 'text-rose-500 bg-rose-500/5' : ''}">৳${parseInt(t.todayProj).toLocaleString()}</td>
+                                                    <td class="px-4 py-4 text-right font-mono font-bold text-purple-600 dark:text-purple-400">৳${parseInt(t.todayColl).toLocaleString()}</td>
+                                                    <td class="px-4 py-4 text-center">
+                                                        <span class="px-2 py-1 rounded-md font-bold ${parseFloat(t.todayAch) >= 100 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'}">
+                                                            ${t.todayAch}%
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
                                     </tbody>
                                 </table>
                             </div>
@@ -3852,66 +3928,165 @@
                 sums.rdrr = daysLeft > 0 ? remainingAmt / daysLeft : remainingAmt;
                 sums.remainingAmt = remainingAmt;
 
-                let cardsHtml = '';
-                territoryData.forEach(t => {
-                    cardsHtml += `
-                    <div class="glass-panel p-4 rounded-xl hover-lift border-l-4 ${parseFloat(t.rpi) >= 90 ? 'border-green-500' : parseFloat(t.rpi) >= 70 ? 'border-yellow-500' : 'border-red-500'}">
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h4 class="font-bold text-slate-800 dark:text-white text-lg">${t.name}</h4>
-                                <p class="text-xs text-slate-500">${t.officer}</p>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-2xl font-black ${Calc.getRPIColor(t.rpi)}">${t.rpi}</span>
-                                <p class="text-[9px] uppercase font-bold text-slate-400">RPI</p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <div class="bg-slate-50 dark:bg-slate-800/50 p-2 rounded">
-                                <span class="text-slate-500 block mb-1">MTD Coll / Target</span>
-                                <span class="font-bold text-slate-800 dark:text-white">${parseInt(t.mtdColl).toLocaleString()} / ${parseInt(t.targetAmt).toLocaleString()}</span>
-                            </div>
-                            <div class="bg-slate-50 dark:bg-slate-800/50 p-2 rounded">
-                                <span class="text-slate-500 block mb-1">Today Coll / Proj</span>
-                                <span class="font-bold ${t.todayColl >= t.todayProj && t.todayProj > 0 ? 'text-green-600' : 'text-slate-800 dark:text-white'}">${parseInt(t.todayColl).toLocaleString()} / ${parseInt(t.todayProj).toLocaleString()}</span>
-                            </div>
-                        </div>
-                        <div class="mt-3 flex justify-between items-center text-xs border-t border-slate-100 dark:border-slate-700 pt-2">
-                            <span class="font-medium text-slate-600 dark:text-slate-400">Ach: ${t.achievement}%</span>
-                            <span class="font-medium ${parseFloat(t.todayAch) >= 100 ? 'text-green-600' : 'text-amber-600'}">Today Ach: ${t.todayAch}%</span>
-                        </div>
-                    </div>`;
-                });
-
                 document.getElementById('views-container').innerHTML = `
                 <div class="animate-entry max-w-6xl mx-auto space-y-6">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Area Head Dashboard</h2>
-                        <p class="text-sm text-slate-500">Welcome, ${Auth.currentUser.officerName || Auth.currentUser.username}</p>
-                    </div>
-
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="glass-panel p-4 rounded-xl border-t-2 border-brand-500">
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Area Target</p>
-                            <p class="text-xl font-bold text-slate-800 dark:text-white">${parseInt(sums.targetAmt).toLocaleString()}</p>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Area Head Dashboard</h2>
+                            <p class="text-sm text-slate-500">Welcome, ${Auth.currentUser.officerName || Auth.currentUser.username}</p>
                         </div>
-                        <div class="glass-panel p-4 rounded-xl border-t-2 border-green-500">
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Area Collection</p>
-                            <p class="text-xl font-bold text-green-600">${parseInt(sums.mtdColl).toLocaleString()}</p>
-                        </div>
-                        <div class="glass-panel p-4 rounded-xl border-t-2 border-blue-500">
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Area Today Proj</p>
-                            <p class="text-xl font-bold text-slate-800 dark:text-white">${parseInt(sums.todayProj).toLocaleString()}</p>
-                        </div>
-                        <div class="glass-panel p-4 rounded-xl border-t-2 border-purple-500">
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Area Today Coll</p>
-                            <p class="text-xl font-bold ${sums.todayColl >= sums.todayProj && sums.todayProj > 0 ? 'text-green-600' : 'text-purple-600'}">${parseInt(sums.todayColl).toLocaleString()}</p>
+                        <div class="px-4 py-2 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-xl font-bold text-xs border border-brand-500/20 flex items-center shadow-sm">
+                            <i class="fa-solid fa-user-tie mr-2"></i> Area Head
                         </div>
                     </div>
 
-                    <h3 class="text-lg font-bold text-slate-800 dark:text-white mt-8 mb-4">Assigned Territories Performance</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        ${cardsHtml || '<p class="text-slate-500 col-span-full">No territories assigned yet. Contact System Admin.</p>'}
+                    <!-- Aggregate Overview Categories -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        
+                        <!-- Category 1: Financial Totals -->
+                        <div class="glass-panel p-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card shadow-lg relative overflow-hidden group hover-lift">
+                            <div class="absolute right-0 top-0 opacity-5 text-emerald-600 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-sack-dollar text-9xl"></i>
+                            </div>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-4 flex items-center">
+                                <i class="fa-solid fa-chart-line mr-2"></i> Area Financial Totals
+                            </h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-500 dark:text-slate-400">Total Target (Proj):</span>
+                                    <span class="font-mono font-bold text-slate-900 dark:text-white">৳${parseInt(sums.presetProjTotal).toLocaleString()}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-500 dark:text-slate-400">Till Date Collection:</span>
+                                    <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">৳${parseInt(sums.mtdColl).toLocaleString()}</span>
+                                </div>
+                                <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
+                                    <span class="text-slate-700 dark:text-slate-300 font-semibold">Collection Ach%:</span>
+                                    <span class="text-lg font-black ${parseFloat(sums.achievement) >= 90 ? 'text-emerald-600' : parseFloat(sums.achievement) >= 70 ? 'text-amber-600' : 'text-rose-600'}">${sums.achievement}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Category 2: File Coverage -->
+                        <div class="glass-panel p-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card shadow-lg relative overflow-hidden group hover-lift">
+                            <div class="absolute right-0 top-0 opacity-5 text-blue-600 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-folder-open text-9xl"></i>
+                            </div>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-4 flex items-center">
+                                <i class="fa-solid fa-percent mr-2"></i> Area File Coverage
+                            </h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-500 dark:text-slate-400">Total Files:</span>
+                                    <span class="font-mono font-bold text-slate-900 dark:text-white">${sums.targetFiles}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-500 dark:text-slate-400">Collected Files:</span>
+                                    <span class="font-mono font-bold text-blue-600 dark:text-blue-400">${sums.uniquePaidCodes}</span>
+                                </div>
+                                <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
+                                    <span class="text-slate-700 dark:text-slate-300 font-semibold">Uncollected Files:</span>
+                                    <span class="font-mono font-bold text-slate-400">${Math.max(0, sums.targetFiles - sums.uniquePaidCodes)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Category 3: Daily Operations -->
+                        <div class="glass-panel p-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card shadow-lg relative overflow-hidden group hover-lift">
+                            <div class="absolute right-0 top-0 opacity-5 text-purple-600 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-calendar-day text-9xl"></i>
+                            </div>
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-4 flex items-center">
+                                <i class="fa-solid fa-bolt mr-2"></i> Area Daily Operations
+                            </h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-500 dark:text-slate-400">Today's Projection:</span>
+                                    <span class="font-mono font-bold text-slate-900 dark:text-white">৳${parseInt(sums.todayProj).toLocaleString()}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-500 dark:text-slate-400">Today's Collection:</span>
+                                    <span class="font-mono font-bold text-purple-600 dark:text-purple-400">৳${parseInt(sums.todayColl).toLocaleString()}</span>
+                                </div>
+                                <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
+                                    <span class="text-slate-700 dark:text-slate-300 font-semibold">Today's Ach%:</span>
+                                    <span class="text-lg font-black ${parseFloat(sums.todayAch) >= 100 ? 'text-emerald-600' : 'text-amber-600'}">${sums.todayAch}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Breakdown Table -->
+                    <div class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700 mt-8">
+                        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
+                            <h3 class="text-base font-bold text-slate-800 dark:text-white flex items-center">
+                                <i class="fa-solid fa-map-location-dot text-brand-500 mr-2"></i> Territory Performance Breakdown
+                            </h3>
+                            <span class="text-xs font-bold bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 px-3 py-1 rounded-full border border-brand-200 dark:border-brand-800 shadow-sm">${territoryData.length} Active Regions</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left whitespace-nowrap">
+                                <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs uppercase tracking-wider">
+                                    <tr class="divide-x divide-slate-200 dark:divide-slate-700">
+                                        <th class="px-6 py-4" rowspan="2">Territory</th>
+                                        <th class="px-6 py-4 text-center bg-emerald-50/40 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-400" colspan="3">Financial Totals</th>
+                                        <th class="px-6 py-4 text-center bg-blue-50/40 dark:bg-blue-900/10 text-blue-700 dark:text-blue-400" colspan="3">File Coverage</th>
+                                        <th class="px-6 py-4 text-center bg-purple-50/40 dark:bg-purple-900/10 text-purple-700 dark:text-purple-400" colspan="3">Daily Operations</th>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-200 dark:divide-slate-700 border-t border-slate-200 dark:border-slate-700 text-[10px]">
+                                        <th class="px-4 py-2 text-right bg-emerald-50/20 dark:bg-emerald-900/5">Target (Proj)</th>
+                                        <th class="px-4 py-2 text-right bg-emerald-50/20 dark:bg-emerald-900/5">MTD Coll</th>
+                                        <th class="px-4 py-2 text-center bg-emerald-50/20 dark:bg-emerald-900/5">Ach%</th>
+                                        <th class="px-4 py-2 text-center bg-blue-50/20 dark:bg-blue-900/5">Total</th>
+                                        <th class="px-4 py-2 text-center bg-blue-50/20 dark:bg-blue-900/5">Coll</th>
+                                        <th class="px-4 py-2 text-center bg-blue-50/20 dark:bg-blue-900/5">Uncoll</th>
+                                        <th class="px-4 py-2 text-right bg-purple-50/20 dark:bg-purple-900/5">Today Proj</th>
+                                        <th class="px-4 py-2 text-right bg-purple-50/20 dark:bg-purple-900/5">Collection</th>
+                                        <th class="px-4 py-2 text-center bg-purple-50/20 dark:bg-purple-900/5">Ach%</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs">
+                                    ${territoryData.map(t => {
+                                        const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
+                                        const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
+                                        const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
+                                        const missingProj = parseInt(t.todayProj) === 0;
+                                        
+                                        return `
+                                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition divide-x divide-slate-100 dark:divide-slate-700 ${isDoingBad ? 'bg-rose-500/5 dark:bg-rose-500/10' : ''}">
+                                                <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
+                                                    <div class="flex flex-col gap-1">
+                                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                                            <span>${t.name}</span>
+                                                            ${isDoingBad ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800 animate-pulse"><i class="fa-solid fa-triangle-exclamation text-[8px]"></i> CRITICAL</span>` : ''}
+                                                            ${missingProj ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800"><i class="fa-solid fa-pencil text-[8px]"></i> NO PROJECTION</span>` : ''}
+                                                        </div>
+                                                        <span class="text-[10px] font-normal text-slate-400 italic">${t.officer || 'No Officer'}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-4 text-right font-mono">৳${parseInt(t.presetProjTotal).toLocaleString()}</td>
+                                                <td class="px-4 py-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">৳${parseInt(t.mtdColl).toLocaleString()}</td>
+                                                <td class="px-4 py-4 text-center">
+                                                    <span class="px-2 py-1 rounded-md font-bold ${parseFloat(finAch) >= 90 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : parseFloat(finAch) >= 70 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800 animate-pulse'}">
+                                                        ${finAch}%
+                                                    </span>
+                                                </td>
+                                                <td class="px-4 py-4 text-center font-mono">${t.targetFiles}</td>
+                                                <td class="px-4 py-4 text-center font-mono text-blue-600 dark:text-blue-400 font-bold">${t.uniquePaidCodes}</td>
+                                                <td class="px-4 py-4 text-center font-mono text-slate-400">${uncoll}</td>
+                                                <td class="px-4 py-4 text-right font-mono ${missingProj ? 'text-rose-500 bg-rose-500/5' : ''}">৳${parseInt(t.todayProj).toLocaleString()}</td>
+                                                <td class="px-4 py-4 text-right font-mono font-bold text-purple-600 dark:text-purple-400">৳${parseInt(t.todayColl).toLocaleString()}</td>
+                                                <td class="px-4 py-4 text-center">
+                                                    <span class="px-2 py-1 rounded-md font-bold ${parseFloat(t.todayAch) >= 100 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'}">
+                                                        ${t.todayAch}%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>`;
             },
