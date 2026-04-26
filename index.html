@@ -1183,9 +1183,11 @@
                 if (!db.users) db.users = [];
                 const areaHeads = db.users.filter(u => u.role === 'area_head');
 
+                const pendingAreaHeads = areaHeads.filter(u => (u.requestedTerritories || '').trim().length > 0);
+
                 document.getElementById('views-container').innerHTML = `
-                    <div class="animate-entry">
-                        <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="animate-entry space-y-6">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
                                 <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Area Head Management</h2>
                                 <p class="text-sm text-slate-500">Create and manage Area Heads and their assigned territories</p>
@@ -1194,6 +1196,60 @@
                                 <i class="fa-solid fa-plus mr-2"></i> Add Area Head
                             </button>
                         </div>
+
+                        <!-- PENDING APPROVAL QUEUE -->
+                        ${pendingAreaHeads.length > 0 ? `
+                            <div class="glass-panel rounded-xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 overflow-hidden shadow-md">
+                                <div class="px-6 py-4 border-b border-amber-500/20 bg-amber-500/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                    <div>
+                                        <h3 class="text-base font-black text-amber-800 dark:text-amber-400 flex items-center gap-2">
+                                            <i class="fa-solid fa-hourglass-half animate-pulse"></i> Pending Territory Requests
+                                        </h3>
+                                        <p class="text-xs text-amber-700/70 dark:text-amber-400/70 mt-0.5">Review requested territories from Area Heads before formal inclusion.</p>
+                                    </div>
+                                    <button onclick="UI.approveAllTerritoryRequests()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold shadow text-xs hover-lift transform active:scale-95">
+                                        <i class="fa-solid fa-check-double mr-1.5"></i> Approve All Requests
+                                    </button>
+                                </div>
+
+                                <div class="divide-y divide-amber-500/10 text-sm">
+                                    ${pendingAreaHeads.map(ah => {
+                                        const req = (ah.requestedTerritories || '').split(',').filter(Boolean);
+                                        const reqNames = req.map(id => {
+                                            const t = db.territories.find(ter => ter.id === id);
+                                            return t ? t.name : id;
+                                        }).join(', ');
+
+                                        return `
+                                            <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-amber-500/5 dark:hover:bg-amber-500/10 transition">
+                                                <div>
+                                                    <h4 class="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                                                        <span>${ah.officerName || ah.username}</span>
+                                                        <span class="text-[10px] font-medium text-slate-400 italic font-mono">(${ah.username})</span>
+                                                    </h4>
+                                                    <div class="flex flex-wrap gap-1.5 mt-2">
+                                                        <span class="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded">Requesting:</span>
+                                                        ${req.map(id => {
+                                                            const t = db.territories.find(ter => ter.id === id);
+                                                            const name = t ? t.name : id;
+                                                            return `<span class="text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md shadow-sm">${name}</span>`;
+                                                        }).join('')}
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-2 self-end sm:self-center">
+                                                    <button onclick="UI.approveTerritoryRequest('${ah.id}', true)" class="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-300 rounded-lg font-bold text-xs border border-slate-200 dark:border-slate-700 transition shadow-sm">
+                                                        <i class="fa-solid fa-pen mr-1"></i> Edit
+                                                    </button>
+                                                    <button onclick="UI.approveTerritoryRequest('${ah.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-md transition transform active:scale-95">
+                                                        <i class="fa-solid fa-check mr-1"></i> Approve
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
 
                         <div class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700">
                             <div class="overflow-x-auto">
@@ -1385,17 +1441,169 @@
                 });
             },
 
+            // --- NEW AREA HEAD SELF-SERVICE REQUESTS ---
+            openRequestTerritoryModal() {
+                const db = Store.get();
+                const currentAh = Auth.currentUser;
+                
+                // Get current state
+                const currentAssigned = (currentAh.territoryId || currentAh.territory_id || '').split(',').filter(Boolean);
+                const currentRequested = (currentAh.requestedTerritories || '').split(',').filter(Boolean);
+
+                let html = `
+                    <div class="p-2">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-circle-nodes text-brand-500"></i> Manage My Territories
+                            </h3>
+                            <button onclick="UI.closeModal()" class="text-slate-400 hover:text-slate-600">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Select or modify the regions you want to manage. Your requests will go into the admin review queue.</p>
+                        
+                        <div class="max-h-[40vh] overflow-y-auto pr-2 space-y-2 border border-slate-100 dark:border-slate-800 rounded-xl p-3 bg-slate-50/50 dark:bg-slate-900/30 shadow-inner mb-5">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                `;
+
+                db.territories.forEach(t => {
+                    const isAssigned = currentAssigned.includes(t.id);
+                    const isRequested = currentRequested.includes(t.id);
+                    const isChecked = isAssigned || isRequested;
+
+                    html += `
+                        <label class="flex items-center gap-3 p-3 rounded-xl border bg-white dark:bg-dark-card hover:bg-slate-50/80 dark:hover:bg-slate-800/50 cursor-pointer transition ${isAssigned ? 'border-emerald-500/30 dark:border-emerald-500/20 bg-emerald-500/5' : isRequested ? 'border-amber-500/30 dark:border-amber-500/20 bg-amber-500/5' : 'border-slate-200 dark:border-slate-700/50'}">
+                            <input type="checkbox" value="${t.id}" ${isChecked ? 'checked' : ''} class="w-4 h-4 text-brand-600 border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded focus:ring-brand-500">
+                            <div class="flex flex-col text-left">
+                                <span class="text-sm font-bold text-slate-800 dark:text-slate-200">${t.name}</span>
+                                <span class="text-[10px] text-slate-400 font-normal italic">Part ${t.part}</span>
+                            </div>
+                        </label>
+                    `;
+                });
+
+                html += `
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-2">
+                            <button onclick="UI.closeModal()" class="px-4 py-2 text-slate-500 hover:text-slate-700 text-xs font-bold">Cancel</button>
+                            <button onclick="UI.saveTerritoryRequest()" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-bold shadow-md text-xs transition transform active:scale-95">
+                                Submit Request
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                this.renderHtmlModal(html);
+            },
+
+            async saveTerritoryRequest() {
+                const modal = document.getElementById('modal-content');
+                const checkboxes = modal.querySelectorAll('input[type="checkbox"]:checked');
+                const selected = Array.from(checkboxes).map(c => c.value).join(',');
+
+                const db = Store.get();
+                const currentAh = Auth.currentUser;
+                
+                // Save existing assignments, everything else selected becomes a request
+                const existing = (currentAh.territoryId || currentAh.territory_id || '').split(',').filter(Boolean);
+                const newRequests = Array.from(checkboxes).map(c => c.value).filter(id => !existing.includes(id)).join(',');
+
+                currentAh.requestedTerritories = newRequests;
+
+                UI.toggleLoader(true);
+                try {
+                    await Store.update('users', currentAh);
+                    UI.closeModal();
+                    UI.showSuccess('Territory additions requested successfully!');
+                    UI.renderAreaHeadDashboard();
+                } catch (err) {
+                    alert('Request failed: ' + err.message);
+                } finally {
+                    UI.toggleLoader(false);
+                }
+            },
+
+            async approveTerritoryRequest(userId, edit = false) {
+                const db = Store.get();
+                const user = db.users.find(u => String(u.id) === String(userId));
+                if (!user) return;
+
+                if (edit) {
+                    this.openAreaHeadModal(userId);
+                    return;
+                }
+
+                const assigned = (user.territoryId || user.territory_id || '').split(',').filter(Boolean);
+                const requested = (user.requestedTerritories || '').split(',').filter(Boolean);
+                
+                // Merge
+                const merged = Array.from(new Set([...assigned, ...requested])).join(',');
+                user.territoryId = merged;
+                user.territory_id = merged;
+                user.requestedTerritories = '';
+
+                UI.toggleLoader(true);
+                try {
+                    await Store.update('users', user);
+                    UI.showSuccess(`Approved territories for ${user.officerName || user.username}`);
+                    UI.renderAdminAreaHeads();
+                } catch (err) {
+                    alert('Approval failed: ' + err.message);
+                } finally {
+                    UI.toggleLoader(false);
+                }
+            },
+
+            async approveAllTerritoryRequests() {
+                const db = Store.get();
+                const areaHeads = db.users.filter(u => u.role === 'area_head' && (u.requestedTerritories || '').trim().length > 0);
+                
+                if (areaHeads.length === 0) return;
+
+                UI.toggleLoader(true);
+                try {
+                    for (const user of areaHeads) {
+                        const assigned = (user.territoryId || user.territory_id || '').split(',').filter(Boolean);
+                        const requested = (user.requestedTerritories || '').split(',').filter(Boolean);
+                        const merged = Array.from(new Set([...assigned, ...requested])).join(',');
+                        user.territoryId = merged;
+                        user.territory_id = merged;
+                        user.requestedTerritories = '';
+                        await Store.update('users', user);
+                    }
+                    UI.showSuccess('Successfully approved all pending territory requests!');
+                    UI.renderAdminAreaHeads();
+                } catch (err) {
+                    alert('Bulk approval failed: ' + err.message);
+                } finally {
+                    UI.toggleLoader(false);
+                }
+            },
+
             renderAreaHeadDashboard() {
                 const db = Store.get();
                 const currentAh = Auth.currentUser;
                 const ahTerritories = (currentAh.territoryId || currentAh.territory_id || '').split(',').filter(Boolean);
+                const currentRequested = (currentAh.requestedTerritories || '').split(',').filter(Boolean);
 
                 if (ahTerritories.length === 0) {
                     document.getElementById('views-container').innerHTML = `
                         <div class="animate-entry flex flex-col items-center justify-center h-full p-10 text-slate-400">
                             <i class="fa-solid fa-circle-nodes text-6xl mb-4 text-slate-300"></i>
-                            <h3 class="text-xl font-bold mb-1">No Territories Assigned</h3>
-                            <p class="text-sm text-slate-500 text-center max-w-md">Contact the system administrator to assign territories to your Area Head account.</p>
+                            <h3 class="text-xl font-bold mb-1 text-slate-800 dark:text-white">No Territories Assigned</h3>
+                            <p class="text-sm text-slate-500 text-center max-w-md mb-4">You currently don't have active territories under your area.</p>
+                            
+                            <button onclick="UI.openRequestTerritoryModal()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-md hover-lift text-sm transition">
+                                <i class="fa-solid fa-plus mr-2"></i> Request Territories
+                            </button>
+
+                            ${currentRequested.length > 0 ? `
+                                <div class="mt-6 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 text-xs font-bold flex items-center">
+                                    <i class="fa-solid fa-hourglass-half mr-2 animate-spin"></i> Pending request for ${currentRequested.length} regions
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                     return;
@@ -1415,11 +1623,23 @@
                     <div class="animate-entry max-w-6xl mx-auto space-y-6">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
-                                <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Area Head Dashboard</h2>
-                                <p class="text-sm text-slate-500 font-medium">Welcome, ${currentAh.officerName || currentAh.username}</p>
+                                <div class="flex items-center gap-2">
+                                    <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Area Head Dashboard</h2>
+                                    <button onclick="UI.openRequestTerritoryModal()" class="p-2 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 hover:bg-brand-500/20 transition flex items-center font-bold text-xs border border-brand-500/20 shadow-sm">
+                                        <i class="fa-solid fa-circle-nodes mr-1.5"></i> Manage Regions
+                                    </button>
+                                </div>
+                                <p class="text-sm text-slate-500 font-medium mt-0.5">Welcome, ${currentAh.officerName || currentAh.username}</p>
                             </div>
-                            <div class="px-4 py-2 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-xl font-bold text-xs border border-brand-500/20 flex items-center shadow-sm">
-                                <i class="fa-solid fa-user-tie mr-2"></i> Area Head
+                            <div class="flex items-center gap-3">
+                                ${currentRequested.length > 0 ? `
+                                    <div class="px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-600 text-[10px] font-bold rounded-xl flex items-center shadow-sm animate-pulse">
+                                        <i class="fa-solid fa-hourglass-half mr-1.5"></i> ${currentRequested.length} Pending Review
+                                    </div>
+                                ` : ''}
+                                <div class="px-4 py-2 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-xl font-bold text-xs border border-brand-500/20 flex items-center shadow-sm">
+                                    <i class="fa-solid fa-user-tie mr-2"></i> Area Head
+                                </div>
                             </div>
                         </div>
 
