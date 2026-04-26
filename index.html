@@ -354,6 +354,201 @@
                     <img src="https://i.ibb.co.com/cshLMZ7/aci-motors-seeklogo.png" alt="ACI Motors"
                         class="h-8 w-auto object-contain mx-auto mb-4 hover:opacity-80 transition-opacity duration-300">
 
+            }
+        }
+
+        .animate-entry {
+            animation: smoothSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Animation Delays */
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+
+        /* Interactive Elements */
+        .hover-lift {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        .dark .hover-lift:hover {
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .hover-lift:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        /* Custom Scrollbar Premium */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 4px;
+        }
+
+        .dark ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.6);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.9);
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: rgba(71, 85, 105, 0.6);
+        }
+
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 0.9);
+        }
+
+        /* Sidebar Transition */
+        #sidebar {
+            z-index: 50;
+        }
+
+        #sidebar-overlay {
+            z-index: 40;
+        }
+
+        /* CREATIVE LOADER STYLE */
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(16, 185, 129, 0.1);
+            border-left-color: #10b981;
+            border-radius: 50%;
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite, glow 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px -5px #10b981;
+            }
+
+            to {
+                box-shadow: 0 0 20px 0px #10b981;
+            }
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        /* FLOATING ACTION DOCK */
+        .floating-dock {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 60;
+        }
+
+        .floating-dock.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 dark:bg-dark-bg dark:text-dark-text min-h-screen flex flex-col relative z-0">
+
+    <!-- PARTICLES BACKGROUND -->
+    <div class="particles-bg" id="particles-bg"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('particles-bg');
+            if (container) {
+                for (let i = 0; i < 30; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    const size = Math.random() * 6 + 3; // 3px to 9px
+                    p.style.width = size + 'px';
+                    p.style.height = size + 'px';
+                    p.style.left = Math.random() * 100 + 'vw';
+                    p.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                    p.style.animationDelay = (Math.random() * 10) + 's';
+                    container.appendChild(p);
+                }
+            }
+        });
+    </script>
+
+    <!-- GLOBAL LOADING OVERLAY -->
+    <div id="global-loader"
+        class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div
+            class="glass-panel px-8 py-6 rounded-2xl shadow-2xl flex flex-col items-center transform scale-100 transition-transform duration-300">
+            <div class="loader-spinner mb-3"></div>
+            <p class="text-xs font-bold text-brand-600 dark:text-brand-400 tracking-widest uppercase animate-pulse">
+                Processing</p>
+        </div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-view"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-white sm:bg-slate-100 dark:bg-[#202124] animate-fade-in overflow-hidden">
+
+        <div class="relative z-10 w-full max-w-[450px] px-4 sm:p-6 animate-entry">
+            <!-- Google Style Clean Background -->
+            <div
+                class="bg-white dark:bg-[#202124] sm:border sm:border-slate-200 sm:dark:border-[#3c4043] rounded-2xl p-6 sm:p-10 sm:shadow-md transition-all duration-300">
+
+                <div class="text-center mb-8">
+                    <!-- ACI MOTORS LOGO -->
+                    <img src="https://i.ibb.co.com/cshLMZ7/aci-motors-seeklogo.png" alt="ACI Motors"
+                        class="h-8 w-auto object-contain mx-auto mb-4 hover:opacity-80 transition-opacity duration-300">
+
                     <h1 class="text-2xl font-normal text-[#202124] dark:text-[#e8eaed] tracking-tight mb-2"
                         style="font-family: Arial, sans-serif;">Sign in</h1>
                     <p class="text-[15px] font-normal text-[#5f6368] dark:text-[#9aa0a6]">Use your Recovery Account</p>
@@ -362,12 +557,14 @@
                 <!-- Tabs -->
                 <div class="flex border-b border-slate-200 dark:border-[#3c4043] mb-8 relative">
                     <div id="login-tab-indicator"
-                        class="absolute bottom-[0px] left-0 w-1/2 h-[3px] bg-[#1a73e8] dark:bg-[#8ab4f8] transition-transform duration-300 rounded-t-sm">
+                        class="absolute bottom-[0px] left-0 w-1/3 h-[3px] bg-[#1a73e8] dark:bg-[#8ab4f8] transition-transform duration-300 rounded-t-sm">
                     </div>
                     <button type="button" onclick="UI.setLoginTab('officer')" id="btn-officer"
-                        class="w-1/2 pb-3 text-[14px] font-bold text-[#1a73e8] dark:text-[#8ab4f8] focus:outline-none transition-colors">Officer</button>
+                        class="w-1/3 pb-3 text-[14px] font-bold text-[#1a73e8] dark:text-[#8ab4f8] focus:outline-none transition-colors">Officer</button>
+                    <button type="button" onclick="UI.setLoginTab('area_head')" id="btn-area-head"
+                        class="w-1/3 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none">Area Head</button>
                     <button type="button" onclick="UI.setLoginTab('admin')" id="btn-admin"
-                        class="w-1/2 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none rounded-t-sm">Admin</button>
+                        class="w-1/3 pb-3 text-[14px] font-medium text-[#5f6368] dark:text-[#9aa0a6] hover:bg-slate-50 dark:hover:bg-[#3c4043]/30 transition-colors focus:outline-none rounded-t-sm">Admin</button>
                 </div>
 
                 <form id="login-form" class="space-y-6">
@@ -981,71 +1178,6 @@
                 }
             },
 
-            setLoginTab(role) {
-                this.currentLoginRole = role;
-                const indicator = document.getElementById('login-tab-indicator');
-                const btnOfficer = document.getElementById('btn-officer');
-                const btnAdmin = document.getElementById('btn-admin');
-                const lblUsername = document.getElementById('lbl-username');
-                const lblPassword = document.getElementById('lbl-password');
-                const inpUsername = document.getElementById('username');
-                const selOfficer = document.getElementById('officer-select');
-                const arrow = document.getElementById('officer-dropdown-arrow');
-
-                if (role === 'officer') {
-                    indicator.classList.remove('translate-x-[100%]', 'translate-x-full');
-                    indicator.classList.add('translate-x-0');
-
-                    btnOfficer.classList.add('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnOfficer.classList.remove('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
-                    btnAdmin.classList.remove('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnAdmin.classList.add('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
-
-                    lblUsername.innerText = 'Select Territory';
-                    const lblAdmin = document.getElementById('lbl-username-admin');
-                    if (lblAdmin) lblAdmin.classList.add('hidden');
-                    if (lblUsername) lblUsername.classList.remove('hidden');
-
-                    inpUsername.classList.add('hidden');
-                    selOfficer.classList.remove('hidden');
-                    arrow.classList.remove('hidden');
-                    this.populateLoginDropdown();
-                } else {
-                    indicator.classList.remove('translate-x-0');
-                    indicator.classList.add('translate-x-[100%]');
-
-                    btnAdmin.classList.add('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnAdmin.classList.remove('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
-                    btnOfficer.classList.remove('text-[#1a73e8]', 'dark:text-[#8ab4f8]', 'font-bold');
-                    btnOfficer.classList.add('text-[#5f6368]', 'dark:text-[#9aa0a6]', 'font-medium');
-
-                    const lblAdmin = document.getElementById('lbl-username-admin');
-                    if (lblAdmin) lblAdmin.classList.remove('hidden');
-                    if (lblUsername) lblUsername.classList.add('hidden');
-
-                    inpUsername.classList.remove('hidden');
-                    selOfficer.classList.add('hidden');
-                    arrow.classList.add('hidden');
-                    inpUsername.placeholder = '';
-                }
-            },
-
-            populateLoginDropdown() {
-                Store.init();
-                const db = Store.get();
-                const select = document.getElementById('officer-select');
-                select.innerHTML = '<option value="">-- Select Your Territory --</option>';
-
-                const officers = db.users.filter(u => u.role === 'officer').sort((a, b) => a.username.localeCompare(b.username));
-
-                officers.forEach(u => {
-                    const opt = document.createElement('option');
-                    opt.value = u.username;
-                    opt.text = `${u.username}`;
-                    select.appendChild(opt);
-                });
-            },
-
             initApp() {
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('app-layout').classList.remove('hidden');
@@ -1057,6 +1189,9 @@
                 if (Auth.currentUser.role === 'admin') {
                     document.getElementById('admin-nav').classList.remove('hidden');
                     Router.navigate('admin-dashboard');
+                } else if (Auth.currentUser.role === 'area_head') {
+                    document.getElementById('area-head-nav').classList.remove('hidden');
+                    Router.navigate('area-head-dashboard');
                 } else {
                     document.getElementById('officer-nav').classList.remove('hidden');
                     Router.navigate('officer-dashboard');
@@ -1064,7 +1199,6 @@
 
                 this.loadDarkMode();
             },
-
             toggleDarkMode() {
                 const html = document.documentElement;
                 if (html.classList.contains('dark')) {
@@ -5763,7 +5897,7 @@
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const role = UI.currentLoginRole;
-            const username = role === 'officer' ? document.getElementById('officer-select').value : document.getElementById('username').value;
+            const username = (role === 'officer' || role === 'area_head') ? document.getElementById('officer-select').value : document.getElementById('username').value;
             const password = document.getElementById('password').value;
             Auth.login(username, password, role);
         });
