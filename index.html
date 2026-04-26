@@ -1499,7 +1499,8 @@
                             </div>
                         </div>
 
-                        <div class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700 mt-8">
+                        <!-- Desktop View Table (hidden on mobile) -->
+                        <div class="hidden md:block glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700 mt-8 animate-entry">
                             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
                                 <h3 class="text-base font-bold text-slate-800 dark:text-white flex items-center">
                                     <i class="fa-solid fa-map-location-dot text-brand-500 mr-2"></i> Territory Performance Breakdown
@@ -1508,7 +1509,6 @@
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm text-left whitespace-nowrap">
-                                    <!-- Table Header -->
                                     <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs uppercase tracking-wider">
                                         <tr class="divide-x divide-slate-200 dark:divide-slate-700">
                                             <th class="px-6 py-4" rowspan="2">Territory</th>
@@ -1517,24 +1517,17 @@
                                             <th class="px-6 py-4 text-center bg-purple-50/40 dark:bg-purple-900/10 text-purple-700 dark:text-purple-400" colspan="3">Daily Operations</th>
                                         </tr>
                                         <tr class="divide-x divide-slate-200 dark:divide-slate-700 border-t border-slate-200 dark:border-slate-700 text-[10px]">
-                                            <!-- Financial -->
                                             <th class="px-4 py-2 text-right bg-emerald-50/20 dark:bg-emerald-900/5">Target (Proj)</th>
                                             <th class="px-4 py-2 text-right bg-emerald-50/20 dark:bg-emerald-900/5">MTD Coll</th>
                                             <th class="px-4 py-2 text-center bg-emerald-50/20 dark:bg-emerald-900/5">Ach%</th>
-                                            
-                                            <!-- File Coverage -->
                                             <th class="px-4 py-2 text-center bg-blue-50/20 dark:bg-blue-900/5">Total</th>
                                             <th class="px-4 py-2 text-center bg-blue-50/20 dark:bg-blue-900/5">Coll</th>
                                             <th class="px-4 py-2 text-center bg-blue-50/20 dark:bg-blue-900/5">Uncoll</th>
-                                            
-                                            <!-- Daily Ops -->
                                             <th class="px-4 py-2 text-right bg-purple-50/20 dark:bg-purple-900/5">Today Proj</th>
                                             <th class="px-4 py-2 text-right bg-purple-50/20 dark:bg-purple-900/5">Collection</th>
                                             <th class="px-4 py-2 text-center bg-purple-50/20 dark:bg-purple-900/5">Ach%</th>
                                         </tr>
                                     </thead>
-                                    
-                                    <!-- Table Body -->
                                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs">
                                         ${assignedTerritoryData.map(t => {
                                             const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
@@ -1544,7 +1537,6 @@
                                             
                                             return `
                                                 <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition divide-x divide-slate-100 dark:divide-slate-700 ${isDoingBad ? 'bg-rose-500/5 dark:bg-rose-500/10' : ''}">
-                                                    <!-- Territory Name -->
                                                     <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
                                                         <div class="flex flex-col gap-1">
                                                             <div class="flex items-center gap-1.5 flex-wrap">
@@ -1555,8 +1547,6 @@
                                                             <span class="text-[10px] font-normal text-slate-400 italic">${t.officer || 'No Officer'}</span>
                                                         </div>
                                                     </td>
-                                                    
-                                                    <!-- Financial Totals -->
                                                     <td class="px-4 py-4 text-right font-mono">৳${parseInt(t.presetProjTotal).toLocaleString()}</td>
                                                     <td class="px-4 py-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">৳${parseInt(t.mtdColl).toLocaleString()}</td>
                                                     <td class="px-4 py-4 text-center">
@@ -1564,13 +1554,9 @@
                                                             ${finAch}%
                                                         </span>
                                                     </td>
-                                                    
-                                                    <!-- File Coverage -->
                                                     <td class="px-4 py-4 text-center font-mono">${t.targetFiles}</td>
                                                     <td class="px-4 py-4 text-center font-mono text-blue-600 dark:text-blue-400 font-bold">${t.uniquePaidCodes}</td>
                                                     <td class="px-4 py-4 text-center font-mono text-slate-400">${uncoll}</td>
-                                                    
-                                                    <!-- Daily Operations -->
                                                     <td class="px-4 py-4 text-right font-mono ${missingProj ? 'text-rose-500 bg-rose-500/5' : ''}">৳${parseInt(t.todayProj).toLocaleString()}</td>
                                                     <td class="px-4 py-4 text-right font-mono font-bold text-purple-600 dark:text-purple-400">৳${parseInt(t.todayColl).toLocaleString()}</td>
                                                     <td class="px-4 py-4 text-center">
@@ -1584,6 +1570,81 @@
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+
+                        <!-- Mobile View Stacked Cards (hidden on desktop) -->
+                        <div class="grid grid-cols-1 gap-4 md:hidden mt-4 animate-entry">
+                            ${assignedTerritoryData.map(t => {
+                                const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
+                                const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
+                                const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
+                                const missingProj = parseInt(t.todayProj) === 0;
+
+                                return `
+                                    <div class="glass-panel p-5 rounded-2xl border relative overflow-hidden bg-white dark:bg-dark-card shadow-md ${isDoingBad ? 'border-rose-300 dark:border-rose-800/60 bg-rose-500/5' : 'border-slate-200 dark:border-slate-700/50'}">
+                                        <div class="flex justify-between items-start gap-2 border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
+                                            <div>
+                                                <h4 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+                                                    <span>${t.name}</span>
+                                                    ${isDoingBad ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800 animate-pulse"><i class="fa-solid fa-triangle-exclamation text-[8px]"></i> CRITICAL</span>` : ''}
+                                                    ${missingProj ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800"><i class="fa-solid fa-pencil text-[8px]"></i> NO PROJ</span>` : ''}
+                                                </h4>
+                                                <span class="text-xs font-medium text-slate-400 flex items-center gap-1 mt-0.5"><i class="fa-solid fa-user-tie text-[10px]"></i> ${t.officer || 'No Officer'}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-4">
+                                            <div class="bg-emerald-500/5 dark:bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/10">
+                                                <span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                                                    <i class="fa-solid fa-chart-line text-[11px]"></i> Financial Totals
+                                                </span>
+                                                <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                                                    <div>Target: <span class="font-mono font-bold text-slate-800 dark:text-white">৳${parseInt(t.presetProjTotal).toLocaleString()}</span></div>
+                                                    <div>Coll: <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">৳${parseInt(t.mtdColl).toLocaleString()}</span></div>
+                                                    <div class="col-span-2 mt-1 pt-1 border-t border-emerald-500/10 flex justify-between items-center">
+                                                        <span>Achievement:</span>
+                                                        <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400">${finAch}%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-blue-500/5 dark:bg-blue-500/10 p-3 rounded-xl border border-blue-500/10">
+                                                <span class="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                                                    <i class="fa-solid fa-percent text-[11px]"></i> File Coverage
+                                                </span>
+                                                <div class="grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                                    <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg">
+                                                        <div class="text-slate-400 text-[9px] uppercase font-bold mb-0.5">Total</div>
+                                                        <div class="font-mono font-bold text-slate-800 dark:text-white">${t.targetFiles}</div>
+                                                    </div>
+                                                    <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg">
+                                                        <div class="text-slate-400 text-[9px] uppercase font-bold mb-0.5">Coll</div>
+                                                        <div class="font-mono font-bold text-blue-600 dark:text-blue-400">${t.uniquePaidCodes}</div>
+                                                    </div>
+                                                    <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg">
+                                                        <div class="text-slate-400 text-[9px] uppercase font-bold mb-0.5">Uncoll</div>
+                                                        <div class="font-mono font-bold text-slate-400">${uncoll}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-purple-500/5 dark:bg-purple-500/10 p-3 rounded-xl border border-purple-500/10">
+                                                <span class="text-[10px] font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                                                    <i class="fa-solid fa-bolt text-[11px]"></i> Daily Operations
+                                                </span>
+                                                <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                                                    <div>Proj: <span class="font-mono font-bold text-slate-800 dark:text-white ${missingProj ? 'text-rose-500' : ''}">৳${parseInt(t.todayProj).toLocaleString()}</span></div>
+                                                    <div>Coll: <span class="font-mono font-bold text-purple-600 dark:text-purple-400">৳${parseInt(t.todayColl).toLocaleString()}</span></div>
+                                                    <div class="col-span-2 mt-1 pt-1 border-t border-purple-500/10 flex justify-between items-center">
+                                                        <span>Today Ach%:</span>
+                                                        <span class="font-bold text-sm text-purple-600 dark:text-purple-400">${t.todayAch}%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
@@ -4017,7 +4078,8 @@
                     </div>
 
                     <!-- Interactive Breakdown Table -->
-                    <div class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700 mt-8">
+                    <!-- Desktop View Table (hidden on mobile) -->
+                    <div class="hidden md:block glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700 mt-8 animate-entry">
                         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
                             <h3 class="text-base font-bold text-slate-800 dark:text-white flex items-center">
                                 <i class="fa-solid fa-map-location-dot text-brand-500 mr-2"></i> Territory Performance Breakdown
@@ -4087,6 +4149,81 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+
+                    <!-- Mobile View Stacked Cards (hidden on desktop) -->
+                    <div class="grid grid-cols-1 gap-4 md:hidden mt-4 animate-entry px-1">
+                        ${territoryData.map(t => {
+                            const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
+                            const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
+                            const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
+                            const missingProj = parseInt(t.todayProj) === 0;
+
+                            return `
+                                <div class="glass-panel p-5 rounded-2xl border relative overflow-hidden bg-white dark:bg-dark-card shadow-md ${isDoingBad ? 'border-rose-300 dark:border-rose-800/60 bg-rose-500/5' : 'border-slate-200 dark:border-slate-700/50'}">
+                                    <div class="flex justify-between items-start gap-2 border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
+                                        <div>
+                                            <h4 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+                                                <span>${t.name}</span>
+                                                ${isDoingBad ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800 animate-pulse"><i class="fa-solid fa-triangle-exclamation text-[8px]"></i> CRITICAL</span>` : ''}
+                                                ${missingProj ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800"><i class="fa-solid fa-pencil text-[8px]"></i> NO PROJ</span>` : ''}
+                                            </h4>
+                                            <span class="text-xs font-medium text-slate-400 flex items-center gap-1 mt-0.5"><i class="fa-solid fa-user-tie text-[10px]"></i> ${t.officer || 'No Officer'}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <div class="bg-emerald-500/5 dark:bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/10">
+                                            <span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                                                <i class="fa-solid fa-chart-line text-[11px]"></i> Financial Totals
+                                            </span>
+                                            <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                                                <div>Target: <span class="font-mono font-bold text-slate-800 dark:text-white">৳${parseInt(t.presetProjTotal).toLocaleString()}</span></div>
+                                                <div>Coll: <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">৳${parseInt(t.mtdColl).toLocaleString()}</span></div>
+                                                <div class="col-span-2 mt-1 pt-1 border-t border-emerald-500/10 flex justify-between items-center">
+                                                    <span>Achievement:</span>
+                                                    <span class="font-bold text-sm text-emerald-600 dark:text-emerald-400">${finAch}%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="bg-blue-500/5 dark:bg-blue-500/10 p-3 rounded-xl border border-blue-500/10">
+                                            <span class="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                                                <i class="fa-solid fa-percent text-[11px]"></i> File Coverage
+                                            </span>
+                                            <div class="grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                                <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg">
+                                                    <div class="text-slate-400 text-[9px] uppercase font-bold mb-0.5">Total</div>
+                                                    <div class="font-mono font-bold text-slate-800 dark:text-white">${t.targetFiles}</div>
+                                                </div>
+                                                <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg">
+                                                    <div class="text-slate-400 text-[9px] uppercase font-bold mb-0.5">Coll</div>
+                                                    <div class="font-mono font-bold text-blue-600 dark:text-blue-400">${t.uniquePaidCodes}</div>
+                                                </div>
+                                                <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg">
+                                                    <div class="text-slate-400 text-[9px] uppercase font-bold mb-0.5">Uncoll</div>
+                                                    <div class="font-mono font-bold text-slate-400">${uncoll}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="bg-purple-500/5 dark:bg-purple-500/10 p-3 rounded-xl border border-purple-500/10">
+                                            <span class="text-[10px] font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                                                <i class="fa-solid fa-bolt text-[11px]"></i> Daily Operations
+                                            </span>
+                                            <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                                                <div>Proj: <span class="font-mono font-bold text-slate-800 dark:text-white ${missingProj ? 'text-rose-500' : ''}">৳${parseInt(t.todayProj).toLocaleString()}</span></div>
+                                                <div>Coll: <span class="font-mono font-bold text-purple-600 dark:text-purple-400">৳${parseInt(t.todayColl).toLocaleString()}</span></div>
+                                                <div class="col-span-2 mt-1 pt-1 border-t border-purple-500/10 flex justify-between items-center">
+                                                    <span>Today Ach%:</span>
+                                                    <span class="font-bold text-sm text-purple-600 dark:text-purple-400">${t.todayAch}%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>`;
             },
