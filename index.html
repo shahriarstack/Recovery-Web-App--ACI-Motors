@@ -1240,6 +1240,52 @@
                 `;
             },
 
+            selectedAhTerritories: [],
+
+            renderAhTerritoryTags() {
+                const db = Store.get();
+                const container = document.getElementById('ah-territory-tags');
+                if (!container) return;
+                
+                if (this.selectedAhTerritories.length === 0) {
+                    container.innerHTML = '<span class="text-xs italic text-slate-400 select-none">No territories selected yet.</span>';
+                } else {
+                    container.innerHTML = this.selectedAhTerritories.map(tId => {
+                        const t = db.territories.find(ter => ter.id === tId);
+                        const name = t ? t.name : tId;
+                        return `
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-xl text-xs font-bold border border-brand-200/50 dark:border-brand-800/30 animate-fade-in">
+                                ${name}
+                                <button type="button" onclick="UI.removeAhTerritory('${tId}')" class="text-brand-500 hover:text-brand-700 focus:outline-none ml-0.5">
+                                    <i class="fa-solid fa-xmark text-[10px]"></i>
+                                </button>
+                            </span>
+                        `;
+                    }).join('');
+                }
+                
+                const input = document.getElementById('ah-territories-input');
+                if (input) input.value = this.selectedAhTerritories.join(',');
+            },
+
+            addAhTerritory() {
+                const picker = document.getElementById('ah-territory-picker');
+                if (!picker) return;
+                const val = picker.value;
+                if (!val) return;
+                
+                if (!this.selectedAhTerritories.includes(val)) {
+                    this.selectedAhTerritories.push(val);
+                    this.renderAhTerritoryTags();
+                }
+                picker.value = '';
+            },
+
+            removeAhTerritory(id) {
+                this.selectedAhTerritories = this.selectedAhTerritories.filter(tId => tId !== id);
+                this.renderAhTerritoryTags();
+            },
+
             openAreaHeadModal(userId = null) {
                 const db = Store.get();
                 let user = { id: '', username: '', password: '', officerName: '', territoryId: '' };
@@ -1248,7 +1294,7 @@
                     if (found) user = found;
                 }
 
-                const userTerritories = (user.territoryId || '').split(',').filter(Boolean);
+                this.selectedAhTerritories = (user.territoryId || '').split(',').filter(Boolean);
 
                 const html = `
                     <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-white">${userId ? 'Edit' : 'Add'} Area Head</h3>
@@ -1267,17 +1313,19 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Assign Territories</label>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-slate-200 dark:border-slate-700 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                                ${db.territories.map(t => {
-                                    const checked = userTerritories.includes(t.id) ? 'checked' : '';
-                                    return `
-                                        <label class="flex items-center space-x-2 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
-                                            <input type="checkbox" name="assignedTerritories" value="${t.id}" ${checked} class="rounded text-brand-500 border-slate-300">
-                                            <span>${t.name}</span>
-                                        </label>
-                                    `;
-                                }).join('')}
+                            <div class="flex gap-2 mb-2">
+                                <select id="ah-territory-picker" class="w-full p-2.5 rounded-lg border dark:bg-slate-800 dark:border-slate-600 text-sm focus:ring-2 focus:ring-brand-500">
+                                    <option value="">-- Select Territory to Add --</option>
+                                    ${db.territories.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+                                </select>
+                                <button type="button" onclick="UI.addAhTerritory()" class="px-4 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition font-bold text-sm flex items-center justify-center shadow-sm">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
                             </div>
+                            <div id="ah-territory-tags" class="flex flex-wrap gap-2 p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/50 min-h-[48px] shadow-inner">
+                                <!-- Pills injected here via JS -->
+                            </div>
+                            <input type="hidden" name="assignedTerritories" id="ah-territories-input" value="${user.territoryId || ''}">
                         </div>
                         <div class="flex justify-end space-x-2 pt-2">
                             <button type="button" onclick="document.getElementById('generic-modal').classList.add('hidden')" class="px-4 py-2 text-slate-500 hover:text-slate-700 transition text-sm font-bold">Cancel</button>
@@ -1286,6 +1334,7 @@
                     </form>
                 `;
                 this.renderHtmlModal(html);
+                setTimeout(() => this.renderAhTerritoryTags(), 50);
             },
 
             saveAreaHead(e, userId) {
@@ -1295,9 +1344,7 @@
                 const officerName = formData.get('officerName');
                 const username = formData.get('username');
                 const password = formData.get('password');
-                
-                const checkboxes = e.target.querySelectorAll('input[name="assignedTerritories"]:checked');
-                const territoryId = Array.from(checkboxes).map(cb => cb.value).join(',');
+                const territoryId = formData.get('assignedTerritories');
 
                 const payload = {
                     officerName,
@@ -1310,7 +1357,7 @@
                 if (userId) {
                     payload.id = userId;
                 } else {
-                    payload.id = 'ah_' + Date.now();
+                    payload.id = 'new_' + Date.now();
                 }
 
                 UI.toggleLoader(true);
