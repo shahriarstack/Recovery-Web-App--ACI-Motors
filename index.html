@@ -1214,13 +1214,13 @@
 
                                 <div class="divide-y divide-amber-500/10 text-sm">
                                     ${pendingAreaHeads.map(ah => {
-                                        const req = (ah.requestedTerritories || '').split(',').filter(Boolean);
-                                        const reqNames = req.map(id => {
-                                            const t = db.territories.find(ter => ter.id === id);
-                                            return t ? t.name : id;
-                                        }).join(', ');
+                    const req = (ah.requestedTerritories || '').split(',').filter(Boolean);
+                    const reqNames = req.map(id => {
+                        const t = db.territories.find(ter => ter.id === id);
+                        return t ? t.name : id;
+                    }).join(', ');
 
-                                        return `
+                    return `
                                             <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-amber-500/5 dark:hover:bg-amber-500/10 transition">
                                                 <div>
                                                     <h4 class="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
@@ -1230,10 +1230,10 @@
                                                     <div class="flex flex-wrap gap-1.5 mt-2">
                                                         <span class="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded">Requesting:</span>
                                                         ${req.map(id => {
-                                                            const t = db.territories.find(ter => ter.id === id);
-                                                            const name = t ? t.name : id;
-                                                            return `<span class="text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md shadow-sm">${name}</span>`;
-                                                        }).join('')}
+                        const t = db.territories.find(ter => ter.id === id);
+                        const name = t ? t.name : id;
+                        return `<span class="text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md shadow-sm">${name}</span>`;
+                    }).join('')}
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center gap-2 self-end sm:self-center">
@@ -1246,7 +1246,7 @@
                                                 </div>
                                             </div>
                                         `;
-                                    }).join('')}
+                }).join('')}
                                 </div>
                             </div>
                         ` : ''}
@@ -1445,7 +1445,7 @@
             openRequestTerritoryModal() {
                 const db = Store.get();
                 const currentAh = Auth.currentUser;
-                
+
                 // Get current state
                 const currentAssigned = (currentAh.territoryId || currentAh.territory_id || '').split(',').filter(Boolean);
                 const currentRequested = (currentAh.requestedTerritories || '').split(',').filter(Boolean);
@@ -1505,7 +1505,7 @@
 
                 const db = Store.get();
                 const currentAh = Auth.currentUser;
-                
+
                 // Save existing assignments, everything else selected becomes a request
                 const existing = (currentAh.territoryId || currentAh.territory_id || '').split(',').filter(Boolean);
                 const newRequests = Array.from(checkboxes).map(c => c.value).filter(id => !existing.includes(id)).join(',');
@@ -1537,7 +1537,7 @@
 
                 const assigned = (user.territoryId || user.territory_id || '').split(',').filter(Boolean);
                 const requested = (user.requestedTerritories || '').split(',').filter(Boolean);
-                
+
                 // Merge
                 const merged = Array.from(new Set([...assigned, ...requested])).join(',');
                 user.territoryId = merged;
@@ -1559,7 +1559,7 @@
             async approveAllTerritoryRequests() {
                 const db = Store.get();
                 const areaHeads = db.users.filter(u => u.role === 'area_head' && (u.requestedTerritories || '').trim().length > 0);
-                
+
                 if (areaHeads.length === 0) return;
 
                 UI.toggleLoader(true);
@@ -1750,12 +1750,12 @@
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs">
                                         ${assignedTerritoryData.map(t => {
-                                            const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
-                                            const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
-                                            const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
-                                            const missingProj = parseInt(t.todayProj) === 0;
-                                            
-                                            return `
+                    const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
+                    const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
+                    const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
+                    const missingProj = parseInt(t.todayProj) === 0;
+
+                    return `
                                                 <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition divide-x divide-slate-100 dark:divide-slate-700 ${isDoingBad ? 'bg-rose-500/5 dark:bg-rose-500/10' : ''}">
                                                     <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
                                                         <div class="flex flex-col gap-1">
@@ -1786,7 +1786,7 @@
                                                     </td>
                                                 </tr>
                                             `;
-                                        }).join('')}
+                }).join('')}
                                     </tbody>
                                 </table>
                             </div>
@@ -1795,12 +1795,12 @@
                         <!-- Mobile View Stacked Cards (hidden on desktop) -->
                         <div class="grid grid-cols-1 gap-4 md:hidden mt-4 animate-entry">
                             ${assignedTerritoryData.map(t => {
-                                const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
-                                const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
-                                const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
-                                const missingProj = parseInt(t.todayProj) === 0;
+                    const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
+                    const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
+                    const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
+                    const missingProj = parseInt(t.todayProj) === 0;
 
-                                return `
+                    return `
                                     <div class="glass-panel p-5 rounded-2xl border relative overflow-hidden bg-white dark:bg-dark-card shadow-md ${isDoingBad ? 'border-rose-300 dark:border-rose-800/60 bg-rose-500/5' : 'border-slate-200 dark:border-slate-700/50'}">
                                         <div class="flex justify-between items-start gap-2 border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
                                             <div>
@@ -1864,7 +1864,7 @@
                                         </div>
                                     </div>
                                 `;
-                            }).join('')}
+                }).join('')}
                         </div>
                     </div>
                 `;
@@ -3293,7 +3293,7 @@
                 const advPct = totalCollSplit > 0 ? Math.round((mtdCollAdv / totalCollSplit) * 100) : 0;
 
                 document.getElementById('views-container').innerHTML = `
-            <div class="animate-entry mb-4 sm:mb-6" >
+            <div id="officer-dashboard-panel" class="animate-entry mb-4 sm:mb-6" >
                         <div class="flex justify-between items-end mb-2">
                             <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h2>
                             <p class="text-xs sm:text-sm text-slate-500 font-medium">${Auth.currentUser.officerName || Auth.currentUser.username}</p>
@@ -3541,9 +3541,14 @@
                                         </td>
                                             <td class="px-4 py-2 sm:px-6 sm:py-3 text-right">
                                                 <div class="font-bold tracking-tight">${parseFloat(c.amount).toLocaleString()}</div>
-                                                <button onclick="UI.openCollectionModal('${c.id}', '${c.territoryId}')" class="text-[10px] text-brand-600 font-bold hover:underline py-1 transition flex items-center justify-end ml-auto">
-                                                    <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
-                                                </button>
+                                                <div class="flex justify-end gap-2 mt-1">
+                                                    <button onclick="UI.openCollectionModal('${c.id}', '${c.territoryId}')" class="text-[10px] text-brand-600 font-bold hover:underline transition flex items-center">
+                                                        <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+                                                    </button>
+                                                    <button onclick="UI.deleteCollection('${c.id}')" class="text-[10px] text-rose-600 font-bold hover:underline transition flex items-center">
+                                                        <i class="fa-solid fa-trash-can mr-1"></i> Delete
+                                                    </button>
+                                                </div>
                                             </td>
                                     </tr>
                                 `).join('')}
@@ -4184,10 +4189,10 @@
                     const tTarget = db.targets.find(tgt => (tgt.territoryId === t.id || tgt.territory_id === t.id) && tgt.month === currentMonth) || {};
                     const ldAch = m.yestProjAmt > 0 ? ((m.yestCollAmt / m.yestProjAmt) * 100).toFixed(1) : '0.0';
                     const tdAch = m.todayProj > 0 ? ((m.todayColl / m.todayProj) * 100).toFixed(1) : (m.todayColl > 0 ? '100+' : '0.0');
-                    return { 
-                        ...t, 
-                        ...m, 
-                        lastDayAch: ldAch, 
+                    return {
+                        ...t,
+                        ...m,
+                        lastDayAch: ldAch,
                         todayAch: tdAch,
                         totalOd: parseFloat(tTarget.totalOd || tTarget.total_od) || 0,
                         odGrowthSply: parseFloat(tTarget.odGrowthSply || tTarget.od_growth_sply) || 0,
@@ -4442,12 +4447,12 @@
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs">
                                     ${territoryData.map(t => {
-                                        const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
-                                        const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
-                                        const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
-                                        const missingProj = parseInt(t.todayProj) === 0;
-                                        
-                                        return `
+                    const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
+                    const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
+                    const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
+                    const missingProj = parseInt(t.todayProj) === 0;
+
+                    return `
                                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition divide-x divide-slate-100 dark:divide-slate-700 ${isDoingBad ? 'bg-rose-500/5 dark:bg-rose-500/10' : ''}">
                                                 <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
                                                     <div class="flex flex-col gap-1">
@@ -4478,7 +4483,7 @@
                                                 </td>
                                             </tr>
                                         `;
-                                    }).join('')}
+                }).join('')}
                                 </tbody>
                             </table>
 
@@ -4501,11 +4506,11 @@
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs">
                                     ${territoryData.map(t => {
-                                        const lmAch = parseFloat(t.lmNpTargetAmt) > 0 ? ((parseFloat(t.mtdLmNpColl) / parseFloat(t.lmNpTargetAmt)) * 100).toFixed(1) : '0.0';
-                                        const lmUncoll = Math.max(0, parseInt(t.lmNpTargetFiles) - parseInt(t.mtdLmNpFiles));
-                                        const lmBad = parseFloat(lmAch) < 60;
+                    const lmAch = parseFloat(t.lmNpTargetAmt) > 0 ? ((parseFloat(t.mtdLmNpColl) / parseFloat(t.lmNpTargetAmt)) * 100).toFixed(1) : '0.0';
+                    const lmUncoll = Math.max(0, parseInt(t.lmNpTargetFiles) - parseInt(t.mtdLmNpFiles));
+                    const lmBad = parseFloat(lmAch) < 60;
 
-                                        return `
+                    return `
                                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition divide-x divide-slate-100 dark:divide-slate-700 ${lmBad ? 'bg-rose-500/5 dark:bg-rose-500/10' : ''}">
                                                 <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
                                                     <div class="flex flex-col gap-1">
@@ -4525,7 +4530,7 @@
                                                 <td class="px-4 py-4 text-center font-mono text-slate-400">${lmUncoll}</td>
                                             </tr>
                                         `;
-                                    }).join('')}
+                }).join('')}
                                 </tbody>
                             </table>
 
@@ -4547,7 +4552,7 @@
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs">
                                     ${territoryData.map(t => {
-                                        return `
+                    return `
                                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition divide-x divide-slate-100 dark:divide-slate-700">
                                                 <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">
                                                     <div class="flex flex-col gap-1">
@@ -4566,7 +4571,7 @@
                                                 </td>
                                             </tr>
                                         `;
-                                    }).join('')}
+                }).join('')}
                                 </tbody>
                             </table>
                         </div>
@@ -4575,12 +4580,12 @@
                     <!-- Mobile View Stacked Cards (hidden on desktop) -->
                     <div class="grid grid-cols-1 gap-4 md:hidden mt-4 animate-entry px-1">
                         ${territoryData.map(t => {
-                            const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
-                            const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
-                            const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
-                            const missingProj = parseInt(t.todayProj) === 0;
+                    const finAch = t.presetProjTotal > 0 ? ((t.mtdColl / t.presetProjTotal) * 100).toFixed(1) : '0.0';
+                    const uncoll = Math.max(0, t.targetFiles - t.uniquePaidCodes);
+                    const isDoingBad = parseFloat(finAch) < 60 || (t.rpi && parseFloat(t.rpi) < 60);
+                    const missingProj = parseInt(t.todayProj) === 0;
 
-                            return `
+                    return `
                                 <div class="glass-panel p-5 rounded-2xl border relative overflow-hidden bg-white dark:bg-dark-card shadow-md ${isDoingBad ? 'border-rose-300 dark:border-rose-800/60 bg-rose-500/5' : 'border-slate-200 dark:border-slate-700/50'}">
                                     <div class="flex justify-between items-start gap-2 border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
                                         <div>
@@ -4678,7 +4683,7 @@
                                     </div>
                                 </div>
                             `;
-                        }).join('')}
+                }).join('')}
                     </div>
                 </div>`;
             },
@@ -6283,6 +6288,8 @@
                         UI.updateAdminHistory(null, formData.get('startDate'), formData.get('endDate'), formData.get('territorySearch'), formData.get('customerSearch'));
                     } else if (document.getElementById('views-container').innerHTML.includes('Projection Monitor')) {
                         UI.renderAdminProjections();
+                    } else if (document.getElementById('officer-dashboard-panel')) {
+                        UI.renderOfficerDashboard();
                     }
                     UI.showSuccess('Collection Deleted!');
                     UI.toggleLoader(false);
