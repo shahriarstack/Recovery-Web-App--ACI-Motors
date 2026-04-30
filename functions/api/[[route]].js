@@ -33,6 +33,9 @@ export async function onRequest(context) {
     // Set up Neon Database Pool using environment variables that you'll configure in Cloudflare manually
     const pool = new Pool({ connectionString: env.DATABASE_URL });
 
+    // Auto-initialize system_settings table if it doesn't exist
+    await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error("Table Init Error:", err));
+
     try {
         // --- GET DB STATE ---
         if (request.method === 'GET' && path === '/api/db') {
