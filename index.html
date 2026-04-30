@@ -1168,83 +1168,52 @@
                         body: JSON.stringify({ key: 'cutoff_extension_hours', value: cutoff_extension_hours })
                     });
                     await Store.init();
-                    UI.closeModal('generic-modal');
-                    Router.navigate('admin-dashboard');
-                } catch (e) {
-                    alert('Error saving settings');
-                }
-                UI.toggleLoader(false);
-            },
-            setTrendRange(days) {
-                const end = new Date();
-                const start = new Date();
-                start.setDate(end.getDate() - (days - 1));
-                document.getElementById('trend-start-date').value = Utils.getLocalDate(start);
-                document.getElementById('trend-end-date').value = Utils.getLocalDate(end);
-                UI.updateAdminTrendChart();
-            },
+                UI.closeModal('generic-modal');
+                Router.navigate('admin-dashboard');
+            } catch (e) {
+                alert('Error saving settings');
+            }
+            UI.toggleLoader(false);
+        },
 
-            updateAdminTrendChart() {
-                const db = Store.get();
-                const tId = document.getElementById('trend-filter-territory')?.value || 'all';
-                const startStr = document.getElementById('trend-start-date')?.value;
-                const endStr = document.getElementById('trend-end-date')?.value;
+        updateMomentumChart() {
+            const db = Store.get();
+            const tid = document.getElementById('momentum-territory')?.value || '';
+            const startDateVal = document.getElementById('momentum-start')?.value;
+            const endDateVal = document.getElementById('momentum-end')?.value;
+            
+            const start = startDateVal ? new Date(startDateVal) : new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
+            const end = endDateVal ? new Date(endDateVal) : new Date(Date.now());
+            
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) return;
 
-                let start, end;
-                if (startStr && endStr) {
-                    start = new Date(startStr);
-                    end = new Date(endStr);
-                } else {
-                    end = new Date();
-                    start = new Date();
-                    start.setDate(end.getDate() - 29);
-                }
+            const labels = [];
+            const data = [];
+            
+            let current = new Date(start);
+            current.setHours(0,0,0,0);
+            const endOfDay = new Date(end);
+            endOfDay.setHours(23,59,59,999);
 
-                const trendLabels = [];
-                const trendData = [];
-                let totalSum = 0;
-
-                const curr = new Date(start);
-                while (curr <= end) {
-                    const dateStr = Utils.getLocalDate(curr);
-                    const day = String(curr.getDate()).padStart(2, '0');
-                    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                    const month = monthNames[curr.getMonth()];
-                    trendLabels.push(`${day} ${month}`);
-
-                    let dailyCollections = db.collections.filter(c => c.date === dateStr);
-                    if (tId !== 'all') {
-                        dailyCollections = dailyCollections.filter(c => c.territoryId === tId || c.territory_id === tId);
-                    }
-
-                    const dailySum = dailyCollections.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
-                    trendData.push(dailySum);
-                    totalSum += dailySum;
-
-                    curr.setDate(curr.getDate() + 1);
-                    if (trendLabels.length > 365) break; // Safety limit
-                }
-
-                Charts.renderLine('admin-global-trend', trendLabels, trendData);
-
-                // Update summary text
-                const summaryEl = document.getElementById('trend-summary-amt');
-                if (summaryEl) {
-                    summaryEl.innerText = Math.round(totalSum).toLocaleString();
-                    summaryEl.closest('.trend-summary-box').classList.remove('opacity-0');
-                }
-
-                // Update title text if custom range
-                const titleText = document.getElementById('trend-chart-title-text');
-                if (titleText) {
-                    if (startStr && endStr) {
-                        const days = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
-                        titleText.innerText = `Momentum (Last ${days} Days)`;
-                    } else {
-                        titleText.innerText = `Global Collection Momentum (Last 30 Days)`;
-                    }
-                }
-            },
+            while (current <= endOfDay) {
+                const dateStr = Utils.getLocalDate(current);
+                const day = String(current.getDate()).padStart(2, '0');
+                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const month = monthNames[current.getMonth()];
+                labels.push(`${day} ${month}`);
+                
+                const dailySum = db.collections.filter(c => {
+                    const matchesDate = c.date === dateStr;
+                    const matchesTid = !tid || c.territoryId === tid || c.territory_id === tid;
+                    return matchesDate && matchesTid;
+                }).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+                
+                data.push(dailySum);
+                current.setDate(current.getDate() + 1);
+            }
+            
+            Charts.renderLine('admin-global-trend', labels, data);
+        },
 
             populateLoginDropdown() {
                 const db = Store.get();
@@ -2053,6 +2022,9 @@
             renderAdminDashboard(tableMode = 'compact') {
                 const metrics = Calc.getMetrics();
                 const db = Store.get();
+                const cutoffSetting = db.system_settings?.find(s => s.key === 'cutoff_extension_hours');
+                const cutoffHours = parseInt(cutoffSetting?.value || 0);
+                const activeMonth = db.system_settings?.find(s => s.key === 'active_month')?.value || 'N/A';
 
                 // Calculate Today Achievement for Admin View
                 const todayAch = metrics.todayProj > 0 ? ((metrics.todayColl / metrics.todayProj) * 100).toFixed(1) : (metrics.todayColl > 0 ? '100+' : '0.0');
@@ -2180,19 +2152,13 @@
                 const topPerformers = [...allTerritoryData].sort((a, b) => parseFloat(b.rpi) - parseFloat(a.rpi)).slice(0, 5);
                 const bottomPerformers = [...allTerritoryData].sort((a, b) => parseFloat(a.rpi) - parseFloat(b.rpi)).slice(0, 5);
 
+                const today = new Date();
+
                 const modes = ['Bank Transfer', 'bKash', 'Cheque', 'Cash'];
                 const modeData = modes.map(m => db.collections.filter(c => c.date.startsWith(Utils.getActiveMonth()) && c.mode === m).reduce((s, c) => s + parseFloat(c.amount), 0));
 
-                const cutoffHours = parseInt(db.system_settings?.find(s => s.key === 'cutoff_extension_hours')?.value || 0);
-                const cutoffStatusHtml = cutoffHours > 0 ? `
-                    <div class="flex items-center gap-2 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full mb-1 w-fit">
-                        <span class="relative flex h-1.5 w-1.5">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
-                        </span>
-                        <span class="text-[9px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest">Cutoff Extended: ${(cutoffHours < 10 ? '0' + cutoffHours : cutoffHours)}:00 AM</span>
-                    </div>
-                ` : '';
+                const container = document.getElementById('views-container');
+                const isCompact = tableMode === 'compact';
 
                 container.innerHTML = `
                     <div class="animate-entry space-y-4"> 
@@ -2200,7 +2166,21 @@
                         <!-- DASHBOARD HEADER -->
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                             <div>
-                                ${cutoffStatusHtml}
+                                <div class="flex items-center gap-2 mb-2">
+                                    ${cutoffHours > 0 ? `
+                                        <div class="flex items-center px-2.5 py-1 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-lg text-amber-700 dark:text-amber-400 text-[10px] font-black tracking-wide shadow-sm">
+                                            <span class="relative flex h-2 w-2 mr-2">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                            </span>
+                                            EXTENDED CUTOFF: +${cutoffHours}H (0${cutoffHours}:00 AM)
+                                        </div>
+                                    ` : ''}
+                                    <div class="flex items-center px-2.5 py-1 bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-700/30 rounded-lg text-brand-700 dark:text-brand-400 text-[10px] font-black tracking-wide shadow-sm">
+                                        <i class="fa-solid fa-calendar-day mr-2 opacity-70"></i>
+                                        ACTIVE OPS MONTH: ${activeMonth}
+                                    </div>
+                                </div>
                                 <h2 class="text-2xl font-black text-slate-800 dark:text-white">Admin Intelligence Dashboard</h2>
                                 <p class="text-xs text-slate-500 font-medium">Monthly Recovery Performance Metrics & Strategic Analytics</p>
                             </div>
@@ -2600,39 +2580,23 @@
                             </h3>
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div class="glass-panel p-6 rounded-xl shadow-lg dark:bg-dark-card lg:col-span-2 hover-lift">
-                                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                                        <div>
-                                            <h4 class="font-bold text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                                                <i class="fa-solid fa-arrow-trend-up mr-2 text-brand-500"></i> 
-                                                <span id="trend-chart-title-text">Collection Momentum</span>
-                                            </h4>
-                                            <div class="trend-summary-box mt-1 flex items-center gap-2 opacity-0 transition-opacity duration-500">
-                                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Selected Total:</span>
-                                                <span id="trend-summary-amt" class="text-xs font-black text-brand-600 dark:text-brand-400">0</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <!-- Territory Selector -->
-                                            <div class="relative">
-                                                <select id="trend-filter-territory" onchange="UI.updateAdminTrendChart()" class="appearance-none pl-3 pr-8 py-1.5 text-[10px] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer transition-all">
-                                                    <option value="all">Global (All Territories)</option>
-                                                    ${db.territories.sort((a, b) => a.name.localeCompare(b.name)).map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+                                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                                        <h4 class="font-bold text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center">
+                                            <i class="fa-solid fa-arrow-trend-up mr-2 text-brand-500"></i> Collection Momentum
+                                        </h4>
+                                        <div class="flex flex-wrap items-center gap-2 bg-slate-50 dark:bg-slate-800/50 p-1.5 rounded-xl border border-slate-100 dark:border-slate-700">
+                                            <div class="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                                                <i class="fa-solid fa-map-location-dot text-[10px] text-brand-500 opacity-70"></i>
+                                                <select id="momentum-territory" onchange="UI.updateMomentumChart()" class="bg-transparent border-none text-[10px] font-black outline-none cursor-pointer">
+                                                    <option value="">GLOBAL MOMENTUM</option>
+                                                    ${db.territories.map(t => `<option value="${t.id}">${t.name.toUpperCase()}</option>`).join('')}
                                                 </select>
-                                                <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[8px] text-slate-400 pointer-events-none"></i>
                                             </div>
-
-                                            <!-- Quick Presets -->
-                                            <div class="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                                                <button onclick="UI.setTrendRange(7)" class="px-2 py-1 text-[9px] font-bold rounded-md hover:bg-white dark:hover:bg-slate-700 transition-all">7D</button>
-                                                <button onclick="UI.setTrendRange(30)" class="px-2 py-1 text-[9px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-brand-600">30D</button>
-                                            </div>
-                                            
-                                            <!-- Date Picker -->
-                                            <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1">
-                                                <input type="date" id="trend-start-date" value="${Utils.getLocalDate(new Date(new Date().setDate(new Date().getDate() - 29)))}" onchange="UI.updateAdminTrendChart()" class="text-[9px] font-bold bg-transparent outline-none cursor-pointer text-slate-600 dark:text-slate-300">
-                                                <span class="text-[10px] text-slate-400 font-bold">-</span>
-                                                <input type="date" id="trend-end-date" value="${Utils.getLocalDate()}" onchange="UI.updateAdminTrendChart()" class="text-[9px] font-bold bg-transparent outline-none cursor-pointer text-slate-600 dark:text-slate-300">
+                                            <div class="flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                                                <i class="fa-solid fa-calendar-range text-[10px] text-brand-500 opacity-70"></i>
+                                                <input type="date" id="momentum-start" onchange="UI.updateMomentumChart()" value="${Utils.getLocalDate(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000))}" class="bg-transparent border-none text-[9px] font-black outline-none cursor-pointer">
+                                                <span class="text-[9px] text-slate-300 font-black px-1">/</span>
+                                                <input type="date" id="momentum-end" onchange="UI.updateMomentumChart()" value="${Utils.getLocalDate()}" class="bg-transparent border-none text-[9px] font-black outline-none cursor-pointer">
                                             </div>
                                         </div>
                                     </div>
@@ -2689,7 +2653,7 @@
                 const partB = totalB.mtdColl;
                 setTimeout(() => {
                     Charts.renderDoughnut('chart-part-comparison', ['Part A', 'Part B'], [partA, partB]);
-                    UI.updateAdminTrendChart();
+                    UI.updateMomentumChart();
                     Charts.renderDoughnut('admin-mode-chart', modes, modeData);
                 }, 100);
             },
