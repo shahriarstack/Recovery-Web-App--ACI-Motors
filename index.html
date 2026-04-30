@@ -601,6 +601,14 @@
                 <div id="views-container" class="flex-1">
                     <!-- Views will be injected here via JS -->
                 </div>
+                
+                <!-- REAL-TIME STATUS INDICATOR (OFFICER DASHBOARD ONLY) -->
+                <div id="live-refresh-indicator" class="fixed bottom-24 right-6 hidden z-40 animate-fade-in">
+                    <div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-900/30 shadow-lg flex items-center gap-2">
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></div>
+                        <span class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Live Sync Active</span>
+                    </div>
+                </div>
 
                 <!-- FOOTER / COPYRIGHT -->
                 <footer
@@ -1014,12 +1022,51 @@
                 else if (viewId === 'officer-settlements') UI.renderOfficerSettlementsView();
                 else if (viewId === 'officer-history') UI.renderOfficerHistory();
                 else if (viewId === 'officer-analytics') UI.renderOfficerVehicleAnalytics();
+
+                // Manage Dashboard Refresh Timer
+                if (viewId === 'officer-dashboard' || viewId === 'admin-dashboard' || viewId === 'area-head-dashboard') {
+                    UI.startDashboardRefresh();
+                } else {
+                    UI.stopDashboardRefresh();
+                }
             },
         };
 
         const UI = {
             charts: {},
             currentLoginRole: 'officer',
+            refreshTimer: null,
+
+            // --- REFRESH LOGIC ---
+            startDashboardRefresh() {
+                if (this.refreshTimer) return;
+                const indicator = document.getElementById('live-refresh-indicator');
+                if (indicator) indicator.classList.remove('hidden');
+                
+                this.refreshTimer = setInterval(async () => {
+                    await Store.init();
+                    const currentView = document.querySelector('.nav-item.bg-brand-50');
+                    if (currentView) {
+                        const viewText = currentView.innerText.toLowerCase();
+                        if (viewText.includes('dashboard')) {
+                           if (viewText.includes('my dashboard')) this.renderOfficerDashboard();
+                           else if (viewText.includes('dashboard')) {
+                               if (Auth.currentUser.role === 'admin') this.renderAdminDashboard();
+                               else this.renderAreaHeadDashboard();
+                           }
+                        }
+                    }
+                }, 30000); // 30 second sync
+            },
+
+            stopDashboardRefresh() {
+                if (this.refreshTimer) {
+                    clearInterval(this.refreshTimer);
+                    this.refreshTimer = null;
+                }
+                const indicator = document.getElementById('live-refresh-indicator');
+                if (indicator) indicator.classList.add('hidden');
+            },
 
             // --- LOADER ---
             toggleLoader(show) {
@@ -3505,7 +3552,7 @@
                                     <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-blue-50/20 dark:bg-blue-900/10">
                                         <div class="flex flex-col sm:flex-row justify-between items-center">
                                             <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">TD Coll</span>
-                                            <span class="font-bold text-[10px] sm:text-xs text-emerald-600 mt-0.5 sm:mt-0">${parseInt(metrics.mtdColl).toLocaleString()}</span>
+                                            <span id="dash-mtd-coll" class="font-bold text-[10px] sm:text-xs text-emerald-600 mt-0.5 sm:mt-0">${parseInt(metrics.mtdColl).toLocaleString()}</span>
                                         </div>
                                     </td>
                                     <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-slate-50/10 dark:bg-slate-800/5">
@@ -3517,7 +3564,7 @@
                                     <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-emerald-50/20 dark:bg-emerald-900/10">
                                         <div class="flex flex-col sm:flex-row justify-between items-center">
                                             <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Today C.</span>
-                                            <span class="font-bold text-[10px] sm:text-xs text-emerald-600 mt-0.5 sm:mt-0">${parseInt(metrics.todayColl).toLocaleString()}</span>
+                                            <span id="dash-today-coll" class="font-bold text-[10px] sm:text-xs text-emerald-600 mt-0.5 sm:mt-0">${parseInt(metrics.todayColl).toLocaleString()}</span>
                                         </div>
                                     </td>
                                     <td class="p-1.5 sm:p-2 bg-rose-50/20 dark:bg-rose-900/10">
@@ -3532,7 +3579,7 @@
                                     <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-blue-50/20 dark:bg-blue-900/10">
                                         <div class="flex flex-col sm:flex-row justify-between items-center">
                                             <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Ach (M)</span>
-                                            <span class="font-bold text-[10px] sm:text-xs text-indigo-600 mt-0.5 sm:mt-0">${metrics.achievement}%</span>
+                                            <span id="dash-achievement" class="font-bold text-[10px] sm:text-xs text-indigo-600 mt-0.5 sm:mt-0">${metrics.achievement}%</span>
                                         </div>
                                     </td>
                                     <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-slate-50/10 dark:bg-slate-800/5">
@@ -3544,7 +3591,7 @@
                                     <td class="p-1.5 sm:p-2 border-r border-slate-100 dark:border-slate-700 bg-emerald-50/20 dark:bg-emerald-900/10">
                                          <div class="flex flex-col sm:flex-row justify-between items-center">
                                             <span class="text-slate-500 font-bold uppercase tracking-tighter text-[8px] sm:text-[10px]">Ach (T)</span>
-                                            <span class="font-bold text-[10px] sm:text-xs text-fuchsia-600 mt-0.5 sm:mt-0">${todayAch}%</span>
+                                            <span id="dash-today-ach" class="font-bold text-[10px] sm:text-xs text-fuchsia-600 mt-0.5 sm:mt-0">${todayAch}%</span>
                                         </div>
                                     </td>
                                     <td class="p-1.5 sm:p-2 bg-rose-50/20 dark:bg-rose-900/10">
@@ -3619,11 +3666,11 @@
             <div class="animate-entry rounded-lg shadow border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card overflow-hidden">
                 <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sm:hidden">
                     <h3 class="font-bold text-slate-800 dark:text-white text-sm">Today's Collections</h3>
-                    <button onclick="Router.navigate('officer-collection')" class="text-[10px] bg-brand-600 text-white px-2 py-1 rounded hover:bg-brand-700"><i class="fa-solid fa-plus"></i> Add</button>
+                    <button onclick="UI.openCollectionModal()" class="text-[10px] bg-brand-600 text-white px-2 py-1 rounded hover:bg-brand-700"><i class="fa-solid fa-plus"></i> Add</button>
                 </div>
                 <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700 hidden sm:flex justify-between items-center">
                     <h3 class="font-bold text-slate-800 dark:text-white">Today's Collections</h3>
-                    <button onclick="Router.navigate('officer-collection')" class="text-xs bg-brand-600 text-white px-3 py-1.5 rounded hover:bg-brand-700 hover-lift"><i class="fa-solid fa-plus mr-1"></i> New Entry</button>
+                    <button onclick="UI.openCollectionModal()" class="text-xs bg-brand-600 text-white px-3 py-1.5 rounded hover:bg-brand-700 hover-lift"><i class="fa-solid fa-plus mr-1"></i> New Entry</button>
                 </div>
                 <div class="overflow-x-auto scrollbar-hide">
                     <table class="w-full text-xs sm:text-sm text-left min-w-[500px]">
@@ -3895,58 +3942,88 @@
             `;
             },
 
-            renderCollectionForm() {
-                document.getElementById('views-container').innerHTML = `
-            <div class="animate-entry max-w-xl mx-auto mt-6 w-full px-4 sm:px-0" >
-                <div class="glass-panel p-5 sm:p-8 rounded-2xl shadow-xl dark:bg-dark-card relative overflow-hidden">
+            openCollectionModal() {
+                const container = document.getElementById('modal-content');
+                
+                // We'll reuse the logic from renderCollectionForm but into the modal
+                this.renderCollectionForm('modal');
+                
+                document.getElementById('generic-modal').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('generic-modal').classList.remove('opacity-0');
+                    document.getElementById('modal-content').classList.remove('scale-95', 'opacity-0');
+                }, 10);
+            },
+
+            renderCollectionForm(mode = 'full') {
+                const isModal = mode === 'modal';
+                const db = Store.get();
+                const linkedTId = this.getCurrentTerritoryId();
+                const metrics = Calc.getMetrics(linkedTId);
+
+                const html = `
+            <div class="animate-entry ${isModal ? '' : 'max-w-xl mx-auto mt-6'} w-full px-4 sm:px-0" >
+                <div class="${isModal ? '' : 'glass-panel p-5 sm:p-8 rounded-2xl shadow-xl dark:bg-dark-card'} relative overflow-hidden">
                     <!-- Decorative bg element -->
                     <div class="absolute -top-12 -right-12 w-40 h-40 bg-brand-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-                    <div class="flex justify-between items-start mb-8 relative z-10">
+                    <div class="flex justify-between items-start mb-6 relative z-10">
                         <div>
-                            <h2 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
+                            <h2 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
                                 <span class="w-1.5 h-6 bg-brand-500 rounded-full"></span>
                                 New Collection
                             </h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 ml-4 mt-1">Enter daily collection details</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 ml-4 mt-0.5">Enter daily collection details</p>
                         </div>
-                        <button onclick="Router.navigate('officer-dashboard')" class="group w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700/50 hover:bg-rose-50 dark:hover:bg-rose-900/20 border border-slate-100 dark:border-slate-600 flex items-center justify-center transition-all duration-300 hover:rotate-90 hover:shadow-md">
-                            <i class="fa-solid fa-xmark text-slate-400 group-hover:text-rose-500 text-lg transition-colors"></i>
+                        <button onclick="${isModal ? 'UI.closeModal()' : 'Router.navigate(\'officer-dashboard\')'}" class="group w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-700/50 hover:bg-rose-50 dark:hover:bg-rose-900/20 border border-slate-100 dark:border-slate-600 flex items-center justify-center transition-all duration-300 hover:rotate-90">
+                            <i class="fa-solid fa-xmark text-slate-400 group-hover:text-rose-500 transition-colors"></i>
                         </button>
                     </div>
 
-                    <form id="collection-form" onsubmit="UI.handleCollectionSubmit(event)" class="space-y-3 sm:space-y-4 relative z-10">
-                        <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                    <!-- LIVE PROGRESS MINI-STRIP -->
+                    <div class="mb-6 grid grid-cols-2 gap-3 animate-fade-in">
+                        <div class="p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/20 flex flex-col items-center">
+                            <span class="text-[8px] font-black text-emerald-600/60 uppercase tracking-widest">Till Date</span>
+                            <span id="form-mtd-coll" class="text-sm font-black text-emerald-600 font-mono">${parseInt(metrics.mtdColl).toLocaleString()}</span>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/20 flex flex-col items-center">
+                            <span class="text-[8px] font-black text-indigo-600/60 uppercase tracking-widest">Ach %</span>
+                            <span id="form-achievement" class="text-sm font-black text-indigo-600 font-mono">${metrics.achievement}%</span>
+                        </div>
+                    </div>
+
+                    <form id="collection-form" onsubmit="UI.handleCollectionSubmit(event)" class="space-y-4 relative z-10">
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Date <span class="hidden sm:inline">(Locked)</span></label>
-                                <input type="date" id="coll-date" class="w-full px-3 py-0 h-10 rounded-lg border bg-slate-100 text-slate-500 dark:bg-slate-700 dark:border-slate-600 cursor-not-allowed text-xs sm:text-sm appearance-none block m-0" disabled>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Date</label>
+                                <input type="date" id="coll-date" class="w-full px-3 h-10 rounded-lg border bg-slate-50 text-slate-500 dark:bg-slate-800/50 dark:border-slate-700 cursor-not-allowed text-xs font-bold" disabled>
                             </div>
                             <div>
-                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Customer Code</label>
-                                <input type="text" id="coll-code" class="w-full px-3 py-0 h-10 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-xs sm:text-sm appearance-none block m-0" placeholder="C-1052" required>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Customer Code</label>
+                                <input type="text" id="coll-code" class="w-full px-3 h-10 rounded-lg border border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none text-xs font-bold" placeholder="C-1052" required>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Money Receipt No</label>
-                            <input type="text" id="coll-receipt" class="w-full px-3 py-0 h-10 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-xs sm:text-sm appearance-none block m-0">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Money Receipt No</label>
+                            <input type="text" id="coll-receipt" class="w-full px-3 h-10 rounded-lg border border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none text-xs font-bold">
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Regular Amount</label>
-                                <input type="number" id="coll-reg-amount" class="w-full px-3 py-0 h-10 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200 appearance-none block m-0" placeholder="0.00">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Regular Amt</label>
+                                <input type="number" id="coll-reg-amount" class="w-full px-3 h-10 rounded-lg border border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none text-sm font-black text-emerald-600" placeholder="0.00">
                             </div>
                             <div>
-                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Advance Amount</label>
-                                <input type="number" id="coll-adv-amount" class="w-full px-3 py-0 h-10 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 text-sm sm:text-base font-bold text-slate-700 dark:text-slate-200 appearance-none block m-0" placeholder="0.00">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Advance Amt</label>
+                                <input type="number" id="coll-adv-amount" class="w-full px-3 h-10 rounded-lg border border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none text-sm font-black text-blue-600" placeholder="0.00">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                        <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-1">Payment Mode</label>
-                                <select id="coll-mode" class="w-full px-3 py-0 h-10 rounded-lg border dark:bg-slate-800 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 bg-white dark:bg-slate-800 text-xs sm:text-sm appearance-none block m-0">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Mode</label>
+                                <select id="coll-mode" class="w-full px-3 h-10 rounded-lg border border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none text-xs font-bold bg-white dark:bg-slate-800">
                                     <option>Bank Transfer</option>
                                     <option>bKash</option>
                                     <option>Cheque</option>
@@ -3954,20 +4031,26 @@
                                 </select>
                             </div>
                             <div class="flex items-end">
-                                <label class="flex items-center space-x-2 px-3 h-10 border rounded-lg w-full cursor-pointer hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-800 transition">
-                                    <input type="checkbox" id="coll-lmnp" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 shadow-sm m-0">
-                                    <span class="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300">Last Month NP Recovery?</span>
+                                <label class="flex items-center space-x-2 px-3 h-10 border border-slate-200 dark:border-slate-700 rounded-lg w-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                                    <input type="checkbox" id="coll-lmnp" class="w-4 h-4 text-brand-600 rounded border-slate-300">
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase">LMNP Rec?</span>
                                 </label>
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold h-12 rounded-lg shadow-lg mt-4 transition transform active:scale-95 text-sm sm:text-base flex items-center justify-center">
-                            Save Entry
+                        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-brand-500/20 mt-2 transition transform active:scale-95 text-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Save Entry
                         </button>
                     </form>
                 </div>
-                    </div>
+            </div>
             `;
+
+                if (isModal) {
+                    document.getElementById('modal-content').innerHTML = html;
+                } else {
+                    document.getElementById('views-container').innerHTML = html;
+                }
                 document.getElementById('coll-date').valueAsDate = new Date();
             },
 
@@ -5103,9 +5186,40 @@
 
                         await Store.update('collections', entry);
                         UI.showSuccess('Collection Saved Successfully');
+                        
+                        // Update metrics instantly if visible
+                        const newMetrics = Calc.getMetrics(tId);
+                        const dashMtd = document.getElementById('dash-mtd-coll');
+                        const dashAch = document.getElementById('dash-achievement');
+                        const dashToday = document.getElementById('dash-today-coll');
+                        const dashTodayAch = document.getElementById('dash-today-ach');
+                        const formMtd = document.getElementById('form-mtd-coll');
+                        const formAch = document.getElementById('form-achievement');
+
+                        if (dashMtd) dashMtd.innerText = parseInt(newMetrics.mtdColl).toLocaleString();
+                        if (dashAch) dashAch.innerText = newMetrics.achievement + '%';
+                        if (dashToday) dashToday.innerText = parseInt(newMetrics.todayColl).toLocaleString();
+                        if (dashTodayAch) {
+                             const ta = newMetrics.todayProj > 0 ? ((newMetrics.todayColl / newMetrics.todayProj) * 100).toFixed(1) : (newMetrics.todayColl > 0 ? '100+' : '0.0');
+                             dashTodayAch.innerText = ta + '%';
+                        }
+                        if (formMtd) formMtd.innerText = parseInt(newMetrics.mtdColl).toLocaleString();
+                        if (formAch) formAch.innerText = newMetrics.achievement + '%';
+
                         document.getElementById('collection-form').reset();
                         document.getElementById('coll-date').valueAsDate = new Date();
-                        UI.renderOfficerDashboard();
+                        
+                        // Close modal after short delay to show the updated numbers
+                        setTimeout(() => {
+                            UI.closeModal();
+                            // If we were on the dedicated page, go back to dashboard
+                            const currentView = document.getElementById('views-container').querySelector('.glass-panel');
+                            if (currentView && !document.getElementById('generic-modal').classList.contains('hidden')) {
+                                // in modal, stay or close
+                            } else if (currentView) {
+                                Router.navigate('officer-dashboard');
+                            }
+                        }, 800);
                     } catch (err) {
                         alert("Error saving collection: " + err.message);
                     } finally {
