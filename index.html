@@ -1091,29 +1091,55 @@
             openSystemSettingsModal() {
                 const db = Store.get();
                 let activeMonth = db.system_settings?.find(s => s.key === 'active_month')?.value || Utils.getLocalDate().slice(0, 7);
-                let cutoffHours = db.system_settings?.find(s => s.key === 'cutoff_extension_hours')?.value || 0;
+                let cutoffHours = parseInt(db.system_settings?.find(s => s.key === 'cutoff_extension_hours')?.value || 0);
+
+                const getCutoffLabel = (h) => {
+                    if (h === 0) return "Midnight (12:00 AM)";
+                    return `0${h}:00 AM`.slice(-8); // Simple formatting for AM
+                };
 
                 const content = `
                     <div class="mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
                         <h2 class="text-xl font-bold text-slate-800 dark:text-white flex items-center">
-                            <i class="fa-solid fa-gear mr-2 text-brand-500"></i> System Settings
+                            <i class="fa-solid fa-gears mr-2 text-brand-500"></i> System Control Panel
                         </h2>
-                        <p class="text-xs text-slate-500">Configure global application behavior.</p>
+                        <p class="text-xs text-slate-500 font-medium">Global operations & cutoff configurations</p>
                     </div>
-                    <form onsubmit="event.preventDefault(); UI.saveSystemSettings(this);" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Active Month</label>
-                            <input type="month" name="active_month" value="${activeMonth}" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 text-sm">
-                            <p class="text-xs text-slate-500 mt-1">Data filtering applies to this month.</p>
+                    <form onsubmit="event.preventDefault(); UI.saveSystemSettings(this);" class="space-y-6">
+                        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Active Operational Month</label>
+                            <input type="month" name="active_month" value="${activeMonth}" required class="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-bold shadow-sm">
+                            <p class="text-[10px] text-slate-400 mt-2 italic font-medium"><i class="fa-solid fa-circle-info mr-1"></i> Dashboard and reporting will strictly follow this month.</p>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Cutoff Extension (Hours)</label>
-                            <input type="number" name="cutoff_extension_hours" value="${cutoffHours}" min="0" max="24" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 text-sm">
-                            <p class="text-xs text-slate-500 mt-1">Hours after midnight to still consider as 'Today' (e.g., 2 = 2:00 AM).</p>
+
+                        <div class="p-4 bg-brand-50/50 dark:bg-brand-900/10 rounded-2xl border border-brand-100 dark:border-brand-900/20">
+                            <div class="flex justify-between items-center mb-4">
+                                <label class="block text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-widest">Cutoff Extension</label>
+                                <span id="cutoff-time-display" class="px-3 py-1 bg-brand-600 text-white text-[10px] font-black rounded-full shadow-lg shadow-brand-500/30">${getCutoffLabel(cutoffHours)}</span>
+                            </div>
+                            
+                            <div class="px-2">
+                                <input type="range" name="cutoff_extension_hours" value="${cutoffHours}" min="0" max="12" step="1" 
+                                    oninput="const val = parseInt(this.value); document.getElementById('cutoff-time-display').innerText = val === 0 ? 'Midnight (12:00 AM)' : (val < 10 ? '0' + val : val) + ':00 AM';" 
+                                    class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-600">
+                                <div class="flex justify-between mt-2 text-[9px] font-bold text-slate-400 px-1">
+                                    <span>STANDARD (0H)</span>
+                                    <span>+6 HOURS</span>
+                                    <span>MAX (+12H)</span>
+                                </div>
+                            </div>
+                            
+                            <p class="text-[10px] text-slate-500 mt-4 leading-relaxed">
+                                <span class="font-bold text-brand-600 dark:text-brand-400">Pro Tip:</span> 
+                                Collection entries made before this time will be recorded as part of the <span class="underline">previous calendar day</span>.
+                            </p>
                         </div>
-                        <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700">
-                            <button type="button" onclick="UI.closeModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">Cancel</button>
-                            <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">Save Settings</button>
+
+                        <div class="flex justify-end space-x-3 pt-2">
+                            <button type="button" onclick="UI.closeModal('generic-modal')" class="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">Cancel</button>
+                            <button type="submit" class="px-8 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-brand-500/25 hover-lift">
+                                <i class="fa-solid fa-floppy-disk mr-2"></i> Save Changes
+                            </button>
                         </div>
                     </form>
                 `;
@@ -1140,7 +1166,7 @@
                         body: JSON.stringify({ key: 'cutoff_extension_hours', value: cutoff_extension_hours })
                     });
                     await Store.init();
-                    UI.closeModal();
+                    UI.closeModal('generic-modal');
                     Router.navigate('admin-dashboard');
                 } catch (e) {
                     alert('Error saving settings');
@@ -6665,7 +6691,7 @@
                     }, 10);
                 }
             },
-            closeModal(id) {
+            closeModal(id = 'generic-modal') {
                 const m = document.getElementById(id);
                 if (m) {
                     if (m.firstElementChild) {
