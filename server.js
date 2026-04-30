@@ -16,6 +16,7 @@ const pool = new Pool({
 
 // Ensure territory_id can hold multiple comma-separated IDs for Area Heads
 pool.query('ALTER TABLE users ALTER COLUMN territory_id TYPE VARCHAR(1000)').catch(err => console.error("Migration Error:", err));
+pool.query('CREATE TABLE IF NOT EXISTS system_settings (key VARCHAR(255) PRIMARY KEY, value VARCHAR(255))').catch(err => console.error(err));
 
 // GET complete database state (mirrors Store.get())
 app.get('/api/db', async (req, res) => {
@@ -29,6 +30,7 @@ app.get('/api/db', async (req, res) => {
         const settlements = await pool.query('SELECT * FROM settlements');
         const unlocksResult = await pool.query('SELECT * FROM admin_unlocks');
         const vehicle_performance = await pool.query('SELECT * FROM vehicle_performance');
+        const system_settings = await pool.query('SELECT * FROM system_settings').catch(() => ({ rows: [] }));
 
         const unlocks = {};
         unlocksResult.rows.forEach(row => {
@@ -44,7 +46,8 @@ app.get('/api/db', async (req, res) => {
             offroad_vehicles: offroad_vehicles.rows,
             settlements: settlements.rows,
             unlocks: unlocks,
-            vehicle_performance: vehicle_performance.rows
+            vehicle_performance: vehicle_performance.rows,
+            system_settings: system_settings.rows
         });
     } catch (err) {
         console.error(err);
@@ -211,6 +214,16 @@ app.post('/api/sync-vehicle-perf', async (req, res) => {
         res.status(500).json({ error: err.message });
     } finally {
         client.release();
+    }
+});
+
+app.post('/api/settings', async (req, res) => {
+    const { key, value } = req.body;
+    try {
+        await pool.query('INSERT INTO system_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [key, value]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 
