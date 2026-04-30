@@ -1175,6 +1175,15 @@
                 }
                 UI.toggleLoader(false);
             },
+            setTrendRange(days) {
+                const end = new Date();
+                const start = new Date();
+                start.setDate(end.getDate() - (days - 1));
+                document.getElementById('trend-start-date').value = Utils.getLocalDate(start);
+                document.getElementById('trend-end-date').value = Utils.getLocalDate(end);
+                UI.updateAdminTrendChart();
+            },
+
             updateAdminTrendChart() {
                 const db = Store.get();
                 const tId = document.getElementById('trend-filter-territory')?.value || 'all';
@@ -1193,7 +1202,8 @@
 
                 const trendLabels = [];
                 const trendData = [];
-                
+                let totalSum = 0;
+
                 const curr = new Date(start);
                 while (curr <= end) {
                     const dateStr = Utils.getLocalDate(curr);
@@ -1206,20 +1216,30 @@
                     if (tId !== 'all') {
                         dailyCollections = dailyCollections.filter(c => c.territoryId === tId || c.territory_id === tId);
                     }
-                    
-                    const dailySum = dailyCollections.reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+
+                    const dailySum = dailyCollections.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
                     trendData.push(dailySum);
-                    
+                    totalSum += dailySum;
+
                     curr.setDate(curr.getDate() + 1);
+                    if (trendLabels.length > 365) break; // Safety limit
                 }
 
                 Charts.renderLine('admin-global-trend', trendLabels, trendData);
-                
+
+                // Update summary text
+                const summaryEl = document.getElementById('trend-summary-amt');
+                if (summaryEl) {
+                    summaryEl.innerText = Math.round(totalSum).toLocaleString();
+                    summaryEl.closest('.trend-summary-box').classList.remove('opacity-0');
+                }
+
                 // Update title text if custom range
                 const titleText = document.getElementById('trend-chart-title-text');
                 if (titleText) {
                     if (startStr && endStr) {
-                        titleText.innerText = `Momentum (${startStr} to ${endStr})`;
+                        const days = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                        titleText.innerText = `Momentum (Last ${days} Days)`;
                     } else {
                         titleText.innerText = `Global Collection Momentum (Last 30 Days)`;
                     }
@@ -2581,21 +2601,38 @@
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div class="glass-panel p-6 rounded-xl shadow-lg dark:bg-dark-card lg:col-span-2 hover-lift">
                                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                                        <h4 class="font-bold text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                                            <i class="fa-solid fa-arrow-trend-up mr-2 text-brand-500"></i> 
-                                            <span id="trend-chart-title-text">Global Collection Momentum (Last 30 Days)</span>
-                                        </h4>
+                                        <div>
+                                            <h4 class="font-bold text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                                                <i class="fa-solid fa-arrow-trend-up mr-2 text-brand-500"></i> 
+                                                <span id="trend-chart-title-text">Collection Momentum</span>
+                                            </h4>
+                                            <div class="trend-summary-box mt-1 flex items-center gap-2 opacity-0 transition-opacity duration-500">
+                                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Selected Total:</span>
+                                                <span id="trend-summary-amt" class="text-xs font-black text-brand-600 dark:text-brand-400">0</span>
+                                            </div>
+                                        </div>
                                         
                                         <div class="flex flex-wrap items-center gap-2">
-                                            <select id="trend-filter-territory" onchange="UI.updateAdminTrendChart()" class="text-[10px] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none focus:border-brand-500 transition-colors">
-                                                <option value="all">Global (All)</option>
-                                                ${db.territories.sort((a, b) => a.name.localeCompare(b.name)).map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
-                                            </select>
+                                            <!-- Territory Selector -->
+                                            <div class="relative">
+                                                <select id="trend-filter-territory" onchange="UI.updateAdminTrendChart()" class="appearance-none pl-3 pr-8 py-1.5 text-[10px] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer transition-all">
+                                                    <option value="all">Global (All Territories)</option>
+                                                    ${db.territories.sort((a, b) => a.name.localeCompare(b.name)).map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+                                                </select>
+                                                <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[8px] text-slate-400 pointer-events-none"></i>
+                                            </div>
+
+                                            <!-- Quick Presets -->
+                                            <div class="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                                                <button onclick="UI.setTrendRange(7)" class="px-2 py-1 text-[9px] font-bold rounded-md hover:bg-white dark:hover:bg-slate-700 transition-all">7D</button>
+                                                <button onclick="UI.setTrendRange(30)" class="px-2 py-1 text-[9px] font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-brand-600">30D</button>
+                                            </div>
                                             
-                                            <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-0.5">
-                                                <input type="date" id="trend-start-date" value="${Utils.getLocalDate(new Date(new Date().setDate(new Date().getDate() - 29)))}" onchange="UI.updateAdminTrendChart()" class="text-[10px] bg-transparent outline-none">
-                                                <span class="text-[10px] text-slate-400">-</span>
-                                                <input type="date" id="trend-end-date" value="${Utils.getLocalDate()}" onchange="UI.updateAdminTrendChart()" class="text-[10px] bg-transparent outline-none">
+                                            <!-- Date Picker -->
+                                            <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1">
+                                                <input type="date" id="trend-start-date" value="${Utils.getLocalDate(new Date(new Date().setDate(new Date().getDate() - 29)))}" onchange="UI.updateAdminTrendChart()" class="text-[9px] font-bold bg-transparent outline-none cursor-pointer text-slate-600 dark:text-slate-300">
+                                                <span class="text-[10px] text-slate-400 font-bold">-</span>
+                                                <input type="date" id="trend-end-date" value="${Utils.getLocalDate()}" onchange="UI.updateAdminTrendChart()" class="text-[9px] font-bold bg-transparent outline-none cursor-pointer text-slate-600 dark:text-slate-300">
                                             </div>
                                         </div>
                                     </div>
@@ -7216,4 +7253,4 @@
     </script>
 </body>
 
-</html> 
+</html>
