@@ -16,7 +16,7 @@ const pool = new Pool({
 
 // Ensure territory_id can hold multiple comma-separated IDs for Area Heads
 pool.query('ALTER TABLE users ALTER COLUMN territory_id TYPE VARCHAR(1000)').catch(err => console.error("Migration Error:", err));
-pool.query('CREATE TABLE IF NOT EXISTS system_settings (key VARCHAR(255) PRIMARY KEY, value VARCHAR(255))').catch(err => console.error(err));
+pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error(err));
 
 // GET complete database state (mirrors Store.get())
 app.get('/api/db', async (req, res) => {
@@ -218,18 +218,24 @@ app.post('/api/sync-vehicle-perf', async (req, res) => {
 });
 
 app.post('/api/settings/bulk', async (req, res) => {
-    const { settings } = req.body; // Array of {key, value}
+    const { settings } = req.body; 
+    if (!settings || !Array.isArray(settings)) {
+        return res.status(400).json({ error: "Invalid settings format" });
+    }
+
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
         for (const s of settings) {
-            await client.query('INSERT INTO system_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [s.key, s.value]);
+            // Using double quotes for "key" and "value" to avoid reserved word issues
+            await client.query('INSERT INTO system_settings ("key", "value") VALUES ($1, $2) ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value"', [s.key, s.value]);
         }
         await client.query('COMMIT');
         res.json({ success: true });
     } catch (err) {
-        await client.query('ROLLBACK');
-        res.status(500).json({ error: err.message });
+        console.error("CRITICAL Settings Save Error:", err);
+        await client.query('ROLLBACK').catch(e => console.error("Rollback Error:", e));
+        res.status(500).json({ error: `DB Error: ${err.message}` });
     } finally {
         client.release();
     }
