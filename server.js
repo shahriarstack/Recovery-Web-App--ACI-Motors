@@ -217,27 +217,14 @@ app.post('/api/sync-vehicle-perf', async (req, res) => {
     }
 });
 
-app.post('/api/settings/bulk', async (req, res) => {
-    const { settings } = req.body; 
-    if (!settings || !Array.isArray(settings)) {
-        return res.status(400).json({ error: "Invalid settings format" });
-    }
-
-    const client = await pool.connect();
+app.post('/api/settings', async (req, res) => {
+    const { key, value } = req.body;
     try {
-        await client.query('BEGIN');
-        for (const s of settings) {
-            // Using double quotes for "key" and "value" to avoid reserved word issues
-            await client.query('INSERT INTO system_settings ("key", "value") VALUES ($1, $2) ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value"', [s.key, s.value]);
-        }
-        await client.query('COMMIT');
+        await pool.query('INSERT INTO system_settings ("key", "value") VALUES ($1, $2) ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value"', [key, value]);
         res.json({ success: true });
     } catch (err) {
-        console.error("CRITICAL Settings Save Error:", err);
-        await client.query('ROLLBACK').catch(e => console.error("Rollback Error:", e));
+        console.error("Settings Save Error:", err);
         res.status(500).json({ error: `DB Error: ${err.message}` });
-    } finally {
-        client.release();
     }
 });
 
