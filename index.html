@@ -1198,52 +1198,52 @@
                         body: JSON.stringify({ key: 'cutoff_extension_hours', value: cutoff_extension_hours })
                     });
                     await Store.init();
-                UI.closeModal('generic-modal');
-                Router.navigate('admin-dashboard');
-            } catch (e) {
-                alert('Error saving settings');
-            }
-            UI.toggleLoader(false);
-        },
+                    UI.closeModal('generic-modal');
+                    Router.navigate('admin-dashboard');
+                } catch (e) {
+                    alert('Error saving settings');
+                }
+                UI.toggleLoader(false);
+            },
 
-        updateMomentumChart() {
-            const db = Store.get();
-            const tid = document.getElementById('momentum-territory')?.value || '';
-            const startDateVal = document.getElementById('momentum-start')?.value;
-            const endDateVal = document.getElementById('momentum-end')?.value;
-            
-            const start = startDateVal ? new Date(startDateVal) : new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
-            const end = endDateVal ? new Date(endDateVal) : new Date(Date.now());
-            
-            if (isNaN(start.getTime()) || isNaN(end.getTime())) return;
-
-            const labels = [];
-            const data = [];
-            
-            let current = new Date(start);
-            current.setHours(0,0,0,0);
-            const endOfDay = new Date(end);
-            endOfDay.setHours(23,59,59,999);
-
-            while (current <= endOfDay) {
-                const dateStr = Utils.getLocalDate(current);
-                const day = String(current.getDate()).padStart(2, '0');
-                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                const month = monthNames[current.getMonth()];
-                labels.push(`${day} ${month}`);
+            updateMomentumChart() {
+                const db = Store.get();
+                const tid = document.getElementById('momentum-territory')?.value || '';
+                const startDateVal = document.getElementById('momentum-start')?.value;
+                const endDateVal = document.getElementById('momentum-end')?.value;
                 
-                const dailySum = db.collections.filter(c => {
-                    const matchesDate = c.date === dateStr;
-                    const matchesTid = !tid || c.territoryId === tid || c.territory_id === tid;
-                    return matchesDate && matchesTid;
-                }).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+                const start = startDateVal ? new Date(startDateVal) : new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
+                const end = endDateVal ? new Date(endDateVal) : new Date(Date.now());
                 
-                data.push(dailySum);
-                current.setDate(current.getDate() + 1);
-            }
-            
-            Charts.renderLine('admin-global-trend', labels, data);
-        },
+                if (isNaN(start.getTime()) || isNaN(end.getTime())) return;
+
+                const labels = [];
+                const data = [];
+                
+                let current = new Date(start);
+                current.setHours(0,0,0,0);
+                const endOfDay = new Date(end);
+                endOfDay.setHours(23,59,59,999);
+
+                while (current <= endOfDay) {
+                    const dateStr = Utils.getLocalDate(current);
+                    const day = String(current.getDate()).padStart(2, '0');
+                    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    const month = monthNames[current.getMonth()];
+                    labels.push(`${day} ${month}`);
+                    
+                    const dailySum = db.collections.filter(c => {
+                        const matchesDate = c.date === dateStr;
+                        const matchesTid = !tid || c.territoryId === tid || c.territory_id === tid;
+                        return matchesDate && matchesTid;
+                    }).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+                    
+                    data.push(dailySum);
+                    current.setDate(current.getDate() + 1);
+                }
+                
+                Charts.renderLine('admin-global-trend', labels, data);
+            },
 
             populateLoginDropdown() {
                 const db = Store.get();
