@@ -1191,19 +1191,23 @@
                 
                 UI.toggleLoader(true);
                 try {
-                    const response = await fetch(Store.apiUrl + '/settings/bulk', {
+                    // Save Active Month
+                    const res1 = await fetch(Store.apiUrl + '/settings', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            settings: [
-                                { key: 'active_month', value: active_month },
-                                { key: 'cutoff_extension_hours', value: cutoff_extension_hours }
-                            ]
-                        })
+                        body: JSON.stringify({ key: 'active_month', value: active_month })
                     });
+                    const out1 = await res1.json();
+                    if (!res1.ok) throw new Error(out1.error || 'Month save failed');
 
-                    const result = await response.json();
-                    if (!response.ok) throw new Error(result.error || 'Server error');
+                    // Save Cutoff Extension
+                    const res2 = await fetch(Store.apiUrl + '/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: 'cutoff_extension_hours', value: cutoff_extension_hours })
+                    });
+                    const out2 = await res2.json();
+                    if (!res2.ok) throw new Error(out2.error || 'Cutoff save failed');
 
                     await Store.init();
                     
