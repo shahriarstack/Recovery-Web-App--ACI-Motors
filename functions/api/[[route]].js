@@ -51,6 +51,8 @@ export async function onRequest(context) {
                 unlocks[row.territory_id] = row.unlock_until;
             });
 
+            const system_settings = await pool.query('SELECT * FROM system_settings').catch(() => ({ rows: [] }));
+
             return jsonResponse({
                 users: users.rows,
                 territories: territories.rows,
@@ -60,7 +62,8 @@ export async function onRequest(context) {
                 offroad_vehicles: offroad_vehicles.rows,
                 settlements: settlements.rows,
                 unlocks: unlocks,
-                vehicle_performance: vehicle_performance.rows
+                vehicle_performance: vehicle_performance.rows,
+                system_settings: system_settings.rows
             });
         }
 
@@ -183,6 +186,13 @@ export async function onRequest(context) {
                 INSERT INTO admin_unlocks (territory_id, unlock_until) VALUES ($1, $2)
                 ON CONFLICT (territory_id) DO UPDATE SET unlock_until = EXCLUDED.unlock_until
             `, [territoryId, unlockUntil]);
+            return jsonResponse({ success: true });
+        }
+
+        // --- SYSTEM SETTINGS ---
+        if (request.method === 'POST' && path === '/api/settings') {
+            const { key, value } = await request.json();
+            await pool.query('INSERT INTO system_settings ("key", "value") VALUES ($1, $2) ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value"', [key, value]);
             return jsonResponse({ success: true });
         }
 
