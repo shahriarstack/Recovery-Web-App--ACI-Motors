@@ -217,13 +217,21 @@ app.post('/api/sync-vehicle-perf', async (req, res) => {
     }
 });
 
-app.post('/api/settings', async (req, res) => {
-    const { key, value } = req.body;
+app.post('/api/settings/bulk', async (req, res) => {
+    const { settings } = req.body; // Array of {key, value}
+    const client = await pool.connect();
     try {
-        await pool.query('INSERT INTO system_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [key, value]);
+        await client.query('BEGIN');
+        for (const s of settings) {
+            await client.query('INSERT INTO system_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [s.key, s.value]);
+        }
+        await client.query('COMMIT');
         res.json({ success: true });
     } catch (err) {
+        await client.query('ROLLBACK');
         res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
     }
 });
 
