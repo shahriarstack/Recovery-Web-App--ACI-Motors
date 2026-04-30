@@ -1175,6 +1175,56 @@
                 }
                 UI.toggleLoader(false);
             },
+            updateAdminTrendChart() {
+                const db = Store.get();
+                const tId = document.getElementById('trend-filter-territory')?.value || 'all';
+                const startStr = document.getElementById('trend-start-date')?.value;
+                const endStr = document.getElementById('trend-end-date')?.value;
+
+                let start, end;
+                if (startStr && endStr) {
+                    start = new Date(startStr);
+                    end = new Date(endStr);
+                } else {
+                    end = new Date();
+                    start = new Date();
+                    start.setDate(end.getDate() - 29);
+                }
+
+                const trendLabels = [];
+                const trendData = [];
+                
+                const curr = new Date(start);
+                while (curr <= end) {
+                    const dateStr = Utils.getLocalDate(curr);
+                    const day = String(curr.getDate()).padStart(2, '0');
+                    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    const month = monthNames[curr.getMonth()];
+                    trendLabels.push(`${day} ${month}`);
+
+                    let dailyCollections = db.collections.filter(c => c.date === dateStr);
+                    if (tId !== 'all') {
+                        dailyCollections = dailyCollections.filter(c => c.territoryId === tId || c.territory_id === tId);
+                    }
+                    
+                    const dailySum = dailyCollections.reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+                    trendData.push(dailySum);
+                    
+                    curr.setDate(curr.getDate() + 1);
+                }
+
+                Charts.renderLine('admin-global-trend', trendLabels, trendData);
+                
+                // Update title text if custom range
+                const titleText = document.getElementById('trend-chart-title-text');
+                if (titleText) {
+                    if (startStr && endStr) {
+                        titleText.innerText = `Momentum (${startStr} to ${endStr})`;
+                    } else {
+                        titleText.innerText = `Global Collection Momentum (Last 30 Days)`;
+                    }
+                }
+            },
 
             populateLoginDropdown() {
                 const db = Store.get();
@@ -2110,26 +2160,19 @@
                 const topPerformers = [...allTerritoryData].sort((a, b) => parseFloat(b.rpi) - parseFloat(a.rpi)).slice(0, 5);
                 const bottomPerformers = [...allTerritoryData].sort((a, b) => parseFloat(a.rpi) - parseFloat(b.rpi)).slice(0, 5);
 
-                const today = new Date();
-                const trendLabels = [];
-                const trendData = [];
-                for (let i = 29; i >= 0; i--) {
-                    const d = new Date(today);
-                    d.setDate(today.getDate() - i);
-                    const dateStr = Utils.getLocalDate(d);
-                    const day = String(d.getDate()).padStart(2, '0');
-                    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                    const month = monthNames[d.getMonth()];
-                    trendLabels.push(`${day} ${month}`);
-                    const dailySum = db.collections.filter(c => c.date === dateStr).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
-                    trendData.push(dailySum);
-                }
-
                 const modes = ['Bank Transfer', 'bKash', 'Cheque', 'Cash'];
                 const modeData = modes.map(m => db.collections.filter(c => c.date.startsWith(Utils.getActiveMonth()) && c.mode === m).reduce((s, c) => s + parseFloat(c.amount), 0));
 
-                const container = document.getElementById('views-container');
-                const isCompact = tableMode === 'compact';
+                const cutoffHours = parseInt(db.system_settings?.find(s => s.key === 'cutoff_extension_hours')?.value || 0);
+                const cutoffStatusHtml = cutoffHours > 0 ? `
+                    <div class="flex items-center gap-2 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full mb-1 w-fit">
+                        <span class="relative flex h-1.5 w-1.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                        </span>
+                        <span class="text-[9px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest">Cutoff Extended: ${(cutoffHours < 10 ? '0' + cutoffHours : cutoffHours)}:00 AM</span>
+                    </div>
+                ` : '';
 
                 container.innerHTML = `
                     <div class="animate-entry space-y-4"> 
@@ -2137,6 +2180,7 @@
                         <!-- DASHBOARD HEADER -->
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
                             <div>
+                                ${cutoffStatusHtml}
                                 <h2 class="text-2xl font-black text-slate-800 dark:text-white">Admin Intelligence Dashboard</h2>
                                 <p class="text-xs text-slate-500 font-medium">Monthly Recovery Performance Metrics & Strategic Analytics</p>
                             </div>
@@ -2536,9 +2580,25 @@
                             </h3>
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div class="glass-panel p-6 rounded-xl shadow-lg dark:bg-dark-card lg:col-span-2 hover-lift">
-                                    <h4 class="font-bold mb-4 text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                                        <i class="fa-solid fa-arrow-trend-up mr-2 text-brand-500"></i> Global Collection Momentum (Last 30 Days)
-                                    </h4>
+                                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                                        <h4 class="font-bold text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                                            <i class="fa-solid fa-arrow-trend-up mr-2 text-brand-500"></i> 
+                                            <span id="trend-chart-title-text">Global Collection Momentum (Last 30 Days)</span>
+                                        </h4>
+                                        
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <select id="trend-filter-territory" onchange="UI.updateAdminTrendChart()" class="text-[10px] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none focus:border-brand-500 transition-colors">
+                                                <option value="all">Global (All)</option>
+                                                ${db.territories.sort((a, b) => a.name.localeCompare(b.name)).map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+                                            </select>
+                                            
+                                            <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-0.5">
+                                                <input type="date" id="trend-start-date" value="${Utils.getLocalDate(new Date(new Date().setDate(new Date().getDate() - 29)))}" onchange="UI.updateAdminTrendChart()" class="text-[10px] bg-transparent outline-none">
+                                                <span class="text-[10px] text-slate-400">-</span>
+                                                <input type="date" id="trend-end-date" value="${Utils.getLocalDate()}" onchange="UI.updateAdminTrendChart()" class="text-[10px] bg-transparent outline-none">
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="relative h-64">
                                         <canvas id="admin-global-trend"></canvas>
                                     </div>
@@ -2592,7 +2652,7 @@
                 const partB = totalB.mtdColl;
                 setTimeout(() => {
                     Charts.renderDoughnut('chart-part-comparison', ['Part A', 'Part B'], [partA, partB]);
-                    Charts.renderLine('admin-global-trend', trendLabels, trendData);
+                    UI.updateAdminTrendChart();
                     Charts.renderDoughnut('admin-mode-chart', modes, modeData);
                 }, 100);
             },
@@ -7156,4 +7216,4 @@
     </script>
 </body>
 
-</html>
+</html> 
