@@ -1107,6 +1107,36 @@
                         </h2>
                         <p class="text-xs text-slate-500 font-medium">Global operations & cutoff configurations</p>
                     </div>
+
+                    <!-- CURRENT STATUS CARD -->
+                    <div class="mb-6 p-4 bg-slate-900 text-white rounded-2xl shadow-xl border border-slate-800 overflow-hidden relative group">
+                        <div class="absolute -right-4 -top-4 opacity-10 group-hover:opacity-20 transition-opacity transform rotate-12">
+                            <i class="fa-solid fa-microchip text-7xl"></i>
+                        </div>
+                        <div class="relative z-10">
+                            <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 flex items-center">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> 
+                                Current Live Configuration
+                            </p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Cutoff Rule</p>
+                                    <p class="text-sm font-black ${cutoffHours > 0 ? 'text-amber-400' : 'text-emerald-400'} flex items-center">
+                                        <i class="fa-solid ${cutoffHours > 0 ? 'fa-clock-rotate-left' : 'fa-check-circle'} mr-2"></i>
+                                        ${cutoffHours > 0 ? `Extended (+${cutoffHours}H)` : 'Standard (12AM)'}
+                                    </p>
+                                </div>
+                                <div class="border-l border-slate-800 pl-4">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Active Month</p>
+                                    <p class="text-sm font-black text-brand-400 flex items-center">
+                                        <i class="fa-solid fa-calendar-check mr-2"></i>
+                                        ${activeMonth}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <form onsubmit="event.preventDefault(); UI.saveSystemSettings(this);" class="space-y-6">
                         <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
                             <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Active Operational Month</label>
