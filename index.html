@@ -631,8 +631,29 @@
     <!-- SCRIPT SECTION -->
     <script>
         const Utils = {
-            getLocalDate(d = new Date()) {
-                return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            getLocalDate(d) {
+                const db = Store.cache;
+                let cutoffHours = 0;
+                if (db && db.system_settings) {
+                    const setting = db.system_settings.find(s => s.key === 'cutoff_extension_hours');
+                    if (setting) cutoffHours = parseFloat(setting.value) || 0;
+                }
+
+                if (!d) {
+                    const now = new Date();
+                    now.setHours(now.getHours() - cutoffHours);
+                    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                } else {
+                    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                }
+            },
+            getActiveMonth() {
+                const db = Store.cache;
+                if (db && db.system_settings) {
+                    const setting = db.system_settings.find(s => s.key === 'active_month');
+                    if (setting && setting.value) return setting.value;
+                }
+                return this.getLocalDate().slice(0, 7);
             }
         };
 
@@ -794,7 +815,7 @@
                 const db = Store.get();
                 const today = new Date();
                 const todayStr = Utils.getLocalDate(today);
-                const currentMonth = todayStr.slice(0, 7);
+                const currentMonth = Utils.getActiveMonth();
                 const yesterday = new Date(today);
                 yesterday.setDate(yesterday.getDate() - 1);
                 const yesterdayStr = Utils.getLocalDate(yesterday);
@@ -1065,6 +1086,66 @@
                     inpUsername.classList.remove('hidden');
                     inpUsername.placeholder = '';
                 }
+            },
+
+            openSystemSettingsModal() {
+                const db = Store.get();
+                let activeMonth = db.system_settings?.find(s => s.key === 'active_month')?.value || Utils.getLocalDate().slice(0, 7);
+                let cutoffHours = db.system_settings?.find(s => s.key === 'cutoff_extension_hours')?.value || 0;
+
+                const content = `
+                    <div class="mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
+                        <h2 class="text-xl font-bold text-slate-800 dark:text-white flex items-center">
+                            <i class="fa-solid fa-gear mr-2 text-brand-500"></i> System Settings
+                        </h2>
+                        <p class="text-xs text-slate-500">Configure global application behavior.</p>
+                    </div>
+                    <form onsubmit="event.preventDefault(); UI.saveSystemSettings(this);" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Active Month</label>
+                            <input type="month" name="active_month" value="${activeMonth}" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 text-sm">
+                            <p class="text-xs text-slate-500 mt-1">Data filtering applies to this month.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Cutoff Extension (Hours)</label>
+                            <input type="number" name="cutoff_extension_hours" value="${cutoffHours}" min="0" max="24" required class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-brand-500 text-sm">
+                            <p class="text-xs text-slate-500 mt-1">Hours after midnight to still consider as 'Today' (e.g., 2 = 2:00 AM).</p>
+                        </div>
+                        <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                            <button type="button" onclick="UI.closeModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">Cancel</button>
+                            <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">Save Settings</button>
+                        </div>
+                    </form>
+                `;
+                document.getElementById('modal-content').innerHTML = content;
+                document.getElementById('generic-modal').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('generic-modal').classList.remove('opacity-0');
+                    document.getElementById('modal-content').classList.remove('scale-95', 'opacity-0');
+                }, 10);
+            },
+            async saveSystemSettings(form) {
+                const active_month = form.active_month.value;
+                const cutoff_extension_hours = form.cutoff_extension_hours.value;
+                UI.toggleLoader(true);
+                try {
+                    await fetch(Store.apiUrl + '/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: 'active_month', value: active_month })
+                    });
+                    await fetch(Store.apiUrl + '/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: 'cutoff_extension_hours', value: cutoff_extension_hours })
+                    });
+                    await Store.init();
+                    UI.closeModal();
+                    Router.navigate('admin-dashboard');
+                } catch (e) {
+                    alert('Error saving settings');
+                }
+                UI.toggleLoader(false);
             },
 
             populateLoginDropdown() {
@@ -2003,17 +2084,20 @@
                 const today = new Date();
                 const trendLabels = [];
                 const trendData = [];
-                for (let i = 6; i >= 0; i--) {
+                for (let i = 29; i >= 0; i--) {
                     const d = new Date(today);
                     d.setDate(today.getDate() - i);
                     const dateStr = Utils.getLocalDate(d);
-                    trendLabels.push(dateStr.slice(5));
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    const month = monthNames[d.getMonth()];
+                    trendLabels.push(`${day} ${month}`);
                     const dailySum = db.collections.filter(c => c.date === dateStr).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
                     trendData.push(dailySum);
                 }
 
                 const modes = ['Bank Transfer', 'bKash', 'Cheque', 'Cash'];
-                const modeData = modes.map(m => db.collections.filter(c => c.date.startsWith(Utils.getLocalDate(today).slice(0, 7)) && c.mode === m).reduce((s, c) => s + parseFloat(c.amount), 0));
+                const modeData = modes.map(m => db.collections.filter(c => c.date.startsWith(Utils.getActiveMonth()) && c.mode === m).reduce((s, c) => s + parseFloat(c.amount), 0));
 
                 const container = document.getElementById('views-container');
                 const isCompact = tableMode === 'compact';
@@ -2028,6 +2112,9 @@
                                 <p class="text-xs text-slate-500 font-medium">Monthly Recovery Performance Metrics & Strategic Analytics</p>
                             </div>
                             <div class="flex items-center gap-3">
+                                <button onclick="UI.openSystemSettingsModal()" class="flex items-center px-4 py-2 bg-white dark:bg-slate-800 border-2 border-brand-500 text-brand-600 dark:text-brand-400 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all font-bold text-sm shadow-lg shadow-brand-500/10 hover-lift">
+                                    <i class="fa-solid fa-gear mr-2"></i> Settings
+                                </button>
                                 <button onclick="UI.captureDashboard()" class="flex items-center px-4 py-2 bg-white dark:bg-slate-800 border-2 border-brand-500 text-brand-600 dark:text-brand-400 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all font-bold text-sm shadow-lg shadow-brand-500/10 hover-lift">
                                     <i class="fa-solid fa-camera-retro mr-2"></i> Capture Report for Email
                                 </button>
@@ -2421,7 +2508,7 @@
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div class="glass-panel p-6 rounded-xl shadow-lg dark:bg-dark-card lg:col-span-2 hover-lift">
                                     <h4 class="font-bold mb-4 text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                                        <i class="fa-solid fa-arrow-trend-up mr-2 text-brand-500"></i> Global Collection Momentum (Last 7 Days)
+                                        <i class="fa-solid fa-arrow-trend-up mr-2 text-brand-500"></i> Global Collection Momentum (Last 30 Days)
                                     </h4>
                                     <div class="relative h-64">
                                         <canvas id="admin-global-trend"></canvas>
@@ -3279,7 +3366,7 @@
                 }
 
                 const metrics = Calc.getMetrics(linkedTId);
-                const currentMonth = Utils.getLocalDate().slice(0, 7);
+                const currentMonth = Utils.getActiveMonth();
                 const targetData = db.targets.find(t => t.territoryId === linkedTId && t.month === currentMonth) || {};
 
                 // Calculate Today Achievement for the new layout
@@ -3861,7 +3948,7 @@
             // --- DATA ENTRY PANEL ---
             renderDataEntry(externalData = null) {
                 const db = Store.get();
-                const currentMonth = Utils.getLocalDate().slice(0, 7);
+                const currentMonth = Utils.getActiveMonth();
                 let displayData = [];
 
                 // Load existing data or create dummy rows if empty
@@ -4182,7 +4269,7 @@
             renderAreaHeadDashboard() {
                 const db = Store.get();
                 const assignedIds = (Auth.currentUser.territoryId || Auth.currentUser.territory_id || '').split(',').map(s => s.trim()).filter(s => s);
-                const currentMonth = Utils.getLocalDate().slice(0, 7);
+                const currentMonth = Utils.getActiveMonth();
 
                 const territoryData = db.territories.filter(t => assignedIds.includes(t.id)).map(t => {
                     const m = Calc.getMetrics(t.id);
@@ -5277,7 +5364,7 @@
 
             openRawExportModal() {
                 const today = Utils.getLocalDate();
-                const firstDay = Utils.getLocalDate().slice(0, 7) + '-01';
+                const firstDay = Utils.getActiveMonth() + '-01';
 
                 const html = `
             <div class="text-left" >
@@ -5515,7 +5602,7 @@
 
             saveBulkData() {
                 const db = Store.get();
-                const currentMonth = Utils.getLocalDate().slice(0, 7);
+                const currentMonth = Utils.getActiveMonth();
                 const rows = document.querySelectorAll('#data-entry-table tbody tr');
 
                 (async () => {
