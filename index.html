@@ -1185,25 +1185,44 @@
             async saveSystemSettings(form) {
                 const active_month = form.active_month.value;
                 const cutoff_extension_hours = form.cutoff_extension_hours.value;
+                
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalBtnHtml = submitBtn.innerHTML;
+                
                 UI.toggleLoader(true);
                 try {
-                    await fetch(Store.apiUrl + '/settings', {
+                    const response = await fetch(Store.apiUrl + '/settings/bulk', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ key: 'active_month', value: active_month })
+                        body: JSON.stringify({ 
+                            settings: [
+                                { key: 'active_month', value: active_month },
+                                { key: 'cutoff_extension_hours', value: cutoff_extension_hours }
+                            ]
+                        })
                     });
-                    await fetch(Store.apiUrl + '/settings', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ key: 'cutoff_extension_hours', value: cutoff_extension_hours })
-                    });
+
+                    if (!response.ok) throw new Error('Server error');
+
                     await Store.init();
-                    UI.closeModal('generic-modal');
-                    Router.navigate('admin-dashboard');
+                    
+                    // Creative Feedback
+                    submitBtn.innerHTML = '<i class="fa-solid fa-check-double mr-2"></i> Saved Successfully!';
+                    submitBtn.className = submitBtn.className.replace('bg-brand-600', 'bg-emerald-600');
+                    
+                    setTimeout(() => {
+                        UI.closeModal('generic-modal');
+                        Router.navigate('admin-dashboard');
+                    }, 800);
+                    
                 } catch (e) {
-                    alert('Error saving settings');
+                    console.error(e);
+                    alert('Error saving settings: ' + e.message);
+                    submitBtn.innerHTML = originalBtnHtml;
+                    submitBtn.className = submitBtn.className.replace('bg-emerald-600', 'bg-brand-600');
+                } finally {
+                    UI.toggleLoader(false);
                 }
-                UI.toggleLoader(false);
             },
 
             updateMomentumChart() {
