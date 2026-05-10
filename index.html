@@ -499,6 +499,11 @@
                         class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg transition-all duration-200">
                         <i class="fa-solid fa-truck-fast mr-3 w-5"></i> Vehicle Performance
                     </a>
+                    <!-- NEW PERFORMANCE ANALYTICS TAB -->
+                    <a href="#" onclick="Router.navigate('admin-performance')"
+                        class="nav-item flex items-center px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg transition-all duration-200">
+                        <i class="fa-solid fa-chart-line mr-3 w-5 text-brand-500"></i> Performance Analytics
+                    </a>
                 </div>
 
                 <div id="areahead-nav" class="hidden space-y-1">
@@ -1009,6 +1014,7 @@
                 else if (viewId === 'admin-history') UI.renderAdminHistory();
                 else if (viewId === 'admin-vehicle-perf') UI.renderAdminVehiclePerf();
                 else if (viewId === 'admin-projections') UI.renderAdminProjections();
+                else if (viewId === 'admin-performance') UI.renderAdminPerformance();
                 else if (viewId === 'officer-dashboard') UI.renderOfficerDashboard();
                 else if (viewId === 'officer-projection') UI.renderProjectionForm();
                 else if (viewId === 'officer-collection') UI.renderCollectionForm();
@@ -2067,6 +2073,154 @@
                                     </div>
                                 `;
                 }).join('')}
+                        </div>
+                    </div>
+                `;
+            },
+
+            // --- ADMIN PERFORMANCE ANALYTICS ---
+            renderAdminPerformance() {
+                const db = Store.get();
+                const allTerritoryData = db.territories.map(t => {
+                    const m = Calc.getMetrics(t.id);
+                    const ldAch = m.yestProjAmt > 0 ? ((m.yestCollAmt / m.yestProjAmt) * 100).toFixed(1) : '0.0';
+                    const tdAch = m.todayProj > 0 ? ((m.todayColl / m.todayProj) * 100).toFixed(1) : (m.todayColl > 0 ? '100+' : '0.0');
+                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch };
+                });
+
+                // Top Performers - Highest Collected
+                const topCollected = [...allTerritoryData].sort((a, b) => b.mtdColl - a.mtdColl).slice(0, 5);
+                // Top Performers - Highest Achievement %
+                const topAchievement = [...allTerritoryData].sort((a, b) => b.tillDayAchievement - a.tillDayAchievement).slice(0, 5);
+                // Top Performers - Last Day Ach%
+                const topLastDayAch = [...allTerritoryData].sort((a, b) => b.lastDayAch - a.lastDayAch).slice(0, 5);
+                // Below Performers - Lowest Achievement %
+                const belowPerformers = [...allTerritoryData].sort((a, b) => a.tillDayAchievement - b.tillDayAchievement).slice(0, 5);
+
+                const container = document.getElementById('views-container');
+                container.innerHTML = `
+                    <div class="animate-entry space-y-8">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 class="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-3">
+                                    <i class="fa-solid fa-trophy text-brand-500"></i> Recovery Performance Analytics
+                                </h2>
+                                <p class="text-sm text-slate-500 font-medium">Strategic insights into top and below performing territories</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- TOP COLLECTORS -->
+                            <div class="glass-panel rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card shadow-xl hover-lift">
+                                <div class="px-6 py-5 bg-gradient-to-r from-emerald-500/10 to-transparent border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
+                                    <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                        <i class="fa-solid fa-crown text-emerald-500"></i> Top Collectors (MTD)
+                                    </h3>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-full">Revenue Leaders</span>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    ${topCollected.map((t, i) => `
+                                        <div class="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/50 transition hover:scale-[1.02]">
+                                            <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-emerald-500/20">
+                                                ${i + 1}
+                                            </div>
+                                            <div class="flex-1">
+                                                <h4 class="text-sm font-bold text-slate-800 dark:text-white">${t.name}</h4>
+                                                <p class="text-[10px] text-slate-400 font-medium">${t.officer || 'No Officer'}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-sm font-black text-emerald-600 dark:text-emerald-400">৳${parseInt(t.mtdColl).toLocaleString()}</p>
+                                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Collected</p>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <!-- TOP ACHIEVEMENT % -->
+                            <div class="glass-panel rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card shadow-xl hover-lift">
+                                <div class="px-6 py-5 bg-gradient-to-r from-blue-500/10 to-transparent border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
+                                    <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                        <i class="fa-solid fa-bolt-lightning text-blue-500"></i> Efficiency Leaders (Ach %)
+                                    </h3>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-full">Target Masters</span>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    ${topAchievement.map((t, i) => `
+                                        <div class="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/50 transition hover:scale-[1.02]">
+                                            <div class="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-blue-500/20">
+                                                ${i + 1}
+                                            </div>
+                                            <div class="flex-1">
+                                                <h4 class="text-sm font-bold text-slate-800 dark:text-white">${t.name}</h4>
+                                                <p class="text-[10px] text-slate-400 font-medium">${t.officer || 'No Officer'}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-sm font-black text-blue-600 dark:text-blue-400">${t.tillDayAchievement}%</p>
+                                                <div class="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
+                                                    <div class="h-full bg-blue-500" style="width: ${Math.min(100, t.tillDayAchievement)}%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <!-- LAST DAY PERFORMANCE -->
+                            <div class="glass-panel rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card shadow-xl hover-lift">
+                                <div class="px-6 py-5 bg-gradient-to-r from-purple-500/10 to-transparent border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
+                                    <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                        <i class="fa-solid fa-fire text-purple-500"></i> Yesterday's Momentum
+                                    </h3>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded-full">Last Day Ach%</span>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    ${topLastDayAch.map((t, i) => `
+                                        <div class="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/50 transition hover:scale-[1.02]">
+                                            <div class="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-purple-500/20">
+                                                ${i + 1}
+                                            </div>
+                                            <div class="flex-1">
+                                                <h4 class="text-sm font-bold text-slate-800 dark:text-white">${t.name}</h4>
+                                                <p class="text-[10px] text-slate-400 font-medium">${t.officer || 'No Officer'}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-sm font-black text-purple-600 dark:text-purple-400">${t.lastDayAch}%</p>
+                                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Achievement</p>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <!-- BELOW PERFORMERS -->
+                            <div class="glass-panel rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card shadow-xl hover-lift border-rose-100 dark:border-rose-900/30">
+                                <div class="px-6 py-5 bg-gradient-to-r from-rose-500/10 to-transparent border-b border-rose-100 dark:border-rose-900/30 flex items-center justify-between">
+                                    <h3 class="text-lg font-bold text-rose-800 dark:text-rose-400 flex items-center gap-2">
+                                        <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Attention Required
+                                    </h3>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-full animate-pulse">Below Benchmark</span>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    ${belowPerformers.map((t, i) => `
+                                        <div class="flex items-center gap-4 p-3 rounded-2xl bg-rose-50/30 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/40 transition hover:scale-[1.02]">
+                                            <div class="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-rose-500/20">
+                                                ${i + 1}
+                                            </div>
+                                            <div class="flex-1">
+                                                <h4 class="text-sm font-bold text-slate-800 dark:text-white">${t.name}</h4>
+                                                <p class="text-[10px] text-slate-400 font-medium">${t.officer || 'No Officer'}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-sm font-black text-rose-600 dark:text-rose-400">${t.tillDayAchievement}%</p>
+                                                <div class="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
+                                                    <div class="h-full bg-rose-500" style="width: ${Math.min(100, t.tillDayAchievement)}%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
