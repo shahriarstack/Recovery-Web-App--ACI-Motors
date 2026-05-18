@@ -667,7 +667,7 @@
          */
         const Store = {
             cache: null,
-            apiUrl: '/api',
+            apiUrl: (window.location.hostname === 'localhost' || window.location.protocol === 'file:') ? 'http://localhost:3000/api' : '/api',
 
             convertKeys(arr) {
                 if (!arr) return;
@@ -716,8 +716,13 @@
                     this.cache = data;
                     return data;
                 } catch (err) {
-                    console.error("Failed to connect to Neon Backend:", err);
-                    alert("Database connection failed. Make sure the backend server (node server.js) is running on port 3000.");
+                    console.error("Failed to connect to Backend:", err);
+                    const isLocal = window.location.hostname === 'localhost' || window.location.protocol === 'file:';
+                    if (isLocal) {
+                        alert("Database connection failed locally.\nMake sure the local backend server (node server.js) is running on port 3000.\n\nError: " + err.message);
+                    } else {
+                        alert("Database connection failed on the server.\nIf you are on Cloudflare Pages, make sure your Functions are deployed correctly and the DATABASE_URL environment variable is set.\n\nError: " + err.message);
+                    }
                 }
             },
 
@@ -1191,10 +1196,10 @@
             async saveSystemSettings(form) {
                 const active_month = form.active_month.value;
                 const cutoff_extension_hours = form.cutoff_extension_hours.value;
-                
+
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalBtnHtml = submitBtn.innerHTML;
-                
+
                 UI.toggleLoader(true);
                 try {
                     // Save Active Month
@@ -1216,16 +1221,16 @@
                     if (!res2.ok) throw new Error(out2.error || 'Cutoff save failed');
 
                     await Store.init();
-                    
+
                     // Creative Feedback
                     submitBtn.innerHTML = '<i class="fa-solid fa-check-double mr-2"></i> Saved Successfully!';
                     submitBtn.className = submitBtn.className.replace('bg-brand-600', 'bg-emerald-600');
-                    
+
                     setTimeout(() => {
                         UI.closeModal('generic-modal');
                         Router.navigate('admin-dashboard');
                     }, 800);
-                    
+
                 } catch (e) {
                     console.error(e);
                     alert('Error saving settings: ' + e.message);
@@ -1241,19 +1246,19 @@
                 const tid = document.getElementById('momentum-territory')?.value || '';
                 const startDateVal = document.getElementById('momentum-start')?.value;
                 const endDateVal = document.getElementById('momentum-end')?.value;
-                
+
                 const start = startDateVal ? new Date(startDateVal) : new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
                 const end = endDateVal ? new Date(endDateVal) : new Date(Date.now());
-                
+
                 if (isNaN(start.getTime()) || isNaN(end.getTime())) return;
 
                 const labels = [];
                 const data = [];
-                
+
                 let current = new Date(start);
-                current.setHours(0,0,0,0);
+                current.setHours(0, 0, 0, 0);
                 const endOfDay = new Date(end);
-                endOfDay.setHours(23,59,59,999);
+                endOfDay.setHours(23, 59, 59, 999);
 
                 while (current <= endOfDay) {
                     const dateStr = Utils.getLocalDate(current);
@@ -1261,17 +1266,17 @@
                     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
                     const month = monthNames[current.getMonth()];
                     labels.push(`${day} ${month}`);
-                    
+
                     const dailySum = db.collections.filter(c => {
                         const matchesDate = c.date === dateStr;
                         const matchesTid = !tid || c.territoryId === tid || c.territory_id === tid;
                         return matchesDate && matchesTid;
                     }).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
-                    
+
                     data.push(dailySum);
                     current.setDate(current.getDate() + 1);
                 }
-                
+
                 Charts.renderLine('admin-global-trend', labels, data);
             },
 
