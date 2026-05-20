@@ -3773,6 +3773,9 @@
                 const regPct = totalCollSplit > 0 ? Math.round((mtdCollReg / totalCollSplit) * 100) : 0;
                 const advPct = totalCollSplit > 0 ? Math.round((mtdCollAdv / totalCollSplit) * 100) : 0;
 
+                // Calculate File Touch Percentage
+                const fileTouchPct = metrics.targetFiles > 0 ? ((metrics.uniquePaidCodes / metrics.targetFiles) * 100).toFixed(1) : 0;
+
                 document.getElementById('views-container').innerHTML = `
             <div id="officer-dashboard-panel" class="animate-entry mb-4 sm:mb-6" >
                         <div class="flex justify-between items-end mb-2">
@@ -3980,6 +3983,28 @@
                         <div class="relative h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
                             <div class="h-full bg-slate-500 relative group transition-all duration-700" style="width: ${regPct}%"></div>
                             <div class="h-full bg-brand-500 relative group transition-all duration-700" style="width: ${advPct}%"></div>
+                        </div>
+                    </div>
+
+                    <!--FILE TOUCH PROGRESS - NEW CREATIVE SECTION-->
+                    <div class="animate-entry mb-4 sm:mb-6 p-2 rounded-lg bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 shadow-sm mt-3 hover-lift">
+                        <div class="flex justify-between items-end mb-1.5 px-1">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center">
+                                    <i class="fa-solid fa-file-signature text-sm"></i>
+                                </div>
+                                <div class="leading-none">
+                                    <p class="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400">File Touch %</p>
+                                    <p class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200">${metrics.uniquePaidCodes} / ${metrics.targetFiles} Files</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg sm:text-xl font-black text-emerald-600">${fileTouchPct}%</p>
+                            </div>
+                        </div>
+                        
+                        <div class="relative h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-2">
+                            <div class="h-full bg-emerald-500 relative transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(16,185,129,0.5)]" style="width: ${Math.min(fileTouchPct, 100)}%"></div>
                         </div>
                     </div>
 
