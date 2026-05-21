@@ -2319,6 +2319,45 @@
                 `;
             },
 
+            downloadAdminSummaryCSV() {
+                const db = Store.get();
+                
+                const allTerritoryData = db.territories.map(t => {
+                    const m = Calc.getMetrics(t.id);
+                    return { ...t, ...m };
+                });
+
+                // Sort by ach% from high to low
+                allTerritoryData.sort((a, b) => parseFloat(b.tillDayAchievement || 0) - parseFloat(a.tillDayAchievement || 0));
+
+                let csvContent = "Rank,Part,Territory Name,Total Customer Count,Non-Pay Customer Count,Total Projection,Till Date Collection,Ach %,Remaining Amount\n";
+
+                allTerritoryData.forEach((t, index) => {
+                    const rank = index + 1;
+                    const part = t.part || '';
+                    const name = t.name || '';
+                    const totalCustomer = t.targetFiles || 0;
+                    const nonPayCustomer = t.tillDateNonPayFiles || 0;
+                    const totalProj = parseFloat(t.presetProjTotal) || 0;
+                    const tillDateColl = parseFloat(t.mtdColl) || 0;
+                    const achPct = parseFloat(t.tillDayAchievement) || 0;
+                    const remaining = Math.max(0, totalProj - tillDateColl);
+
+                    csvContent += `${rank},${part},"${name}",${totalCustomer},${nonPayCustomer},${totalProj},${tillDateColl},${achPct}%,${remaining}\n`;
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `Admin_Performance_Summary_${Utils.getActiveMonth()}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                UI.showSuccess('Summary Report Downloaded!');
+            },
+
             // --- ADMIN VIEWS ---
             renderAdminDashboard(tableMode = 'compact') {
                 const metrics = Calc.getMetrics();
@@ -2489,8 +2528,12 @@
                                 <button onclick="UI.openSystemSettingsModal()" class="flex items-center px-4 py-2 bg-white dark:bg-slate-800 border-2 border-brand-500 text-brand-600 dark:text-brand-400 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all font-bold text-sm shadow-lg shadow-brand-500/10 hover-lift">
                                     <i class="fa-solid fa-gear mr-2"></i> Settings
                                 </button>
-                                <button onclick="UI.captureDashboard()" class="flex items-center px-4 py-2 bg-white dark:bg-slate-800 border-2 border-brand-500 text-brand-600 dark:text-brand-400 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all font-bold text-sm shadow-lg shadow-brand-500/10 hover-lift">
-                                    <i class="fa-solid fa-camera-retro mr-2"></i> Capture Report for Email
+                                <button onclick="UI.captureDashboard()" class="flex items-center px-4 py-2 bg-white dark:bg-slate-800 border-2 border-brand-500 text-brand-600 dark:text-brand-400 rounded-xl hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all font-bold text-sm shadow-lg shadow-brand-500/10 hover-lift hidden md:flex">
+                                    <i class="fa-solid fa-camera-retro mr-2"></i> Capture
+                                </button>
+                                <button onclick="UI.downloadAdminSummaryCSV()" class="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all font-bold text-sm shadow-lg shadow-emerald-500/20 hover-lift relative overflow-hidden group">
+                                    <div class="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                                    <i class="fa-solid fa-cloud-arrow-down mr-2 relative z-10"></i> <span class="relative z-10">Summary Data</span>
                                 </button>
                                 <button onclick="Router.navigate('admin-performance')" class="flex items-center px-4 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-all font-bold text-sm shadow-lg shadow-brand-500/20 hover-lift">
                                     <i class="fa-solid fa-chart-line mr-2"></i> Performance Analytics
