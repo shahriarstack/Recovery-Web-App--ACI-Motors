@@ -2675,8 +2675,8 @@
                 };
 
                 // Group Data
-                const partAData = allTerritoryData.filter(t => t.part === 'A').sort((a, b) => parseFloat(b.rpi) - parseFloat(a.rpi));
-                const partBData = allTerritoryData.filter(t => t.part === 'B').sort((a, b) => parseFloat(b.rpi) - parseFloat(a.rpi));
+                const partAData = allTerritoryData.filter(t => t.part === 'A').sort((a, b) => parseFloat(b.tillDayAchievement) - parseFloat(a.tillDayAchievement));
+                const partBData = allTerritoryData.filter(t => t.part === 'B').sort((a, b) => parseFloat(b.tillDayAchievement) - parseFloat(a.tillDayAchievement));
 
                 const totalA = calculateTotals(partAData);
                 const totalB = calculateTotals(partBData);
@@ -2685,10 +2685,27 @@
                 // Row HTML Generator
                 const createRow = (t, isTotal = false, label = '') => {
                     const isCompact = tableMode === 'compact';
-                    const achColorClass = (!isTotal && parseFloat(t.tillDayAchievement) < parseFloat(totalGrand.tillDayAchievement)) ? 'text-red-600' : '';
+                    const achPct = parseFloat(t.tillDayAchievement) || 0;
                     const lastAchColorClass = (!isTotal && parseFloat(t.lastDayAch) < parseFloat(totalGrand.lastDayAch)) ? 'text-red-600' : 'text-orange-500';
+                    
+                    let achBgClass = '';
+                    let rowBorderStyle = '';
+                    
+                    if (!isTotal) {
+                        if (achPct >= 85) {
+                            achBgClass = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800/30';
+                            rowBorderStyle = 'border-left: 3.5px solid #10b981;';
+                        } else if (achPct >= 50) {
+                            achBgClass = 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-100 dark:border-amber-800/30';
+                            rowBorderStyle = 'border-left: 3.5px solid #f59e0b;';
+                        } else {
+                            achBgClass = 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-100 dark:border-rose-800/30';
+                            rowBorderStyle = 'border-left: 3.5px solid #ef4444;';
+                        }
+                    }
+
                     return `
-                    <tr class="${isTotal ? 'bg-slate-200 dark:bg-slate-700 font-bold border-y-2 border-slate-300 dark:border-slate-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition interactive-row border-b border-slate-100 dark:border-slate-700'} text-slate-700 dark:text-slate-300">
+                    <tr class="${isTotal ? 'bg-slate-200 dark:bg-slate-700 font-bold border-y-2 border-slate-300 dark:border-slate-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition interactive-row border-b border-slate-100 dark:border-slate-700'} text-slate-700 dark:text-slate-300" style="${rowBorderStyle}">
                         <td class="p-1.5 border dark:border-slate-600 ${isTotal ? '' : 'sticky left-0 bg-white dark:bg-dark-card'} text-center">${isTotal ? '' : t.part}</td>
                         <td class="p-1.5 border dark:border-slate-600 ${isTotal ? 'text-right' : 'sticky left-10 bg-white dark:bg-dark-card shadow-sm'} font-medium">
                             ${isTotal ? label : t.name}
@@ -2705,7 +2722,9 @@
                         
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-brand-600' : ''}">${parseInt(t.presetProjTotal).toLocaleString()}</td>
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-green-600' : ''}">${parseInt(t.mtdColl).toLocaleString()}</td>
-                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold bg-blue-50 dark:bg-blue-900/20 ${achColorClass}">${t.tillDayAchievement}%</td>
+                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold">
+                            ${isTotal ? `<span>${t.tillDayAchievement}%</span>` : `<span class="inline-block px-2 py-0.5 rounded font-black text-xs ${achBgClass}">${t.tillDayAchievement}%</span>`}
+                        </td>
                         
                         <td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'font-medium text-slate-700 dark:text-slate-300' : ''}">${parseInt(t.todayProj).toLocaleString()}</td>
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-green-600' : ''}">${parseInt(t.todayColl).toLocaleString()}</td>
