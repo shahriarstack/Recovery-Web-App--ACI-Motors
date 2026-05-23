@@ -62,6 +62,27 @@
     </script>
 
     <style>
+        /* Creative Global Row Height Reduction & Row Hover Glows */
+        table tr td {
+            padding-top: 0.225rem !important;
+            padding-bottom: 0.225rem !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        table tr th {
+            padding-top: 0.3rem !important;
+            padding-bottom: 0.3rem !important;
+        }
+        table tbody tr {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        table tbody tr:hover {
+            background-color: rgba(16, 185, 129, 0.04) !important;
+            transform: translateX(3px);
+        }
+        .dark table tbody tr:hover {
+            background-color: rgba(16, 185, 129, 0.08) !important;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s;
@@ -635,6 +656,69 @@
 
     <!-- SCRIPT SECTION -->
     <script>
+        window.filterPerformanceAnalytics = function() {
+            const searchVal = (document.getElementById('perf-search')?.value || '').toLowerCase();
+            const minAch = parseFloat(document.getElementById('perf-min-ach')?.value || 0);
+            
+            const minAchValSpan = document.getElementById('perf-min-ach-val');
+            if (minAchValSpan) minAchValSpan.innerText = minAch + '%';
+            
+            const activeBtn = document.querySelector('.preset-btn.active');
+            const preset = activeBtn ? activeBtn.getAttribute('data-preset') : 'all';
+            
+            const rows = document.querySelectorAll('#perf-analytics-table-body tr');
+            let visibleCount = 0;
+            rows.forEach(row => {
+                if (row.id === 'perf-no-results') return;
+                
+                const name = (row.getAttribute('data-name') || '').toLowerCase();
+                const officer = (row.getAttribute('data-officer') || '').toLowerCase();
+                const ach = parseFloat(row.getAttribute('data-ach') || 0);
+                
+                const matchesSearch = name.includes(searchVal) || officer.includes(searchVal);
+                let matchesPreset = true;
+                if (preset === 'excellent') matchesPreset = ach >= 90;
+                else if (preset === 'good') matchesPreset = ach >= 70 && ach < 90;
+                else if (preset === 'warning') matchesPreset = ach >= 40 && ach < 70;
+                else if (preset === 'critical') matchesPreset = ach < 40;
+                
+                const matchesSlider = ach >= minAch;
+                
+                if (matchesSearch && matchesPreset && matchesSlider) {
+                    row.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+            
+            const noResultsRow = document.getElementById('perf-no-results');
+            if (noResultsRow) {
+                if (visibleCount === 0) noResultsRow.classList.remove('hidden');
+                else noResultsRow.classList.add('hidden');
+            }
+        };
+
+        window.setPerfPreset = function(presetType, btn) {
+            document.querySelectorAll('.preset-btn').forEach(b => {
+                b.classList.remove('active', 'bg-brand-600', 'text-white', 'shadow-lg', 'shadow-brand-500/20');
+                b.classList.add('bg-white', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
+            });
+            btn.classList.add('active', 'bg-brand-600', 'text-white', 'shadow-lg', 'shadow-brand-500/20');
+            btn.classList.remove('bg-white', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
+            
+            const slider = document.getElementById('perf-min-ach');
+            if (slider) {
+                if (presetType === 'excellent') slider.value = 90;
+                else if (presetType === 'good') slider.value = 70;
+                else if (presetType === 'warning') slider.value = 40;
+                else if (presetType === 'critical') slider.value = 0;
+                else slider.value = 0;
+            }
+            
+            window.filterPerformanceAnalytics();
+        };
+
         const Utils = {
             getLocalDate(d) {
                 const db = Store.cache;
@@ -2313,6 +2397,157 @@
                                         </div>
                                     `).join('')}
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- ALL TERRITORIES PERFORMANCE LEDGER -->
+                        <div class="glass-panel p-6 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-dark-card shadow-xl mt-8 space-y-6">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
+                                <div>
+                                    <h3 class="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2.5">
+                                        <i class="fa-solid fa-ranking-star text-brand-500"></i> All Territories Performance Ledger
+                                    </h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Real-time leaderboard sorted by MTD achievement percentage, dynamic green-to-red visualization.</p>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-brand-600 bg-brand-50 dark:bg-brand-900/20 px-3 py-1 rounded-full border border-brand-200 dark:border-brand-800/30">
+                                        Active: ${allTerritoryData.length} Territories
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- INTERACTIVE CONTROL DECK -->
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 bg-slate-50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <!-- Search Input -->
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                                    </span>
+                                    <input type="text" id="perf-search" oninput="window.filterPerformanceAnalytics()" 
+                                        placeholder="Search territory or officer..." 
+                                        class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold placeholder:text-slate-400 text-slate-800 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all shadow-sm">
+                                </div>
+
+                                <!-- Preset Chips -->
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <button onclick="window.setPerfPreset('all', this)" data-preset="all" class="preset-btn active px-3 py-2 text-[10px] font-black rounded-lg border transition-all bg-brand-600 text-white shadow-lg shadow-brand-500/20">
+                                        ALL
+                                    </button>
+                                    <button onclick="window.setPerfPreset('excellent', this)" data-preset="excellent" class="preset-btn px-3 py-2 text-[10px] font-black rounded-lg border transition-all bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                        🏆 EXC (≥90%)
+                                    </button>
+                                    <button onclick="window.setPerfPreset('good', this)" data-preset="good" class="preset-btn px-3 py-2 text-[10px] font-black rounded-lg border transition-all bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                        📈 GOOD (70%-90%)
+                                    </button>
+                                    <button onclick="window.setPerfPreset('warning', this)" data-preset="warning" class="preset-btn px-3 py-2 text-[10px] font-black rounded-lg border transition-all bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                        ⚠️ WARN (40%-70%)
+                                    </button>
+                                    <button onclick="window.setPerfPreset('critical', this)" data-preset="critical" class="preset-btn px-3 py-2 text-[10px] font-black rounded-lg border transition-all bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                        🚨 CRIT (<40%)
+                                    </button>
+                                </div>
+
+                                <!-- Slider Filter -->
+                                <div class="flex flex-col justify-center px-2">
+                                    <div class="flex justify-between items-center mb-1.5">
+                                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Min MTD Achievement</span>
+                                        <span id="perf-min-ach-val" class="text-xs font-black text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20 px-2 py-0.5 rounded border border-brand-200/50 dark:border-brand-800/30">0%</span>
+                                    </div>
+                                    <input type="range" id="perf-min-ach" min="0" max="120" value="0" oninput="window.filterPerformanceAnalytics()" 
+                                        class="w-full accent-brand-600 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                            </div>
+
+                            <!-- LEADERBOARD TABLE -->
+                            <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800 shadow-inner">
+                                <table class="w-full text-xs text-left border-collapse whitespace-nowrap">
+                                    <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                                        <tr class="divide-x divide-slate-100 dark:divide-slate-700">
+                                            <th class="p-3 text-center">Rank</th>
+                                            <th class="p-3 text-center">Part</th>
+                                            <th class="p-3">Territory & Officer</th>
+                                            <th class="p-3 text-center">Customers</th>
+                                            <th class="p-3 text-center">Non-Pay</th>
+                                            <th class="p-3 text-right">Target Proj</th>
+                                            <th class="p-3 text-right">MTD Collection</th>
+                                            <th class="p-3 text-right">Remaining Amt</th>
+                                            <th class="p-3 text-center">Achievement %</th>
+                                            <th class="p-3 text-center">Performance Indicator</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="perf-analytics-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                        ${[...allTerritoryData].sort((a, b) => parseFloat(b.tillDayAchievement) - parseFloat(a.tillDayAchievement)).map((t, index) => {
+                                            const rank = index + 1;
+                                            const totalProj = parseFloat(t.presetProjTotal) || 0;
+                                            const mtdColl = parseFloat(t.mtdColl) || 0;
+                                            const achPct = parseFloat(t.tillDayAchievement) || 0;
+                                            const remaining = Math.max(0, totalProj - mtdColl);
+                                            
+                                            // Hue goes from 0 (red) to 120 (green) based on achPct
+                                            const hue = Math.min(120, Math.max(0, (achPct / 100) * 120));
+                                            
+                                            let statusText = 'Critical';
+                                            if (achPct >= 90) statusText = 'Excellent';
+                                            else if (achPct >= 70) statusText = 'Good';
+                                            else if (achPct >= 40) statusText = 'Warning';
+                                            
+                                            return `
+                                                <tr data-name="${t.name}" data-officer="${t.officer || ''}" data-ach="${achPct}" data-part="${t.part}"
+                                                    class="divide-x divide-slate-100 dark:divide-slate-800 transition"
+                                                    style="border-left: 4px solid hsl(${hue}, 80%, 45%); background: linear-gradient(90deg, hsla(${hue}, 85%, 45%, 0.03) 0%, transparent 100%);">
+                                                    <td class="p-2.5 text-center font-bold">
+                                                        <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg font-black text-xs
+                                                            ${rank === 1 ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800 animate-pulse' : 
+                                                              rank === 2 ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700' : 
+                                                              rank === 3 ? 'bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400 border border-orange-200 dark:border-orange-800' : 
+                                                              'bg-slate-50 dark:bg-slate-900 text-slate-500'}">
+                                                            ${rank}
+                                                        </span>
+                                                    </td>
+                                                    <td class="p-2.5 text-center font-black">
+                                                        <span class="px-2 py-0.5 rounded text-[10px] ${t.part === 'A' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30' : 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30'}">
+                                                            ${t.part}
+                                                        </span>
+                                                    </td>
+                                                    <td class="p-2.5 font-bold text-slate-800 dark:text-white">
+                                                        <div class="flex flex-col">
+                                                            <span class="text-xs">${t.name}</span>
+                                                            <span class="text-[9px] font-medium text-slate-400">${t.officer || 'No Officer Assigned'}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="p-2.5 text-center font-mono font-medium">${t.targetFiles}</td>
+                                                    <td class="p-2.5 text-center font-mono font-medium text-rose-500">${t.tillDateNonPayFiles}</td>
+                                                    <td class="p-2.5 text-right font-mono font-medium">৳${parseInt(totalProj).toLocaleString()}</td>
+                                                    <td class="p-2.5 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">৳${parseInt(mtdColl).toLocaleString()}</td>
+                                                    <td class="p-2.5 text-right font-mono font-medium text-slate-500">৳${parseInt(remaining).toLocaleString()}</td>
+                                                    <td class="p-2.5 text-center">
+                                                        <span class="inline-block px-2.5 py-1 rounded-lg font-black text-xs shadow-sm border"
+                                                            style="background-color: hsla(${hue}, 85%, 45%, 0.1); color: hsl(${hue}, 85%, 35%); border-color: hsla(${hue}, 85%, 45%, 0.2);">
+                                                            ${achPct}%
+                                                        </span>
+                                                    </td>
+                                                    <td class="p-2.5 text-center">
+                                                        <div class="flex items-center justify-center gap-2">
+                                                            <div class="w-2.5 h-2.5 rounded-full animate-pulse shadow-sm" style="background-color: hsl(${hue}, 85%, 45%);"></div>
+                                                            <span class="font-extrabold text-[10px] uppercase tracking-wider" style="color: hsl(${hue}, 85%, 38%);">${statusText}</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                        
+                                        <!-- Empty State Row -->
+                                        <tr id="perf-no-results" class="hidden">
+                                            <td colspan="10" class="p-12 text-center text-slate-400 italic">
+                                                <div class="flex flex-col items-center justify-center gap-2">
+                                                    <i class="fa-solid fa-triangle-exclamation text-3xl text-slate-300 dark:text-slate-700 animate-bounce"></i>
+                                                    <p class="font-bold text-sm">No territories match your filter settings</p>
+                                                    <p class="text-xs text-slate-400">Try adjusting the search query or MTD achievement slider</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
