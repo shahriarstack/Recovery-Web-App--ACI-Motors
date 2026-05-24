@@ -2723,6 +2723,19 @@
                     return sums;
                 };
 
+                // Calculate global ranks for dynamic top/middle/bottom groups across ALL territories
+                const sortedAll = [...allTerritoryData].sort((a, b) => parseFloat(b.tillDayAchievement || 0) - parseFloat(a.tillDayAchievement || 0));
+                const totalCount = sortedAll.length;
+                sortedAll.forEach((t, i) => {
+                    if (i < Math.ceil(totalCount / 3)) {
+                        t.globalGroup = 'top';
+                    } else if (i < Math.ceil(totalCount * 2 / 3)) {
+                        t.globalGroup = 'middle';
+                    } else {
+                        t.globalGroup = 'bottom';
+                    }
+                });
+
                 // Group Data sorted by MTD Achievement % from top to bottom
                 const partAData = allTerritoryData.filter(t => t.part === 'A').sort((a, b) => parseFloat(b.tillDayAchievement || 0) - parseFloat(a.tillDayAchievement || 0));
                 const partBData = allTerritoryData.filter(t => t.part === 'B').sort((a, b) => parseFloat(b.tillDayAchievement || 0) - parseFloat(a.tillDayAchievement || 0));
@@ -2732,24 +2745,21 @@
                 const totalGrand = calculateTotals(allTerritoryData);
 
                 // Row HTML Generator
-                const createRow = (t, isTotal = false, label = '', index = 0, totalCount = 1) => {
+                const createRow = (t, isTotal = false, label = '') => {
                     const isCompact = tableMode === 'compact';
                     
                     let achColorStyle = '';
                     let achIcon = '';
                     if (!isTotal) {
-                        const topThreshold = Math.ceil(totalCount / 3);
-                        const bottomThreshold = totalCount - Math.floor(totalCount / 3);
-                        
-                        if (index < topThreshold) {
-                            // Green (Top performer)
-                            achColorStyle = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold border-l-2 border-emerald-500 animate-top-glow';
-                        } else if (index < bottomThreshold) {
-                            // Yellow (Middle performer)
-                            achColorStyle = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold border-l-2 border-amber-500';
+                        if (t.globalGroup === 'top') {
+                            achColorStyle = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold border-l-2 border-emerald-500 transition-colors duration-300 hover:bg-emerald-500/20';
+                            achIcon = '<i class="fa-solid fa-arrow-trend-up text-[9px] text-emerald-500 opacity-80"></i>';
+                        } else if (t.globalGroup === 'middle') {
+                            achColorStyle = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold border-l-2 border-amber-500 transition-colors duration-300 hover:bg-amber-500/20';
+                            achIcon = '<i class="fa-solid fa-minus text-[9px] text-amber-500 opacity-70"></i>';
                         } else {
-                            // Red (Bottom performer)
-                            achColorStyle = 'bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold border-l-2 border-rose-500 animate-bottom-glow';
+                            achColorStyle = 'bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold border-l-2 border-rose-500 transition-colors duration-300 hover:bg-rose-500/20';
+                            achIcon = '<i class="fa-solid fa-arrow-trend-down text-[9px] text-rose-500 opacity-80"></i>';
                         }
                     } else {
                         achColorStyle = 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white font-bold';
@@ -3298,12 +3308,12 @@
                 const tbody = document.getElementById('ranking-table-body');
 
                 // Render Part A
-                partAData.forEach((t, i) => tbody.innerHTML += createRow(t, false, '', i, partAData.length));
+                partAData.forEach((t, i) => tbody.innerHTML += createRow(t));
                 // Total Part A
                 tbody.innerHTML += createRow(totalA, true, 'Total Part A');
 
                 // Render Part B
-                partBData.forEach((t, i) => tbody.innerHTML += createRow(t, false, '', i, partBData.length));
+                partBData.forEach((t, i) => tbody.innerHTML += createRow(t));
                 // Total Part B
                 tbody.innerHTML += createRow(totalB, true, 'Total Part B');
 
