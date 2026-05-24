@@ -62,6 +62,44 @@
     </script>
 
     <style>
+        /* Premium Performance Glow Animations */
+        @keyframes topPerformanceShimmer {
+            0% {
+                background-color: rgba(16, 185, 129, 0.08);
+                box-shadow: inset 0 0 4px rgba(16, 185, 129, 0.2);
+            }
+            50% {
+                background-color: rgba(16, 185, 129, 0.2);
+                box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.4), 0 0 8px rgba(16, 185, 129, 0.3);
+            }
+            100% {
+                background-color: rgba(16, 185, 129, 0.08);
+                box-shadow: inset 0 0 4px rgba(16, 185, 129, 0.2);
+            }
+        }
+        @keyframes bottomPerformancePulse {
+            0% {
+                background-color: rgba(244, 63, 94, 0.08);
+                box-shadow: inset 0 0 4px rgba(244, 63, 94, 0.2);
+            }
+            50% {
+                background-color: rgba(244, 63, 94, 0.22);
+                box-shadow: inset 0 0 10px rgba(244, 63, 94, 0.4), 0 0 8px rgba(244, 63, 94, 0.3);
+            }
+            100% {
+                background-color: rgba(244, 63, 94, 0.08);
+                box-shadow: inset 0 0 4px rgba(244, 63, 94, 0.2);
+            }
+        }
+        .animate-top-glow {
+            animation: topPerformanceShimmer 2.2s infinite ease-in-out;
+            transition: all 0.3s ease;
+        }
+        .animate-bottom-glow {
+            animation: bottomPerformancePulse 1.6s infinite ease-in-out;
+            transition: all 0.3s ease;
+        }
+
         /* Creative Global Row Height Reduction & Row Hover Glows */
         table tr td {
             padding-top: 0.225rem !important;
@@ -2601,6 +2639,22 @@
                 const cutoffHours = parseInt(cutoffSetting?.value || 0);
                 const activeMonth = db.system_settings?.find(s => s.key === 'active_month')?.value || 'N/A';
 
+                // Calculate dynamic expected target achievement for the current day of the month
+                const todayDate = new Date();
+                let expectedTarget = 100;
+                if (activeMonth && activeMonth !== 'N/A') {
+                    const activeLower = activeMonth.toLowerCase();
+                    const curShortMonth = todayDate.toLocaleString('en-US', { month: 'short' }).toLowerCase();
+                    const curLongMonth = todayDate.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+                    const curYear = todayDate.getFullYear().toString();
+                    
+                    if ((activeLower.includes(curShortMonth) || activeLower.includes(curLongMonth)) && activeLower.includes(curYear)) {
+                        const day = todayDate.getDate();
+                        const totalDays = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0).getDate();
+                        expectedTarget = (day / totalDays) * 100;
+                    }
+                }
+
                 // Calculate Today Achievement for Admin View
                 const todayAch = metrics.todayProj > 0 ? ((metrics.todayColl / metrics.todayProj) * 100).toFixed(1) : (metrics.todayColl > 0 ? '100+' : '0.0');
 
@@ -2674,9 +2728,9 @@
                     return sums;
                 };
 
-                // Group Data
-                const partAData = allTerritoryData.filter(t => t.part === 'A').sort((a, b) => parseFloat(b.tillDayAchievement) - parseFloat(a.tillDayAchievement));
-                const partBData = allTerritoryData.filter(t => t.part === 'B').sort((a, b) => parseFloat(b.tillDayAchievement) - parseFloat(a.tillDayAchievement));
+                // Group Data sorted by MTD Achievement % from top to bottom
+                const partAData = allTerritoryData.filter(t => t.part === 'A').sort((a, b) => parseFloat(b.tillDayAchievement || 0) - parseFloat(a.tillDayAchievement || 0));
+                const partBData = allTerritoryData.filter(t => t.part === 'B').sort((a, b) => parseFloat(b.tillDayAchievement || 0) - parseFloat(a.tillDayAchievement || 0));
 
                 const totalA = calculateTotals(partAData);
                 const totalB = calculateTotals(partBData);
@@ -2685,27 +2739,31 @@
                 // Row HTML Generator
                 const createRow = (t, isTotal = false, label = '') => {
                     const isCompact = tableMode === 'compact';
-                    const achPct = parseFloat(t.tillDayAchievement) || 0;
-                    const lastAchColorClass = (!isTotal && parseFloat(t.lastDayAch) < parseFloat(totalGrand.lastDayAch)) ? 'text-red-600' : 'text-orange-500';
                     
-                    let achBgClass = '';
-                    let rowBorderStyle = '';
-                    
+                    let achColorStyle = '';
+                    let achIcon = '';
                     if (!isTotal) {
-                        if (achPct >= 85) {
-                            achBgClass = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800/30';
-                            rowBorderStyle = 'border-left: 3.5px solid #10b981;';
-                        } else if (achPct >= 50) {
-                            achBgClass = 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-100 dark:border-amber-800/30';
-                            rowBorderStyle = 'border-left: 3.5px solid #f59e0b;';
+                        const ach = parseFloat(t.tillDayAchievement || 0);
+                        if (ach >= expectedTarget * 0.9) {
+                            // Green (Top performer) -> Glowing breathing emerald border & pulsing crown
+                            achColorStyle = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold border-l-2 border-emerald-500 animate-top-glow';
+                            achIcon = '<i class="fa-solid fa-crown text-[9px] text-amber-500 animate-bounce"></i>';
+                        } else if (ach >= expectedTarget * 0.5) {
+                            // Yellow (Middle performer) -> Normal yellow background
+                            achColorStyle = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold border-l-2 border-amber-500';
+                            achIcon = '<i class="fa-solid fa-circle-dot text-[7px] text-amber-500/70"></i>';
                         } else {
-                            achBgClass = 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-100 dark:border-rose-800/30';
-                            rowBorderStyle = 'border-left: 3.5px solid #ef4444;';
+                            // Red (Bottom performer) -> Pulsing warning crimson border & critical warning triangle
+                            achColorStyle = 'bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold border-l-2 border-rose-500 animate-bottom-glow';
+                            achIcon = '<i class="fa-solid fa-triangle-exclamation text-[9px] text-rose-500 animate-pulse"></i>';
                         }
+                    } else {
+                        achColorStyle = 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white font-bold';
                     }
 
+                    const lastAchColorClass = (!isTotal && parseFloat(t.lastDayAch) < parseFloat(totalGrand.lastDayAch)) ? 'text-red-600' : 'text-orange-500';
                     return `
-                    <tr class="${isTotal ? 'bg-slate-200 dark:bg-slate-700 font-bold border-y-2 border-slate-300 dark:border-slate-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition interactive-row border-b border-slate-100 dark:border-slate-700'} text-slate-700 dark:text-slate-300" style="${rowBorderStyle}">
+                    <tr class="${isTotal ? 'bg-slate-200 dark:bg-slate-700 font-bold border-y-2 border-slate-300 dark:border-slate-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition interactive-row border-b border-slate-100 dark:border-slate-700'} text-slate-700 dark:text-slate-300">
                         <td class="p-1.5 border dark:border-slate-600 ${isTotal ? '' : 'sticky left-0 bg-white dark:bg-dark-card'} text-center">${isTotal ? '' : t.part}</td>
                         <td class="p-1.5 border dark:border-slate-600 ${isTotal ? 'text-right' : 'sticky left-10 bg-white dark:bg-dark-card shadow-sm'} font-medium">
                             ${isTotal ? label : t.name}
@@ -2722,14 +2780,17 @@
                         
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-brand-600' : ''}">${parseInt(t.presetProjTotal).toLocaleString()}</td>
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-green-600' : ''}">${parseInt(t.mtdColl).toLocaleString()}</td>
-                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold">
-                            ${isTotal ? `<span>${t.tillDayAchievement}%</span>` : `<span class="inline-block px-2 py-0.5 rounded font-black text-xs ${achBgClass}">${t.tillDayAchievement}%</span>`}
+                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold ${achColorStyle}">
+                            <div class="flex items-center justify-center gap-1.5">
+                                ${achIcon}
+                                <span>${t.tillDayAchievement}%</span>
+                            </div>
                         </td>
                         
                         <td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'font-medium text-slate-700 dark:text-slate-300' : ''}">${parseInt(t.todayProj).toLocaleString()}</td>
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-green-600' : ''}">${parseInt(t.todayColl).toLocaleString()}</td>
                         <td class="p-1.5 border dark:border-slate-600 text-center font-bold text-fuchsia-600 bg-fuchsia-50 dark:bg-fuchsia-900/10">${t.todayAch}%</td>
-
+ 
                         <td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'text-slate-500' : ''} border-l-2 border-slate-100 dark:border-slate-600">${parseInt(t.yestProjAmt).toLocaleString()}</td>
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center ${!isTotal ? 'text-slate-500' : ''}">${t.yestProjFiles}</td>` : ''}
                         <td class="p-1.5 border dark:border-slate-600 text-right ${!isTotal ? 'text-slate-500' : ''}">${parseInt(t.yestCollAmt).toLocaleString()}</td>
@@ -3014,8 +3075,13 @@
                         <div class="glass-panel p-6 rounded-xl shadow-lg dark:bg-dark-card border-t-4 border-brand-500">
                             <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
                                 <div>
-                                    <h3 class="text-xl font-bold text-slate-800 dark:text-white">Territory Performance Ranking</h3>
-                                    <div class="text-xs text-slate-500 italic">Live tracking of MTD and Daily performance</div>
+                                    <h3 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                        Territory Performance Ranking
+                                        <span class="text-xs font-black bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400 px-2 py-0.5 rounded-md border border-brand-200/50 dark:border-brand-800/30">
+                                            MTD Daily Target: ${expectedTarget.toFixed(1)}%
+                                        </span>
+                                    </h3>
+                                    <div class="text-xs text-slate-500 italic">Sorted by achievement from top to bottom. Color indicates status relative to current daily target.</div>
                                 </div>
                                 <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
                                     <button onclick="UI.renderAdminDashboard('compact')" class="px-3 py-1.5 text-xs font-bold rounded-md transition-all ${isCompact ? 'bg-white dark:bg-slate-600 text-brand-600 shadow' : 'text-slate-500 hover:text-slate-700'}">
