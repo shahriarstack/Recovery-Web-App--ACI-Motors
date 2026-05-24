@@ -2749,17 +2749,13 @@
                     const isCompact = tableMode === 'compact';
                     
                     let achColorStyle = '';
-                    let achIcon = '';
                     if (!isTotal) {
                         if (t.globalGroup === 'top') {
                             achColorStyle = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold border-l-2 border-emerald-500 transition-colors duration-300 hover:bg-emerald-500/20';
-                            achIcon = '<i class="fa-solid fa-arrow-trend-up text-[9px] text-emerald-500 opacity-80"></i>';
                         } else if (t.globalGroup === 'middle') {
                             achColorStyle = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold border-l-2 border-amber-500 transition-colors duration-300 hover:bg-amber-500/20';
-                            achIcon = '<i class="fa-solid fa-minus text-[9px] text-amber-500 opacity-70"></i>';
                         } else {
                             achColorStyle = 'bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold border-l-2 border-rose-500 transition-colors duration-300 hover:bg-rose-500/20';
-                            achIcon = '<i class="fa-solid fa-arrow-trend-down text-[9px] text-rose-500 opacity-80"></i>';
                         }
                     } else {
                         achColorStyle = 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white font-bold';
@@ -2786,7 +2782,6 @@
                         <td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-green-600' : ''}">${parseInt(t.mtdColl).toLocaleString()}</td>
                         <td class="p-1.5 border dark:border-slate-600 text-center font-bold ${achColorStyle}">
                             <div class="flex items-center justify-center gap-1.5">
-                                ${achIcon}
                                 <span>${t.tillDayAchievement}%</span>
                             </div>
                         </td>
