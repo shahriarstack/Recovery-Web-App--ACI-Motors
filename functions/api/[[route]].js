@@ -31,21 +31,16 @@ export async function onRequest(context) {
     }
 
     try {
-        // Strictly check if DATABASE_URL is configured
         if (!env.DATABASE_URL) {
-            return jsonResponse({
-                error: "DATABASE_URL environment variable is missing on Cloudflare. Please log in to your Cloudflare Dashboard, go to your Pages project > Settings > Environment variables, add 'DATABASE_URL' with your Neon DB connection string, and re-deploy."
-            }, 500);
+            return jsonResponse({ error: 'DATABASE_URL environment variable is missing.' }, 500);
         }
 
-        // Set up Neon Database Pool using environment variables configured in Cloudflare
+        // Set up Neon Database Pool using environment variables that you'll configure in Cloudflare manually
         const pool = new Pool({ connectionString: env.DATABASE_URL });
 
         // Auto-initialize system_settings table if it doesn't exist
-        await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => {
-            console.error("Table Init Error:", err);
-            throw new Error("Failed to initialize database tables: " + err.message);
-        });
+        await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error("Table Init Error:", err));
+
         // --- GET DB STATE ---
         if (request.method === 'GET' && path === '/api/db') {
             const users = await pool.query('SELECT * FROM users');
