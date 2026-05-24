@@ -789,7 +789,7 @@
          */
         const Store = {
             cache: null,
-            apiUrl: (window.location.hostname === 'localhost' || window.location.protocol === 'file:') ? 'http://localhost:3000/api' : '/api',
+            apiUrl: '/api',
 
             convertKeys(arr) {
                 if (!arr) return;
@@ -839,12 +839,7 @@
                     return data;
                 } catch (err) {
                     console.error("Failed to connect to Backend:", err);
-                    const isLocal = window.location.hostname === 'localhost' || window.location.protocol === 'file:';
-                    if (isLocal) {
-                        alert("Database connection failed locally.\nMake sure the local backend server (node server.js) is running on port 3000.\n\nError: " + err.message);
-                    } else {
-                        alert("Database connection failed on the server.\nIf you are on Cloudflare Pages, make sure your Functions are deployed correctly and the DATABASE_URL environment variable is set.\n\nError: " + err.message);
-                    }
+                    alert("Database connection failed.\nPlease refresh the page or check if the DATABASE_URL environment variable is set correctly in Cloudflare Pages.\n\nError: " + err.message);
                 }
             },
 
