@@ -2739,20 +2739,17 @@
                     let achIcon = '';
                     if (!isTotal) {
                         const topThreshold = Math.ceil(totalCount / 3);
-                        const bottomThreshold = totalCount - Math.ceil(totalCount / 3);
-
+                        const bottomThreshold = totalCount - Math.floor(totalCount / 3);
+                        
                         if (index < topThreshold) {
-                            // Green (Top performer) -> Glowing breathing emerald border & pulsing crown
+                            // Green (Top performer)
                             achColorStyle = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold border-l-2 border-emerald-500 animate-top-glow';
-                            achIcon = '<i class="fa-solid fa-crown text-[9px] text-amber-500 animate-bounce"></i>';
-                        } else if (index >= bottomThreshold) {
-                            // Red (Bottom performer) -> Pulsing warning crimson border & critical warning triangle
-                            achColorStyle = 'bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold border-l-2 border-rose-500 animate-bottom-glow';
-                            achIcon = '<i class="fa-solid fa-triangle-exclamation text-[9px] text-rose-500 animate-pulse"></i>';
-                        } else {
-                            // Yellow (Middle performer) -> Normal yellow background
+                        } else if (index < bottomThreshold) {
+                            // Yellow (Middle performer)
                             achColorStyle = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold border-l-2 border-amber-500';
-                            achIcon = '<i class="fa-solid fa-circle-dot text-[7px] text-amber-500/70"></i>';
+                        } else {
+                            // Red (Bottom performer)
+                            achColorStyle = 'bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold border-l-2 border-rose-500 animate-bottom-glow';
                         }
                     } else {
                         achColorStyle = 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white font-bold';
