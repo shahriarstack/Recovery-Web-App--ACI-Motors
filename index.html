@@ -694,6 +694,38 @@
 
     <!-- SCRIPT SECTION -->
     <script>
+        // GLOBAL FETCH INTERCEPTOR: Permanent fix for Neon DB Serverless Cold Starts and Cloudflare Timeouts
+        const originalFetch = window.fetch;
+        window.fetch = async function(url, options) {
+            let retries = 3;
+            let lastError = null;
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await originalFetch(url, options);
+                    
+                    // If this is an API call, verify we actually got JSON back, not a Cloudflare 500 HTML error page
+                    if (typeof url === 'string' && url.includes('/api')) {
+                        const contentType = res.headers.get("content-type");
+                        if (contentType && contentType.includes("text/html")) {
+                            throw new Error("Received HTML error page from Cloudflare. Backend might be cold-starting or timed out.");
+                        }
+                        if (res.status >= 500) {
+                            throw new Error("Server error " + res.status);
+                        }
+                    }
+                    return res; // Success! Return the response to the caller
+                } catch (err) {
+                    lastError = err;
+                    console.warn(`Fetch attempt ${i + 1} failed for ${url}:`, err.message);
+                    if (i < retries - 1) {
+                        // Exponential backoff: Wait 1s, then 2s before retrying
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                    }
+                }
+            }
+            throw lastError; // Exhausted all retries, bubble the error up
+        };
+
         window.filterPerformanceAnalytics = function() {
             const searchVal = (document.getElementById('perf-search')?.value || '').toLowerCase();
             const minAch = parseFloat(document.getElementById('perf-min-ach')?.value || 0);
