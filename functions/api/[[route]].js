@@ -29,14 +29,14 @@ export async function onRequest(context) {
     if (request.method === 'OPTIONS') {
         return new Response(null, { headers: corsHeaders });
     }
-
+    let pool;
     try {
         if (!env.DATABASE_URL) {
             throw new Error("DATABASE_URL environment variable is missing in Cloudflare Pages.");
         }
 
         // Set up Neon Database Pool using environment variables that you'll configure in Cloudflare manually
-        const pool = new Pool({ connectionString: env.DATABASE_URL });
+        pool = new Pool({ connectionString: env.DATABASE_URL });
 
         // Auto-initialize system_settings table if it doesn't exist
         await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error("Table Init Error:", err));
@@ -206,5 +206,9 @@ export async function onRequest(context) {
     } catch (error) {
         console.error('API Error:', error);
         return jsonResponse({ error: error.message }, 500);
+    } finally {
+        if (pool) {
+            context.waitUntil(pool.end());
+        }
     }
 }
