@@ -839,7 +839,7 @@
                     return data;
                 } catch (err) {
                     console.error("Failed to connect to Backend:", err);
-                    alert("Database connection failed.\nPlease refresh the page or check if the DATABASE_URL environment variable is set correctly in Cloudflare Pages.\n\nError: " + err.message);
+                    alert("Unable to connect to the server. Please check your internet connection and try again.");
                 }
             },
 
