@@ -32,7 +32,7 @@ export async function onRequest(context) {
 
     try {
         if (!env.DATABASE_URL) {
-            return jsonResponse({ error: 'DATABASE_URL environment variable is missing.' }, 500);
+            throw new Error("DATABASE_URL environment variable is missing in Cloudflare Pages.");
         }
 
         // Set up Neon Database Pool using environment variables that you'll configure in Cloudflare manually
@@ -40,7 +40,6 @@ export async function onRequest(context) {
 
         // Auto-initialize system_settings table if it doesn't exist
         await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error("Table Init Error:", err));
-
         // --- GET DB STATE ---
         if (request.method === 'GET' && path === '/api/db') {
             const users = await pool.query('SELECT * FROM users');
