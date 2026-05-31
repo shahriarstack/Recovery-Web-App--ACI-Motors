@@ -697,7 +697,7 @@
         // GLOBAL FETCH INTERCEPTOR: Permanent fix for Neon DB Serverless Cold Starts and Cloudflare Timeouts
         const originalFetch = window.fetch;
         window.fetch = async function(url, options) {
-            let retries = 3;
+            let retries = 5;
             let lastError = null;
             for (let i = 0; i < retries; i++) {
                 try {
@@ -718,8 +718,8 @@
                     lastError = err;
                     console.warn(`Fetch attempt ${i + 1} failed for ${url}:`, err.message);
                     if (i < retries - 1) {
-                        // Exponential backoff: Wait 1s, then 2s before retrying
-                        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                        // Exponential backoff: Wait 1s, 2s, 4s, 8s before retrying
+                        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
                     }
                 }
             }
