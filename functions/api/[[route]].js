@@ -18,6 +18,7 @@ function jsonResponse(data, status = 200) {
 
 // Global connection pool that is reused across requests
 let globalPool;
+let isDbInitialized = false;
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -45,25 +46,34 @@ export async function onRequest(context) {
         const pool = globalPool;
 
         // Auto-initialize system_settings table if it doesn't exist
-        await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error("Table Init Error:", err));
+        if (!isDbInitialized) {
+            await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error("Table Init Error:", err));
+            isDbInitialized = true;
+        }
+        
         // --- GET DB STATE ---
         if (request.method === 'GET' && path === '/api/db') {
-            const users = await pool.query('SELECT * FROM users');
-            const territories = await pool.query('SELECT * FROM territories');
-            const targets = await pool.query('SELECT * FROM targets');
-            const projections = await pool.query('SELECT * FROM projections');
-            const collections = await pool.query('SELECT * FROM collections');
-            const offroad_vehicles = await pool.query('SELECT * FROM offroad_vehicles');
-            const settlements = await pool.query('SELECT * FROM settlements');
-            const unlocksResult = await pool.query('SELECT * FROM admin_unlocks');
-            const vehicle_performance = await pool.query('SELECT * FROM vehicle_performance');
+            // Run all queries concurrently to prevent timeouts
+            const [
+                users, territories, targets, projections, collections,
+                offroad_vehicles, settlements, unlocksResult, vehicle_performance, system_settings
+            ] = await Promise.all([
+                pool.query('SELECT * FROM users'),
+                pool.query('SELECT * FROM territories'),
+                pool.query('SELECT * FROM targets'),
+                pool.query('SELECT * FROM projections'),
+                pool.query('SELECT * FROM collections'),
+                pool.query('SELECT * FROM offroad_vehicles'),
+                pool.query('SELECT * FROM settlements'),
+                pool.query('SELECT * FROM admin_unlocks'),
+                pool.query('SELECT * FROM vehicle_performance'),
+                pool.query('SELECT * FROM system_settings').catch(() => ({ rows: [] }))
+            ]);
 
             const unlocks = {};
             unlocksResult.rows.forEach(row => {
                 unlocks[row.territory_id] = row.unlock_until;
             });
-
-            const system_settings = await pool.query('SELECT * FROM system_settings').catch(() => ({ rows: [] }));
 
             return jsonResponse({
                 users: users.rows,
