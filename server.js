@@ -12,6 +12,12 @@ app.use(express.static(__dirname));
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
+});
+
+pool.on('error', (err, client) => {
+    console.error('Unexpected error on idle client', err);
 });
 
 // Ensure territory_id can hold multiple comma-separated IDs for Area Heads
