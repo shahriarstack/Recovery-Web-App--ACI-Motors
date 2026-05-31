@@ -16,6 +16,9 @@ function jsonResponse(data, status = 200) {
     });
 }
 
+// Global connection pool that is reused across requests
+let globalPool;
+
 export async function onRequest(context) {
     const { request, env } = context;
     const url = new URL(request.url);
@@ -29,14 +32,17 @@ export async function onRequest(context) {
     if (request.method === 'OPTIONS') {
         return new Response(null, { headers: corsHeaders });
     }
-    let pool;
+    
     try {
         if (!env.DATABASE_URL) {
             throw new Error("DATABASE_URL environment variable is missing in Cloudflare Pages.");
         }
 
-        // Set up Neon Database Pool using environment variables that you'll configure in Cloudflare manually
-        pool = new Pool({ connectionString: env.DATABASE_URL });
+        // Only create the pool once, then reuse it for all future requests
+        if (!globalPool) {
+            globalPool = new Pool({ connectionString: env.DATABASE_URL });
+        }
+        const pool = globalPool;
 
         // Auto-initialize system_settings table if it doesn't exist
         await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error("Table Init Error:", err));
@@ -206,9 +212,5 @@ export async function onRequest(context) {
     } catch (error) {
         console.error('API Error:', error);
         return jsonResponse({ error: error.message }, 500);
-    } finally {
-        if (pool) {
-            context.waitUntil(pool.end());
-        }
     }
 }
