@@ -877,7 +877,8 @@
 
                     this.cache = data;
 
-                    // Auto-migration for entries submitted today physically but saved as May 31st under old date-capping rules:
+                    // Auto-migration for entries submitted today physically but saved as May 31st under old date-capping rules,
+                    // and for entries submitted on extended days that are missing an active_month field:
                     (async () => {
                         try {
                             const activeMonth = data.system_settings?.find(s => s.key === 'active_month')?.value;
@@ -887,15 +888,16 @@
                                 startOfTodayLocal.setHours(0,0,0,0);
                                 const startOfTodayTimestamp = startOfTodayLocal.getTime();
 
-                                // Find any collection submitted physically today that got saved as 2026-05-31
                                 let migrated = false;
+
+                                // 1. Migrate collections entered physically today that got saved as May 31st
                                 if (data.collections) {
                                     for (const c of data.collections) {
                                         if (c.timestamp >= startOfTodayTimestamp && c.date === '2026-05-31') {
                                             c.date = '2026-06-01';
                                             c.active_month = '2026-05';
                                             c.activeMonth = '2026-05';
-                                            console.log("Auto-migrating collection:", c.receipt);
+                                            console.log("Auto-migrating collection date:", c.receipt);
                                             await fetch(`${this.apiUrl}/update`, {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
@@ -910,8 +912,48 @@
                                     }
                                 }
 
-                                // For projections: If a territory has collections on June 1st but projection is on May 31st:
-                                if (migrated && data.projections) {
+                                // 2. Migrate existing collections saved on June 1st/2nd physically without active_month
+                                if (data.collections) {
+                                    for (const c of data.collections) {
+                                        if (c.date.startsWith('2026-06') && !c.active_month && !c.activeMonth) {
+                                            c.active_month = '2026-05';
+                                            c.activeMonth = '2026-05';
+                                            console.log("Auto-migrating collection active_month:", c.receipt);
+                                            await fetch(`${this.apiUrl}/update`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ collection: 'collections', item: {
+                                                    id: c.id,
+                                                    active_month: '2026-05'
+                                                }})
+                                            });
+                                            migrated = true;
+                                        }
+                                    }
+                                }
+
+                                // 3. Migrate existing projections saved on June 1st/2nd physically without active_month
+                                if (data.projections) {
+                                    for (const p of data.projections) {
+                                        if (p.date.startsWith('2026-06') && !p.active_month && !p.activeMonth) {
+                                            p.active_month = '2026-05';
+                                            p.activeMonth = '2026-05';
+                                            console.log("Auto-migrating projection active_month for territory:", p.territoryId || p.territory_id);
+                                            await fetch(`${this.apiUrl}/update`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ collection: 'projections', item: {
+                                                    id: p.id,
+                                                    active_month: '2026-05'
+                                                }})
+                                            });
+                                            migrated = true;
+                                        }
+                                    }
+                                }
+
+                                // 4. If a territory has collections on June 1st but projection is on May 31st:
+                                if (data.projections && data.collections) {
                                     const activeTIds = new Set(data.collections.filter(c => c.date === '2026-06-01').map(c => c.territoryId || c.territory_id));
                                     for (const tId of activeTIds) {
                                         const projJune1 = data.projections.find(p => (p.territoryId === tId || p.territory_id === tId) && p.date === '2026-06-01');
@@ -919,7 +961,6 @@
                                             const projMay31 = data.projections.find(p => (p.territoryId === tId || p.territory_id === tId) && p.date === '2026-05-31');
                                             if (projMay31) {
                                                 console.log("Auto-migrating projection for territory:", tId);
-                                                // Create a new projection row for June 1st using May 31st values
                                                 await fetch(`${this.apiUrl}/update`, {
                                                     method: 'POST',
                                                     headers: { 'Content-Type': 'application/json' },
@@ -933,6 +974,7 @@
                                                         active_month: '2026-05'
                                                     }})
                                                 });
+                                                migrated = true;
                                             }
                                         }
                                     }
@@ -940,7 +982,6 @@
 
                                 if (migrated) {
                                     console.log("Auto-migration complete. Refreshing UI cache...");
-                                    // Refresh cache in-memory and trigger dashboard rerenders
                                     const refreshRes = await fetch(`${this.apiUrl}/db`);
                                     const refreshData = await refreshRes.json();
                                     ['users', 'targets', 'projections', 'collections', 'offroad_vehicles', 'settlements', 'vehicle_performance'].forEach(collection => {
