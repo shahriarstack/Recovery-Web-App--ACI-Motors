@@ -16,10 +16,12 @@ function jsonResponse(data, status = 200) {
     });
 }
 
+// Global connection pool that is reused across requests
+let globalPool;
 let isDbInitialized = false;
 
 export async function onRequest(context) {
-    const { request, env, waitUntil } = context;
+    const { request, env } = context;
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -32,19 +34,24 @@ export async function onRequest(context) {
         return new Response(null, { headers: corsHeaders });
     }
     
-    if (!env.DATABASE_URL) {
-        return jsonResponse({ error: "DATABASE_URL environment variable is missing in Cloudflare Pages." }, 500);
-    }
-
-    // CRITICAL FIX: In Cloudflare Workers, maintaining a persistent Pool across requests leads to frozen WebSockets when the isolate is suspended.
-    // We must create a new Pool per request and close it after the response is sent.
-    const pool = new Pool({ 
-        connectionString: env.DATABASE_URL,
-        connectionTimeoutMillis: 10000,
-        idleTimeoutMillis: 30000,
-    });
-    
     try {
+        if (!env.DATABASE_URL) {
+            throw new Error("DATABASE_URL environment variable is missing in Cloudflare Pages.");
+        }
+
+        // Only create the pool once, then reuse it for all future requests
+        if (!globalPool) {
+            globalPool = new Pool({ 
+                connectionString: env.DATABASE_URL,
+                connectionTimeoutMillis: 30000,
+                idleTimeoutMillis: 5000,
+            });
+            globalPool.on('error', (err) => {
+                console.error('Unexpected error on idle client', err);
+            });
+        }
+        const pool = globalPool;
+
         // Auto-initialize system_settings table if it doesn't exist
         if (!isDbInitialized) {
             await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error("Table Init Error:", err));
@@ -160,6 +167,8 @@ export async function onRequest(context) {
                 await client.query("DELETE FROM users WHERE role = 'officer'");
                 for (const u of users) {
                     if (u.role === 'officer') {
+                        // Use a subquery for territory_id to ensure it exists in territories table, otherwise insert NULL
+                        // to avoid foreign key constraint violation.
                         await client.query(`
                             INSERT INTO users (username, officer_name, role, password, territory_id) 
                             VALUES ($1, $2, $3, $4, (SELECT id FROM territories WHERE id = $5))
@@ -220,9 +229,5 @@ export async function onRequest(context) {
     } catch (error) {
         console.error('API Error:', error);
         return jsonResponse({ error: error.message }, 500);
-    } finally {
-        // Ensure the pool is closed in the background after the response is sent.
-        // This prevents frozen WebSockets on subsequent requests.
-        waitUntil(pool.end());
     }
 }
