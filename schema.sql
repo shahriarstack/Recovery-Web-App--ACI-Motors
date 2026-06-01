@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS projections (
     advance_amount DECIMAL(15, 2) DEFAULT 0,
     amount DECIMAL(15, 2) DEFAULT 0,
     file_count INT DEFAULT 0,
+    active_month VARCHAR(7),
     UNIQUE(territory_id, date)
 );
 
@@ -64,7 +65,8 @@ CREATE TABLE IF NOT EXISTS collections (
     advance_amount DECIMAL(15, 2) DEFAULT 0,
     mode VARCHAR(50),
     is_lm_np BOOLEAN DEFAULT FALSE,
-    timestamp BIGINT
+    timestamp BIGINT,
+    active_month VARCHAR(7)
 );
 
 -- Offroad Vehicles Monitor table
