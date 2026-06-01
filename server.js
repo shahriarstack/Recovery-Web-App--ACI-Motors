@@ -25,6 +25,7 @@ pool.query('ALTER TABLE users ALTER COLUMN territory_id TYPE VARCHAR(1000)').cat
 pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error(err));
 pool.query('ALTER TABLE collections ADD COLUMN IF NOT EXISTS active_month VARCHAR(7)').catch(err => console.error("Migration Error collections active_month:", err));
 pool.query('ALTER TABLE projections ADD COLUMN IF NOT EXISTS active_month VARCHAR(7)').catch(err => console.error("Migration Error projections active_month:", err));
+pool.query('ALTER TABLE projections ADD COLUMN IF NOT EXISTS timestamp BIGINT').catch(err => console.error("Migration Error projections timestamp:", err));
 
 // GET complete database state (mirrors Store.get())
 app.get('/api/db', async (req, res) => {
