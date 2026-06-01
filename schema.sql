@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS projections (
     amount DECIMAL(15, 2) DEFAULT 0,
     file_count INT DEFAULT 0,
     active_month VARCHAR(7),
+    timestamp BIGINT,
     UNIQUE(territory_id, date)
 );
 
