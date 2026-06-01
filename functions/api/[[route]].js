@@ -41,7 +41,14 @@ export async function onRequest(context) {
 
         // Only create the pool once, then reuse it for all future requests
         if (!globalPool) {
-            globalPool = new Pool({ connectionString: env.DATABASE_URL });
+            globalPool = new Pool({ 
+                connectionString: env.DATABASE_URL,
+                connectionTimeoutMillis: 10000,
+                idleTimeoutMillis: 30000,
+            });
+            globalPool.on('error', (err) => {
+                console.error('Unexpected error on idle client', err);
+            });
         }
         const pool = globalPool;
 
