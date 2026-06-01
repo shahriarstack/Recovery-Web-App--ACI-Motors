@@ -55,6 +55,8 @@ export async function onRequest(context) {
         // Auto-initialize system_settings table if it doesn't exist
         if (!isDbInitialized) {
             await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error("Table Init Error:", err));
+            await pool.query('ALTER TABLE collections ADD COLUMN IF NOT EXISTS active_month VARCHAR(7)').catch(err => console.error("Migration Error collections active_month:", err));
+            await pool.query('ALTER TABLE projections ADD COLUMN IF NOT EXISTS active_month VARCHAR(7)').catch(err => console.error("Migration Error projections active_month:", err));
             isDbInitialized = true;
         }
         
