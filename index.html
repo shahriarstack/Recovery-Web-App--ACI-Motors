@@ -787,15 +787,24 @@
             getLocalDate(d) {
                 const db = Store.cache;
                 let cutoffHours = 0;
+                let activeMonth = null;
                 if (db && db.system_settings) {
                     const setting = db.system_settings.find(s => s.key === 'cutoff_extension_hours');
                     if (setting) cutoffHours = parseFloat(setting.value) || 0;
+                    const am = db.system_settings.find(s => s.key === 'active_month');
+                    if (am && am.value) activeMonth = am.value;
                 }
 
                 if (!d) {
                     const now = new Date();
                     now.setHours(now.getHours() - cutoffHours);
-                    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                    const localStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                    if (activeMonth && localStr.slice(0, 7) > activeMonth) {
+                        const [year, month] = activeMonth.split('-');
+                        const lastDay = new Date(year, month, 0);
+                        return new Date(lastDay.getTime() - lastDay.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                    }
+                    return localStr;
                 } else {
                     return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
                 }
@@ -807,6 +816,13 @@
                     if (setting && setting.value) return setting.value;
                 }
                 return this.getLocalDate().slice(0, 7);
+            },
+            getMonthBounds() {
+                const activeMonth = this.getActiveMonth();
+                const [year, month] = activeMonth.split('-');
+                const lastDay = new Date(year, month, 0);
+                const lastDayStr = new Date(lastDay.getTime() - lastDay.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                return { startOfMonth: `${activeMonth}-01`, endOfMonth: lastDayStr };
             }
         };
 
@@ -3940,9 +3956,7 @@
             },
 
             renderAdminHistory() {
-                const today = new Date();
-                const startOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth(), 1));
-                const endOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+                const { startOfMonth, endOfMonth } = Utils.getMonthBounds();
 
                 document.getElementById('views-container').innerHTML = `
             <div class="animate-entry max-w-6xl mx-auto" >
@@ -6009,10 +6023,8 @@
 
             // --- HISTORY ---
             renderOfficerHistory() {
-                const today = new Date();
-                // Default to current month
-                const startOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth(), 1));
-                const endOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+                // Default to active month boundaries
+                const { startOfMonth, endOfMonth } = Utils.getMonthBounds();
 
                 document.getElementById('views-container').innerHTML = `
             <div class="animate-entry max-w-5xl mx-auto" >
