@@ -982,12 +982,13 @@
         const Calc = {
             getMetrics(territoryId = null) {
                 const db = Store.get();
-                const today = new Date();
-                const todayStr = Utils.getLocalDate(today);
+                const todayStr = Utils.getLocalDate();
                 const currentMonth = Utils.getActiveMonth();
-                const yesterday = new Date(today);
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = Utils.getLocalDate(yesterday);
+                const todayParts = todayStr.split('-');
+                const todayDateObj = new Date(parseInt(todayParts[0]), parseInt(todayParts[1]) - 1, parseInt(todayParts[2]));
+                const yesterdayDateObj = new Date(todayDateObj);
+                yesterdayDateObj.setDate(yesterdayDateObj.getDate() - 1);
+                const yesterdayStr = Utils.getLocalDate(yesterdayDateObj);
 
                 let collections = db.collections.filter(c => c.date.startsWith(currentMonth));
                 let targets = db.targets.filter(t => t.month === currentMonth);
@@ -1058,7 +1059,7 @@
                     projAcc = 100;
                 }
 
-                const now = new Date();
+                const now = todayDateObj;
                 const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
                 const dayOfMonth = now.getDate();
                 const remainingAmt = Math.max(0, presetProjTotal - mtdColl);
@@ -5147,7 +5148,9 @@
                 sums.todayAch = sums.todayProj > 0 ? ((sums.todayColl / sums.todayProj) * 100).toFixed(1) : (sums.todayColl > 0 ? '100+' : '0.0');
                 sums.lmNpRecPct = sums.lmNpTargetAmt > 0 ? ((sums.mtdLmNpColl / sums.lmNpTargetAmt) * 100).toFixed(1) : '0.0';
 
-                const now = new Date();
+                const todayStr = Utils.getLocalDate();
+                const todayParts = todayStr.split('-');
+                const now = new Date(parseInt(todayParts[0]), parseInt(todayParts[1]) - 1, parseInt(todayParts[2]));
                 const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
                 const remainingAmt = Math.max(0, sums.presetProjTotal - sums.mtdColl);
                 const daysLeft = daysInMonth - now.getDate();
@@ -6300,7 +6303,9 @@
 
             getDailyTrendData(tId) {
                 const db = Store.get();
-                const today = new Date();
+                const todayStr = Utils.getLocalDate();
+                const todayParts = todayStr.split('-');
+                const today = new Date(parseInt(todayParts[0]), parseInt(todayParts[1]) - 1, parseInt(todayParts[2]));
                 const labels = [];
                 const data = [];
                 for (let i = 6; i >= 0; i--) {
@@ -6308,7 +6313,7 @@
                     d.setDate(today.getDate() - i);
                     const dateStr = Utils.getLocalDate(d);
                     labels.push(dateStr.slice(5));
-                    const sum = db.collections.filter(c => c.territoryId === tId && c.date === dateStr).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+                    const sum = db.collections.filter(c => (c.territoryId === tId || c.territory_id === tId) && c.date === dateStr).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
                     data.push(sum);
                 }
                 return { labels, data };
