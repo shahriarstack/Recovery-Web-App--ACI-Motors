@@ -1238,6 +1238,77 @@
                 if (score >= 90) return 'bg-green-100 dark:bg-green-900/30 border-green-200';
                 if (score >= 70) return 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200';
                 return 'bg-red-100 dark:bg-red-900/30 border-red-200';
+            },
+
+            getAppUsePercentage(territoryId) {
+                if (!territoryId) return 0;
+                
+                const db = Store.get();
+                if (!db || !db.projections || !db.collections) return 0;
+                
+                const activeMonth = Utils.getActiveMonth();
+                const bounds = Utils.getMonthBounds();
+                const startOfMonth = bounds.startOfMonth;
+                const endOfMonth = bounds.endOfMonth;
+                const today = Utils.getLocalDate();
+                
+                const calcEndDate = (today < startOfMonth) ? startOfMonth : (today > endOfMonth ? endOfMonth : today);
+                
+                const dates = [];
+                const [year, month] = activeMonth.split('-').map(Number);
+                const [endYear, endMonth, endDay] = calcEndDate.split('-').map(Number);
+                let curr = new Date(year, month - 1, 1);
+                const endD = new Date(endYear, endMonth - 1, endDay);
+                while (curr <= endD) {
+                    const yStr = curr.getFullYear();
+                    const mStr = String(curr.getMonth() + 1).padStart(2, '0');
+                    const dStr = String(curr.getDate()).padStart(2, '0');
+                    dates.push(`${yStr}-${mStr}-${dStr}`);
+                    curr.setDate(curr.getDate() + 1);
+                }
+                
+                if (dates.length === 0) return 100;
+                
+                const ids = String(territoryId).split(',').filter(Boolean);
+                const territoryProjs = db.projections.filter(p => ids.includes(p.territoryId || p.territory_id) && (p.activeMonth || p.active_month) === activeMonth);
+                const territoryColls = db.collections.filter(c => ids.includes(c.territoryId || c.territory_id) && (c.activeMonth || c.active_month) === activeMonth);
+                
+                let totalScore = 0;
+                
+                dates.forEach(d => {
+                    const projs = territoryProjs.filter(p => p.date === d);
+                    const hasColl = territoryColls.some(c => c.date === d);
+                    
+                    let dayScore = 0;
+                    if (projs.length > 0) {
+                        dayScore += 40;
+                        
+                        let isOnTime = false;
+                        for (const proj of projs) {
+                            if (proj.timestamp) {
+                                const pTime = new Date(Number(proj.timestamp));
+                                if (pTime.getHours() < 10) {
+                                    isOnTime = true;
+                                    break;
+                                }
+                            } else {
+                                isOnTime = true;
+                                break;
+                            }
+                        }
+                        if (isOnTime) {
+                            dayScore += 20;
+                        }
+                    }
+                    
+                    if (hasColl) {
+                        dayScore += 40;
+                    }
+                    
+                    totalScore += dayScore;
+                });
+                
+                return Number((totalScore / dates.length).toFixed(1));
             }
         };
 
@@ -2839,7 +2910,8 @@
                     // Calculate Last Day Achievement for the new column
                     const ldAch = m.yestProjAmt > 0 ? ((m.yestCollAmt / m.yestProjAmt) * 100).toFixed(1) : '0.0';
                     const tdAch = m.todayProj > 0 ? ((m.todayColl / m.todayProj) * 100).toFixed(1) : (m.todayColl > 0 ? '100+' : '0.0');
-                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch };
+                    const appUsePct = Calc.getAppUsePercentage(t.id);
+                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch, appUsePct };
                 });
 
                 // Helper to calculate totals
@@ -2850,7 +2922,7 @@
                         presetProjReg: 0, presetProjAdv: 0, presetProjTotal: 0,
                         yestProjAmt: 0, yestProjFiles: 0, yestCollAmt: 0, yestCollFiles: 0,
                         lmNpTargetAmt: 0, lmNpTargetFiles: 0, mtdLmNpColl: 0, mtdLmNpFiles: 0,
-                        todayProj: 0, todayColl: 0
+                        todayProj: 0, todayColl: 0, appUsePct: 0
                     };
 
                     data.forEach(t => {
@@ -2900,6 +2972,9 @@
 
                     // Weighted RPI for Group
                     sums.rpi = ((parseFloat(sums.achievement) * 0.4) + (projAcc * 0.2) + (lmNpRecPct * 0.2) + (cureRate * 0.2)).toFixed(1);
+                    
+                    // App Use Group Average
+                    sums.appUsePct = data.length > 0 ? Number((data.reduce((sum, item) => sum + (parseFloat(item.appUsePct) || 0), 0) / data.length).toFixed(1)) : 0;
 
                     return sums;
                 };
@@ -2981,6 +3056,16 @@
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center ${!isTotal ? 'text-rose-800 bg-rose-50 dark:bg-rose-900/20' : ''}">${t.lmNpTargetFiles}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-rose-600' : ''}">${parseInt(t.mtdLmNpColl).toLocaleString()}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center font-bold ${!isTotal ? 'text-rose-600' : ''}">${t.mtdLmNpFiles}</td>` : ''}
+                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold border-l-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black ${
+                                t.appUsePct >= 90 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+                                t.appUsePct >= 70 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
+                                'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                            }">
+                                <i class="fa-solid ${t.appUsePct >= 90 ? 'fa-circle-check' : t.appUsePct >= 70 ? 'fa-triangle-exclamation' : 'fa-circle-xmark'} mr-1 opacity-80"></i>
+                                ${t.appUsePct}%
+                            </span>
+                        </td>
                     </tr>`;
                 };
 
@@ -3307,6 +3392,7 @@
                                             ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-rose-50 dark:bg-rose-900/10">LM NP Files</th>` : ''}
                                             ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-rose-50 dark:bg-rose-900/10">LM NP Rec (Amt)</th>` : ''}
                                             ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-rose-50 dark:bg-rose-900/10">LM NP Rec (Files)</th>` : ''}
+                                            <th class="p-2 border dark:border-slate-600 bg-violet-100 dark:bg-violet-900/30 text-violet-700 font-bold border-l-2 border-slate-200 dark:border-slate-600 text-center">App Use %</th>
                                         </tr>
                                     </thead>
                                     <tbody id="ranking-table-body"></tbody>
@@ -3943,7 +4029,8 @@
                     advance_amount: 0,
                     amount: amount,
                     file_count: files,
-                    active_month: (existingProj && (existingProj.activeMonth || existingProj.active_month)) || (today === Utils.getLocalDate() ? Utils.getActiveMonth() : today.slice(0, 7))
+                    active_month: (existingProj && (existingProj.activeMonth || existingProj.active_month)) || (today === Utils.getLocalDate() ? Utils.getActiveMonth() : today.slice(0, 7)),
+                    timestamp: (existingProj && existingProj.timestamp) ? Number(existingProj.timestamp) : Date.now()
                 };
 
                 if (existingProj && existingProj.id) {
@@ -4321,11 +4408,48 @@
                 // Calculate File Touch Percentage
                 const fileTouchPct = metrics.targetFiles > 0 ? ((metrics.uniquePaidCodes / metrics.targetFiles) * 100).toFixed(1) : 0;
 
+                const appUsePct = Calc.getAppUsePercentage(linkedTId);
+
                 document.getElementById('views-container').innerHTML = `
             <div id="officer-dashboard-panel" class="animate-entry mb-4 sm:mb-6" >
-                        <div class="flex justify-between items-end mb-2">
-                            <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h2>
-                            <p class="text-xs sm:text-sm text-slate-500 font-medium">${Auth.currentUser.officerName || Auth.currentUser.username}</p>
+                        <div class="flex justify-between items-center mb-2">
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h2>
+                                <p class="text-[10px] text-slate-400">Territory: ${linkedTId}</p>
+                            </div>
+                            
+                            <!-- Premium Glassmorphic App Use Gauge -->
+                            <div class="flex items-center gap-3">
+                                <div class="hidden sm:flex flex-col items-end">
+                                    <span class="text-[9px] uppercase tracking-widest font-black text-slate-400 dark:text-slate-500">System Engagement</span>
+                                    <span class="text-xs font-bold text-slate-600 dark:text-slate-300">App Use Rating</span>
+                                </div>
+                                <div class="relative flex items-center justify-center p-2.5 rounded-2xl bg-white/40 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover-lift group">
+                                    <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr ${
+                                        appUsePct >= 90 ? 'from-emerald-500/10 to-teal-500/5' :
+                                        appUsePct >= 70 ? 'from-amber-500/10 to-orange-500/5' :
+                                        'from-rose-500/10 to-red-500/5'
+                                    } opacity-100 group-hover:scale-105 transition-transform duration-500"></div>
+                                    
+                                    <div class="flex items-center gap-2 relative z-10">
+                                        <div class="flex items-center justify-center w-8 h-8 rounded-xl ${
+                                            appUsePct >= 90 ? 'bg-emerald-500/10 text-emerald-500' :
+                                            appUsePct >= 70 ? 'bg-amber-500/10 text-amber-500' :
+                                            'bg-rose-500/10 text-rose-500'
+                                        } text-sm font-black transition-transform duration-300 group-hover:rotate-12">
+                                            <i class="fa-solid fa-gauge-high"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-[8px] uppercase tracking-widest font-black text-slate-400 leading-none mb-0.5">App Use</div>
+                                            <div class="text-sm font-black ${
+                                                appUsePct >= 90 ? 'text-emerald-500' :
+                                                appUsePct >= 70 ? 'text-amber-500' :
+                                                'text-rose-500'
+                                            } leading-none">${appUsePct}%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -5992,7 +6116,8 @@
                             advance_amount: 0,
                             amount: amount,
                             file_count: files,
-                            active_month: (existingProj && (existingProj.activeMonth || existingProj.active_month)) || (today === Utils.getLocalDate() ? Utils.getActiveMonth() : today.slice(0, 7))
+                            active_month: (existingProj && (existingProj.activeMonth || existingProj.active_month)) || (today === Utils.getLocalDate() ? Utils.getActiveMonth() : today.slice(0, 7)),
+                            timestamp: (existingProj && existingProj.timestamp) ? Number(existingProj.timestamp) : Date.now()
                         };
 
                         if (existingProj && existingProj.id) {
@@ -7598,12 +7723,14 @@
                 };
 
                 const dataId = formData.get('id');
+                const db = Store.get();
+                const existing = dataId ? db.projections.find(p => String(p.id) === String(dataId)) : db.projections.find(p => (p.territoryId === payload.territory_id || p.territory_id === payload.territory_id) && p.date === today);
+                payload.timestamp = (existing && existing.timestamp) ? Number(existing.timestamp) : Date.now();
+
                 if (dataId) {
                     payload.id = dataId;
-                    if (!payload.territory_id) {
-                        const db = Store.get();
-                        const existing = db.projections.find(p => String(p.id) === String(dataId));
-                        if (existing) payload.territory_id = existing.territoryId || existing.territory_id;
+                    if (!payload.territory_id && existing) {
+                        payload.territory_id = existing.territoryId || existing.territory_id;
                     }
                 }
 
