@@ -694,7 +694,7 @@
 
     <!-- SCRIPT SECTION -->
     <script>
-        // GLOBAL FETCH INTERCEPTOR: Permanent fix for Neon DB Serverless Cold Starts and Cloudflare Timeouts
+        // GLOBAL FETCH INTERCEPTOR: Generic Retry Mechanism
         const originalFetch = window.fetch;
         window.fetch = async function(url, options) {
             let retries = 5;
@@ -703,27 +703,21 @@
                 try {
                     const res = await originalFetch(url, options);
                     
-                    // If this is an API call, verify we actually got JSON back, not a Cloudflare 500 HTML error page
                     if (typeof url === 'string' && url.includes('/api')) {
-                        const contentType = res.headers.get("content-type");
-                        if (contentType && contentType.includes("text/html")) {
-                            throw new Error("Received HTML error page from Cloudflare. Backend might be cold-starting or timed out.");
-                        }
-                        if (res.status >= 500) {
+                        if (!res.ok) {
                             throw new Error("Server error " + res.status);
                         }
                     }
-                    return res; // Success! Return the response to the caller
+                    return res;
                 } catch (err) {
                     lastError = err;
                     console.warn(`Fetch attempt ${i + 1} failed for ${url}:`, err.message);
                     if (i < retries - 1) {
-                        // Exponential backoff: Wait 1s, 2s, 4s, 8s before retrying
                         await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
                     }
                 }
             }
-            throw lastError; // Exhausted all retries, bubble the error up
+            throw lastError;
         };
 
         window.filterPerformanceAnalytics = function() {
