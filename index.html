@@ -876,6 +876,92 @@
                     });
 
                     this.cache = data;
+
+                    // Auto-migration for entries submitted today physically but saved as May 31st under old date-capping rules:
+                    (async () => {
+                        try {
+                            const activeMonth = data.system_settings?.find(s => s.key === 'active_month')?.value;
+                            if (activeMonth === '2026-05') {
+                                // Today is June 1st physically, which starts at 1780250400000 ms local epoch
+                                const startOfTodayLocal = new Date();
+                                startOfTodayLocal.setHours(0,0,0,0);
+                                const startOfTodayTimestamp = startOfTodayLocal.getTime();
+
+                                // Find any collection submitted physically today that got saved as 2026-05-31
+                                let migrated = false;
+                                if (data.collections) {
+                                    for (const c of data.collections) {
+                                        if (c.timestamp >= startOfTodayTimestamp && c.date === '2026-05-31') {
+                                            c.date = '2026-06-01';
+                                            c.active_month = '2026-05';
+                                            c.activeMonth = '2026-05';
+                                            console.log("Auto-migrating collection:", c.receipt);
+                                            await fetch(`${this.apiUrl}/update`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ collection: 'collections', item: {
+                                                    id: c.id,
+                                                    date: '2026-06-01',
+                                                    active_month: '2026-05'
+                                                }})
+                                            });
+                                            migrated = true;
+                                        }
+                                    }
+                                }
+
+                                // For projections: If a territory has collections on June 1st but projection is on May 31st:
+                                if (migrated && data.projections) {
+                                    const activeTIds = new Set(data.collections.filter(c => c.date === '2026-06-01').map(c => c.territoryId || c.territory_id));
+                                    for (const tId of activeTIds) {
+                                        const projJune1 = data.projections.find(p => (p.territoryId === tId || p.territory_id === tId) && p.date === '2026-06-01');
+                                        if (!projJune1) {
+                                            const projMay31 = data.projections.find(p => (p.territoryId === tId || p.territory_id === tId) && p.date === '2026-05-31');
+                                            if (projMay31) {
+                                                console.log("Auto-migrating projection for territory:", tId);
+                                                // Create a new projection row for June 1st using May 31st values
+                                                await fetch(`${this.apiUrl}/update`, {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ collection: 'projections', item: {
+                                                        territory_id: tId,
+                                                        date: '2026-06-01',
+                                                        regular_amount: projMay31.regularAmount || projMay31.amount || 0,
+                                                        advance_amount: projMay31.advanceAmount || 0,
+                                                        amount: projMay31.amount || 0,
+                                                        file_count: projMay31.fileCount || 0,
+                                                        active_month: '2026-05'
+                                                    }})
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (migrated) {
+                                    console.log("Auto-migration complete. Refreshing UI cache...");
+                                    // Refresh cache in-memory and trigger dashboard rerenders
+                                    const refreshRes = await fetch(`${this.apiUrl}/db`);
+                                    const refreshData = await refreshRes.json();
+                                    ['users', 'targets', 'projections', 'collections', 'offroad_vehicles', 'settlements', 'vehicle_performance'].forEach(collection => {
+                                        if (refreshData[collection]) this.convertKeys(refreshData[collection]);
+                                    });
+                                    this.cache = refreshData;
+                                    
+                                    setTimeout(() => {
+                                        if (document.getElementById('officer-dashboard-panel')) {
+                                            UI.renderOfficerDashboard();
+                                        } else if (document.getElementById('views-container').innerHTML.includes('Admin Intelligence Dashboard')) {
+                                            UI.renderAdminDashboard();
+                                        }
+                                    }, 100);
+                                }
+                            }
+                        } catch (err) {
+                            console.error("Auto-migration error:", err);
+                        }
+                    })();
+
                     return data;
                 } catch (err) {
                     console.error("Failed to connect to Backend:", err);
