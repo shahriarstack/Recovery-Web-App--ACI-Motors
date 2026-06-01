@@ -787,24 +787,15 @@
             getLocalDate(d) {
                 const db = Store.cache;
                 let cutoffHours = 0;
-                let activeMonth = null;
                 if (db && db.system_settings) {
                     const setting = db.system_settings.find(s => s.key === 'cutoff_extension_hours');
                     if (setting) cutoffHours = parseFloat(setting.value) || 0;
-                    const am = db.system_settings.find(s => s.key === 'active_month');
-                    if (am && am.value) activeMonth = am.value;
                 }
 
                 if (!d) {
                     const now = new Date();
                     now.setHours(now.getHours() - cutoffHours);
-                    const localStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-                    if (activeMonth && localStr.slice(0, 7) > activeMonth) {
-                        const [year, month] = activeMonth.split('-');
-                        const lastDay = new Date(year, month, 0);
-                        return new Date(lastDay.getTime() - lastDay.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-                    }
-                    return localStr;
+                    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
                 } else {
                     return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
                 }
@@ -822,7 +813,14 @@
                 const [year, month] = activeMonth.split('-');
                 const lastDay = new Date(year, month, 0);
                 const lastDayStr = new Date(lastDay.getTime() - lastDay.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-                return { startOfMonth: `${activeMonth}-01`, endOfMonth: lastDayStr };
+                
+                // UX Optimization: If physically in next month but active month hasn't changed (extended month),
+                // dynamically extend the endOfMonth boundary to today's date so collections display in history forms.
+                const realToday = new Date();
+                const realTodayStr = new Date(realToday.getTime() - realToday.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                const end = realTodayStr > lastDayStr && realTodayStr.startsWith(activeMonth.slice(0, 4)) ? realTodayStr : lastDayStr;
+                
+                return { startOfMonth: `${activeMonth}-01`, endOfMonth: end };
             }
         };
 
@@ -990,9 +988,9 @@
                 yesterdayDateObj.setDate(yesterdayDateObj.getDate() - 1);
                 const yesterdayStr = Utils.getLocalDate(yesterdayDateObj);
 
-                let collections = db.collections.filter(c => c.date.startsWith(currentMonth));
+                let collections = db.collections.filter(c => (c.activeMonth || c.active_month || c.date.slice(0, 7)) === currentMonth);
                 let targets = db.targets.filter(t => t.month === currentMonth);
-                let projections = db.projections.filter(p => p.date.startsWith(currentMonth));
+                let projections = db.projections.filter(p => (p.activeMonth || p.active_month || p.date.slice(0, 7)) === currentMonth);
 
                 if (territoryId) {
                     if (Array.isArray(territoryId)) {
@@ -1059,11 +1057,24 @@
                     projAcc = 100;
                 }
 
-                const now = todayDateObj;
-                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-                const dayOfMonth = now.getDate();
+                // Rigorous Days Left & Run Rate math for both standard and extended months
+                const [activeYear, activeMonthNum] = currentMonth.split('-').map(Number);
+                const realToday = new Date();
+                const realTodayStr = new Date(realToday.getTime() - realToday.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                
+                let daysLeft = 0;
+                if (realTodayStr.slice(0, 7) === currentMonth) {
+                    const daysInMonth = new Date(activeYear, activeMonthNum, 0).getDate();
+                    const dayOfMonth = todayDateObj.getDate();
+                    daysLeft = daysInMonth - dayOfMonth;
+                } else if (realTodayStr.slice(0, 7) < currentMonth) {
+                    const daysInMonth = new Date(activeYear, activeMonthNum, 0).getDate();
+                    daysLeft = daysInMonth;
+                } else {
+                    daysLeft = 0; // Exceeded the active month, treat as final/extended days
+                }
+
                 const remainingAmt = Math.max(0, presetProjTotal - mtdColl);
-                const daysLeft = daysInMonth - dayOfMonth;
                 const rdrr = daysLeft > 0 ? remainingAmt / daysLeft : remainingAmt;
 
                 const rpi = (achievement * 0.4) + (projAcc * 0.2) + (lmNpRecPct * 0.2) + (cureRate * 0.2);
@@ -2852,7 +2863,7 @@
                 const today = new Date();
 
                 const modes = ['Bank Transfer', 'bKash', 'Cheque', 'Cash'];
-                const modeData = modes.map(m => db.collections.filter(c => c.date.startsWith(Utils.getActiveMonth()) && c.mode === m).reduce((s, c) => s + parseFloat(c.amount), 0));
+                const modeData = modes.map(m => db.collections.filter(c => (c.activeMonth || c.active_month || c.date.slice(0, 7)) === Utils.getActiveMonth() && c.mode === m).reduce((s, c) => s + parseFloat(c.amount), 0));
 
                 const container = document.getElementById('views-container');
                 const isCompact = tableMode === 'compact';
@@ -3801,7 +3812,8 @@
                     regular_amount: amount,
                     advance_amount: 0,
                     amount: amount,
-                    file_count: files
+                    file_count: files,
+                    active_month: (existingProj && (existingProj.activeMonth || existingProj.active_month)) || (today === Utils.getLocalDate() ? Utils.getActiveMonth() : today.slice(0, 7))
                 };
 
                 if (existingProj && existingProj.id) {
@@ -5148,12 +5160,27 @@
                 sums.todayAch = sums.todayProj > 0 ? ((sums.todayColl / sums.todayProj) * 100).toFixed(1) : (sums.todayColl > 0 ? '100+' : '0.0');
                 sums.lmNpRecPct = sums.lmNpTargetAmt > 0 ? ((sums.mtdLmNpColl / sums.lmNpTargetAmt) * 100).toFixed(1) : '0.0';
 
+                // Rigorous Days Left & Run Rate math for both standard and extended months
                 const todayStr = Utils.getLocalDate();
                 const todayParts = todayStr.split('-');
-                const now = new Date(parseInt(todayParts[0]), parseInt(todayParts[1]) - 1, parseInt(todayParts[2]));
-                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                const todayDateObj = new Date(parseInt(todayParts[0]), parseInt(todayParts[1]) - 1, parseInt(todayParts[2]));
+                const [activeYear, activeMonthNum] = currentMonth.split('-').map(Number);
+                const realToday = new Date();
+                const realTodayStr = new Date(realToday.getTime() - realToday.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                
+                let daysLeft = 0;
+                if (realTodayStr.slice(0, 7) === currentMonth) {
+                    const daysInMonth = new Date(activeYear, activeMonthNum, 0).getDate();
+                    const dayOfMonth = todayDateObj.getDate();
+                    daysLeft = daysInMonth - dayOfMonth;
+                } else if (realTodayStr.slice(0, 7) < currentMonth) {
+                    const daysInMonth = new Date(activeYear, activeMonthNum, 0).getDate();
+                    daysLeft = daysInMonth;
+                } else {
+                    daysLeft = 0; // Exceeded the active month, treat as final/extended days
+                }
+
                 const remainingAmt = Math.max(0, sums.presetProjTotal - sums.mtdColl);
-                const daysLeft = daysInMonth - now.getDate();
                 sums.rdrr = daysLeft > 0 ? remainingAmt / daysLeft : remainingAmt;
                 sums.remainingAmt = remainingAmt;
 
@@ -5834,7 +5861,8 @@
                             regular_amount: amount,
                             advance_amount: 0,
                             amount: amount,
-                            file_count: files
+                            file_count: files,
+                            active_month: (existingProj && (existingProj.activeMonth || existingProj.active_month)) || (today === Utils.getLocalDate() ? Utils.getActiveMonth() : today.slice(0, 7))
                         };
 
                         if (existingProj && existingProj.id) {
@@ -5897,7 +5925,8 @@
                             advance_amount: advAmt,
                             mode: document.getElementById('coll-mode').value,
                             is_lm_np: document.getElementById('coll-lmnp').checked,
-                            timestamp: Date.now()
+                            timestamp: Date.now(),
+                            active_month: (todayStr === Utils.getLocalDate() ? Utils.getActiveMonth() : todayStr.slice(0, 7))
                         };
 
                         await Store.update('collections', entry);
@@ -7162,7 +7191,8 @@
                     amount: reg + adv,
                     mode: formData.get('mode'),
                     is_lm_np: formData.get('isLmNp') === 'true',
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    active_month: (formData.get('date') === Utils.getLocalDate() ? Utils.getActiveMonth() : formData.get('date').slice(0, 7))
                 };
 
                 const existingId = formData.get('id');
@@ -7426,13 +7456,15 @@
                     adv = 0;
                 }
 
+                const today = Utils.getLocalDate();
                 const payload = {
                     territory_id: formData.get('territoryId'),
                     regular_amount: reg,
                     advance_amount: adv,
                     amount: total,
                     file_count: parseInt(formData.get('fileCount')) || 0,
-                    date: Utils.getLocalDate()
+                    date: today,
+                    active_month: Utils.getActiveMonth()
                 };
 
                 const dataId = formData.get('id');
