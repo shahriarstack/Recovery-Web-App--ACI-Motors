@@ -1322,6 +1322,143 @@
                 });
                 
                 return Number((totalScore / dates.length).toFixed(1));
+            },
+
+            getAppUseTooltipHtml(territoryId) {
+                if (!territoryId) return '';
+                
+                const db = Store.get();
+                if (!db || !db.projections || !db.collections) return '';
+                
+                const activeMonth = Utils.getActiveMonth();
+                const bounds = Utils.getMonthBounds();
+                const startOfMonth = bounds.startOfMonth;
+                const endOfMonth = bounds.endOfMonth;
+                const today = Utils.getLocalDate();
+                
+                const calcEndDate = (today < startOfMonth) ? startOfMonth : (today > endOfMonth ? endOfMonth : today);
+                
+                const dates = [];
+                const [year, month] = activeMonth.split('-').map(Number);
+                const [endYear, endMonth, endDay] = calcEndDate.split('-').map(Number);
+                let curr = new Date(year, month - 1, 1);
+                const endD = new Date(endYear, endMonth - 1, endDay);
+                while (curr <= endD) {
+                    const yStr = curr.getFullYear();
+                    const mStr = String(curr.getMonth() + 1).padStart(2, '0');
+                    const dStr = String(curr.getDate()).padStart(2, '0');
+                    dates.push(`${yStr}-${mStr}-${dStr}`);
+                    curr.setDate(curr.getDate() + 1);
+                }
+                
+                if (dates.length === 0) return '';
+                
+                const ids = String(territoryId).split(',').filter(Boolean);
+                const territoryProjs = db.projections.filter(p => ids.includes(p.territoryId || p.territory_id) && (p.activeMonth || p.active_month) === activeMonth);
+                const territoryColls = db.collections.filter(c => ids.includes(c.territoryId || c.territory_id) && (c.activeMonth || c.active_month) === activeMonth);
+                
+                let dayDetails = [];
+                let projCount = 0;
+                let onTimeCount = 0;
+                let collCount = 0;
+                let totalScore = 0;
+                
+                dates.forEach(d => {
+                    const projs = territoryProjs.filter(p => p.date === d);
+                    const hasColl = territoryColls.some(c => c.date === d);
+                    
+                    let dayScore = 0;
+                    let hasProj = projs.length > 0;
+                    let isOnTime = false;
+                    
+                    if (hasProj) {
+                        dayScore += 40;
+                        projCount++;
+                        
+                        for (const proj of projs) {
+                            if (proj.timestamp) {
+                                const pTime = new Date(Number(proj.timestamp));
+                                if (pTime.getHours() < 10) {
+                                    isOnTime = true;
+                                    break;
+                                }
+                            } else {
+                                isOnTime = true;
+                                break;
+                            }
+                        }
+                        if (isOnTime) {
+                            dayScore += 20;
+                            onTimeCount++;
+                        }
+                    }
+                    
+                    if (hasColl) {
+                        dayScore += 40;
+                        collCount++;
+                    }
+                    
+                    totalScore += dayScore;
+                    
+                    dayDetails.push({
+                        date: d.split('-')[2],
+                        fullDate: d,
+                        score: dayScore,
+                        hasProj,
+                        isOnTime,
+                        hasColl
+                    });
+                });
+                
+                const appUsePct = Number((totalScore / dates.length).toFixed(1));
+                const recentDays = dayDetails.slice(-15).reverse();
+                
+                let daysHtml = recentDays.map(day => {
+                    let dotColor = 'bg-rose-500';
+                    let statusText = 'Missed';
+                    if (day.score >= 90) {
+                        dotColor = 'bg-emerald-500';
+                        statusText = 'Perfect (100)';
+                    } else if (day.score > 0) {
+                        dotColor = 'bg-amber-500';
+                        statusText = `Partial (${day.score})`;
+                    }
+                    
+                    return `
+                        <div class="flex items-center justify-between text-[10px] py-1 border-b border-slate-800 last:border-0">
+                            <span class="text-slate-400 font-medium">Day ${parseInt(day.date)}:</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="px-1 py-0.2 rounded bg-slate-800 text-slate-300 font-black text-[9px]">
+                                    Proj: ${day.hasProj ? (day.isOnTime ? '🌅 On-Time' : '✅ Yes') : '❌ No'}
+                                </span>
+                                <span class="px-1 py-0.2 rounded bg-slate-800 text-slate-300 font-black text-[9px]">
+                                    Coll: ${day.hasColl ? '✅ Yes' : '❌ No'}
+                                </span>
+                                <span class="h-2 w-2 rounded-full ${dotColor}" title="${statusText}"></span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                return `
+                    <div class="absolute right-0 bottom-full mb-2 w-64 p-3 rounded-2xl bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl border border-slate-700/50 shadow-2xl text-left text-slate-200 pointer-events-none opacity-0 scale-95 translate-y-2 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-y-0 transition-all duration-200 z-50 origin-bottom-right">
+                        <div class="font-black text-[10px] uppercase text-slate-400 tracking-wider mb-2 flex justify-between items-center">
+                            <span>App Engagement</span>
+                            <span class="${appUsePct >= 90 ? 'text-emerald-400' : appUsePct >= 70 ? 'text-amber-400' : 'text-rose-400'}">${appUsePct}%</span>
+                        </div>
+                        <div class="text-[9px] text-slate-500 mb-2 leading-tight">
+                            Factors: Proj (40%) + On-time Proj before 10 AM (20%) + Coll (40%). Averaged cumulative day-by-day.
+                        </div>
+                        <div class="space-y-0.5 max-h-40 overflow-y-auto pr-1">
+                            ${daysHtml}
+                        </div>
+                        <div class="mt-2 pt-2 border-t border-slate-800 text-[9px] text-slate-400 flex justify-between font-bold">
+                            <span>Proj: ${projCount}/${dates.length}d</span>
+                            <span>On-Time: ${onTimeCount}/${projCount || 0}</span>
+                            <span>Coll: ${collCount}/${dates.length}d</span>
+                        </div>
+                    </div>
+                `;
             }
         };
 
@@ -3069,15 +3206,16 @@
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center ${!isTotal ? 'text-rose-800 bg-rose-50 dark:bg-rose-900/20' : ''}">${t.lmNpTargetFiles}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-rose-600' : ''}">${parseInt(t.mtdLmNpColl).toLocaleString()}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center font-bold ${!isTotal ? 'text-rose-600' : ''}">${t.mtdLmNpFiles}</td>` : ''}
-                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold border-l-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40">
+                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold border-l-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40 relative group">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black ${
                                 t.appUsePct >= 90 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
                                 t.appUsePct >= 70 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
                                 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                            }">
+                            } cursor-help">
                                 <i class="fa-solid ${t.appUsePct >= 90 ? 'fa-circle-check' : t.appUsePct >= 70 ? 'fa-triangle-exclamation' : 'fa-circle-xmark'} mr-1 opacity-80"></i>
                                 ${t.appUsePct}%
                             </span>
+                            ${!isTotal ? Calc.getAppUseTooltipHtml(t.id) : ''}
                         </td>
                     </tr>`;
                 };
@@ -4437,7 +4575,7 @@
                                     <span class="text-[9px] uppercase tracking-widest font-black text-slate-400 dark:text-slate-500">System Engagement</span>
                                     <span class="text-xs font-bold text-slate-600 dark:text-slate-300">App Use Rating</span>
                                 </div>
-                                <div class="relative flex items-center justify-center p-2.5 rounded-2xl bg-white/40 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover-lift group">
+                                <div class="relative flex items-center justify-center p-2.5 rounded-2xl bg-white/40 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover-lift group cursor-help">
                                     <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr ${
                                         appUsePct >= 90 ? 'from-emerald-500/10 to-teal-500/5' :
                                         appUsePct >= 70 ? 'from-amber-500/10 to-orange-500/5' :
@@ -4461,6 +4599,7 @@
                                             } leading-none">${appUsePct}%</div>
                                         </div>
                                     </div>
+                                    ${Calc.getAppUseTooltipHtml(linkedTId)}
                                 </div>
                             </div>
                         </div>
