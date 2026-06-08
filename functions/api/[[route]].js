@@ -16,11 +16,12 @@ function jsonResponse(data, status = 200) {
     });
 }
 
-// Global connection flag
+// Global connection pool that is reused across requests
+let globalPool;
 let isDbInitialized = false;
 
 export async function onRequest(context) {
-    const { request, env, waitUntil } = context;
+    const { request, env } = context;
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -33,17 +34,30 @@ export async function onRequest(context) {
         return new Response(null, { headers: corsHeaders });
     }
     
-    if (!env.DATABASE_URL) {
-        return jsonResponse({ error: "DATABASE_URL environment variable is missing in Cloudflare Pages." }, 500);
-    }
-
-    // Create a new pool strictly for this request
-    const pool = new Pool({ connectionString: env.DATABASE_URL });
-    
     try {
+        if (!env.DATABASE_URL) {
+            throw new Error("DATABASE_URL environment variable is missing in Cloudflare Pages.");
+        }
+
+        // Only create the pool once, then reuse it for all future requests
+        if (!globalPool) {
+            globalPool = new Pool({ 
+                connectionString: env.DATABASE_URL,
+                connectionTimeoutMillis: 30000,
+                idleTimeoutMillis: 5000,
+            });
+            globalPool.on('error', (err) => {
+                console.error('Unexpected error on idle client', err);
+            });
+        }
+        const pool = globalPool;
+
         // Auto-initialize system_settings table if it doesn't exist
         if (!isDbInitialized) {
             await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error("Table Init Error:", err));
+            await pool.query('ALTER TABLE collections ADD COLUMN IF NOT EXISTS active_month VARCHAR(7)').catch(err => console.error("Migration Error collections active_month:", err));
+            await pool.query('ALTER TABLE projections ADD COLUMN IF NOT EXISTS active_month VARCHAR(7)').catch(err => console.error("Migration Error projections active_month:", err));
+            await pool.query('ALTER TABLE projections ADD COLUMN IF NOT EXISTS timestamp BIGINT').catch(err => console.error("Migration Error projections timestamp:", err));
             isDbInitialized = true;
         }
         
@@ -218,11 +232,5 @@ export async function onRequest(context) {
     } catch (error) {
         console.error('API Error:', error);
         return jsonResponse({ error: error.message }, 500);
-    } finally {
-        if (waitUntil) {
-            waitUntil(pool.end());
-        } else {
-            await pool.end();
-        }
     }
 }
