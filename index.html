@@ -1273,10 +1273,12 @@
                 let curr = new Date(year, month - 1, 1);
                 const endD = new Date(endYear, endMonth - 1, endDay);
                 while (curr <= endD) {
-                    const yStr = curr.getFullYear();
-                    const mStr = String(curr.getMonth() + 1).padStart(2, '0');
-                    const dStr = String(curr.getDate()).padStart(2, '0');
-                    dates.push(`${yStr}-${mStr}-${dStr}`);
+                    if (curr.getDay() !== 5) { // 5 is Friday - skip it as a weekend
+                        const yStr = curr.getFullYear();
+                        const mStr = String(curr.getMonth() + 1).padStart(2, '0');
+                        const dStr = String(curr.getDate()).padStart(2, '0');
+                        dates.push(`${yStr}-${mStr}-${dStr}`);
+                    }
                     curr.setDate(curr.getDate() + 1);
                 }
                 
@@ -1324,11 +1326,11 @@
                 return Number((totalScore / dates.length).toFixed(1));
             },
 
-            getAppUseTooltipHtml(territoryId) {
-                if (!territoryId) return '';
+            getAppUseDetails(territoryId) {
+                if (!territoryId) return { pct: 0, details: [] };
                 
                 const db = Store.get();
-                if (!db || !db.projections || !db.collections) return '';
+                if (!db || !db.projections || !db.collections) return { pct: 0, details: [] };
                 
                 const activeMonth = Utils.getActiveMonth();
                 const bounds = Utils.getMonthBounds();
@@ -1344,36 +1346,35 @@
                 let curr = new Date(year, month - 1, 1);
                 const endD = new Date(endYear, endMonth - 1, endDay);
                 while (curr <= endD) {
-                    const yStr = curr.getFullYear();
-                    const mStr = String(curr.getMonth() + 1).padStart(2, '0');
-                    const dStr = String(curr.getDate()).padStart(2, '0');
-                    dates.push(`${yStr}-${mStr}-${dStr}`);
+                    if (curr.getDay() !== 5) { // Skip Friday
+                        const yStr = curr.getFullYear();
+                        const mStr = String(curr.getMonth() + 1).padStart(2, '0');
+                        const dStr = String(curr.getDate()).padStart(2, '0');
+                        dates.push(`${yStr}-${mStr}-${dStr}`);
+                    }
                     curr.setDate(curr.getDate() + 1);
                 }
                 
-                if (dates.length === 0) return '';
+                if (dates.length === 0) return { pct: 100, details: [] };
                 
                 const ids = String(territoryId).split(',').filter(Boolean);
                 const territoryProjs = db.projections.filter(p => ids.includes(p.territoryId || p.territory_id) && (p.activeMonth || p.active_month) === activeMonth);
                 const territoryColls = db.collections.filter(c => ids.includes(c.territoryId || c.territory_id) && (c.activeMonth || c.active_month) === activeMonth);
                 
-                let dayDetails = [];
-                let projCount = 0;
-                let onTimeCount = 0;
-                let collCount = 0;
                 let totalScore = 0;
+                const details = [];
                 
                 dates.forEach(d => {
                     const projs = territoryProjs.filter(p => p.date === d);
                     const hasColl = territoryColls.some(c => c.date === d);
                     
                     let dayScore = 0;
-                    let hasProj = projs.length > 0;
+                    let hasProj = false;
                     let isOnTime = false;
                     
-                    if (hasProj) {
+                    if (projs.length > 0) {
+                        hasProj = true;
                         dayScore += 40;
-                        projCount++;
                         
                         for (const proj of projs) {
                             if (proj.timestamp) {
@@ -1389,76 +1390,27 @@
                         }
                         if (isOnTime) {
                             dayScore += 20;
-                            onTimeCount++;
                         }
                     }
                     
                     if (hasColl) {
                         dayScore += 40;
-                        collCount++;
                     }
                     
                     totalScore += dayScore;
-                    
-                    dayDetails.push({
-                        date: d.split('-')[2],
-                        fullDate: d,
-                        score: dayScore,
+                    details.push({
+                        date: d,
                         hasProj,
                         isOnTime,
-                        hasColl
+                        hasColl,
+                        dayScore
                     });
                 });
                 
-                const appUsePct = Number((totalScore / dates.length).toFixed(1));
-                const recentDays = dayDetails.slice(-15).reverse();
-                
-                let daysHtml = recentDays.map(day => {
-                    let dotColor = 'bg-rose-500';
-                    let statusText = 'Missed';
-                    if (day.score >= 90) {
-                        dotColor = 'bg-emerald-500';
-                        statusText = 'Perfect (100)';
-                    } else if (day.score > 0) {
-                        dotColor = 'bg-amber-500';
-                        statusText = `Partial (${day.score})`;
-                    }
-                    
-                    return `
-                        <div class="flex items-center justify-between text-[10px] py-1 border-b border-slate-800 last:border-0">
-                            <span class="text-slate-400 font-medium">Day ${parseInt(day.date)}:</span>
-                            <div class="flex items-center gap-1.5">
-                                <span class="px-1 py-0.2 rounded bg-slate-800 text-slate-300 font-black text-[9px]">
-                                    Proj: ${day.hasProj ? (day.isOnTime ? '🌅 On-Time' : '✅ Yes') : '❌ No'}
-                                </span>
-                                <span class="px-1 py-0.2 rounded bg-slate-800 text-slate-300 font-black text-[9px]">
-                                    Coll: ${day.hasColl ? '✅ Yes' : '❌ No'}
-                                </span>
-                                <span class="h-2 w-2 rounded-full ${dotColor}" title="${statusText}"></span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                
-                return `
-                    <div class="absolute right-0 bottom-full mb-2 w-64 p-3 rounded-2xl bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl border border-slate-700/50 shadow-2xl text-left text-slate-200 pointer-events-none opacity-0 scale-95 translate-y-2 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-y-0 transition-all duration-200 z-50 origin-bottom-right">
-                        <div class="font-black text-[10px] uppercase text-slate-400 tracking-wider mb-2 flex justify-between items-center">
-                            <span>App Engagement</span>
-                            <span class="${appUsePct >= 90 ? 'text-emerald-400' : appUsePct >= 70 ? 'text-amber-400' : 'text-rose-400'}">${appUsePct}%</span>
-                        </div>
-                        <div class="text-[9px] text-slate-500 mb-2 leading-tight">
-                            Factors: Proj (40%) + On-time Proj before 10 AM (20%) + Coll (40%). Averaged cumulative day-by-day.
-                        </div>
-                        <div class="space-y-0.5 max-h-40 overflow-y-auto pr-1">
-                            ${daysHtml}
-                        </div>
-                        <div class="mt-2 pt-2 border-t border-slate-800 text-[9px] text-slate-400 flex justify-between font-bold">
-                            <span>Proj: ${projCount}/${dates.length}d</span>
-                            <span>On-Time: ${onTimeCount}/${projCount || 0}</span>
-                            <span>Coll: ${collCount}/${dates.length}d</span>
-                        </div>
-                    </div>
-                `;
+                return {
+                    pct: Number((totalScore / dates.length).toFixed(1)),
+                    details
+                };
             }
         };
 
@@ -1552,6 +1504,88 @@
         const UI = {
             charts: {},
             currentLoginRole: 'officer',
+
+            showAppUseModal(territoryId) {
+                const data = Calc.getAppUseDetails(territoryId);
+                const tName = Store.get()?.territories?.find(t => t.id === territoryId)?.name || territoryId;
+                
+                let html = `
+                <div class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm animate-fade-in" id="app-use-modal" onclick="if(event.target.id === 'app-use-modal') this.remove()">
+                    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-[90%] max-w-lg overflow-hidden animate-entry flex flex-col max-h-[85vh]">
+                        <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center bg-gradient-to-r from-brand-50 to-emerald-50 dark:from-brand-900/20 dark:to-emerald-900/20 relative overflow-hidden">
+                            <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(circle at 100% 0%, var(--tw-gradient-from) 0%, transparent 50%);"></div>
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-800 dark:text-white relative z-10">${tName}</h2>
+                                <p class="text-xs font-medium text-brand-600 dark:text-brand-400 mt-0.5 tracking-wider uppercase relative z-10">App Use Rating Overview</p>
+                            </div>
+                            <div class="flex items-center gap-3 relative z-10">
+                                <div class="px-3 py-1 rounded-full ${Calc.getRPIBg(data.pct)} font-bold text-lg border">
+                                    ${data.pct}%
+                                </div>
+                                <button onclick="document.getElementById('app-use-modal').remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                                    <i class="fa-solid fa-times text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
+                            <div class="space-y-3">
+                `;
+                
+                if (data.details.length === 0) {
+                    html += `<div class="text-center py-8 text-slate-500 dark:text-slate-400 font-medium">No valid working days recorded yet.</div>`;
+                } else {
+                    [...data.details].reverse().forEach(d => {
+                        const dateObj = new Date(d.date);
+                        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                        const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        
+                        const projIcon = d.hasProj ? '<i class="fa-solid fa-check-circle text-emerald-500"></i>' : '<i class="fa-solid fa-times-circle text-rose-500"></i>';
+                        const timeIcon = d.isOnTime ? '<i class="fa-solid fa-check-circle text-emerald-500"></i>' : (d.hasProj ? '<i class="fa-solid fa-times-circle text-amber-500"></i>' : '<i class="fa-solid fa-minus-circle text-slate-300 dark:text-slate-600"></i>');
+                        const collIcon = d.hasColl ? '<i class="fa-solid fa-check-circle text-emerald-500"></i>' : '<i class="fa-solid fa-times-circle text-rose-500"></i>';
+                        
+                        let scoreColor = 'text-rose-500 bg-rose-50 dark:bg-rose-500/10 border-rose-100 dark:border-rose-500/20';
+                        if (d.dayScore === 100) scoreColor = 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20';
+                        else if (d.dayScore >= 60) scoreColor = 'text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/20';
+                        
+                        html += `
+                            <div class="flex items-center justify-between p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 text-center">
+                                        <div class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">${dayName}</div>
+                                        <div class="text-sm font-bold text-slate-700 dark:text-slate-200">${dateStr}</div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex flex-col items-center gap-1" title="Projection Submitted">
+                                            <div class="text-[9px] uppercase tracking-wider text-slate-500 font-semibold">Proj</div>
+                                            ${projIcon}
+                                        </div>
+                                        <div class="flex flex-col items-center gap-1" title="On-Time Before 10AM">
+                                            <div class="text-[9px] uppercase tracking-wider text-slate-500 font-semibold">Time</div>
+                                            ${timeIcon}
+                                        </div>
+                                        <div class="flex flex-col items-center gap-1" title="Collection Submitted">
+                                            <div class="text-[9px] uppercase tracking-wider text-slate-500 font-semibold">Coll</div>
+                                            ${collIcon}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="px-3 py-1.5 rounded-xl text-sm font-black border ${scoreColor}">
+                                    ${d.dayScore}%
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', html);
+            },
 
             // --- LOADER ---
             toggleLoader(show) {
@@ -3206,16 +3240,15 @@
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center ${!isTotal ? 'text-rose-800 bg-rose-50 dark:bg-rose-900/20' : ''}">${t.lmNpTargetFiles}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-rose-600' : ''}">${parseInt(t.mtdLmNpColl).toLocaleString()}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center font-bold ${!isTotal ? 'text-rose-600' : ''}">${t.mtdLmNpFiles}</td>` : ''}
-                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold border-l-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40 relative group">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black ${
+                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold border-l-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40">
+                            <span onclick="UI.showAppUseModal('${t.id}')" class="cursor-pointer hover:opacity-80 transition-opacity inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black ${
                                 t.appUsePct >= 90 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
                                 t.appUsePct >= 70 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
                                 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                            } cursor-help">
+                            }">
                                 <i class="fa-solid ${t.appUsePct >= 90 ? 'fa-circle-check' : t.appUsePct >= 70 ? 'fa-triangle-exclamation' : 'fa-circle-xmark'} mr-1 opacity-80"></i>
                                 ${t.appUsePct}%
                             </span>
-                            ${!isTotal ? Calc.getAppUseTooltipHtml(t.id) : ''}
                         </td>
                     </tr>`;
                 };
@@ -4575,7 +4608,7 @@
                                     <span class="text-[9px] uppercase tracking-widest font-black text-slate-400 dark:text-slate-500">System Engagement</span>
                                     <span class="text-xs font-bold text-slate-600 dark:text-slate-300">App Use Rating</span>
                                 </div>
-                                <div class="relative flex items-center justify-center p-2.5 rounded-2xl bg-white/40 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover-lift group cursor-help">
+                                <div onclick="UI.showAppUseModal('${linkedTId}')" class="cursor-pointer relative flex items-center justify-center p-2.5 rounded-2xl bg-white/40 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover-lift group">
                                     <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr ${
                                         appUsePct >= 90 ? 'from-emerald-500/10 to-teal-500/5' :
                                         appUsePct >= 70 ? 'from-amber-500/10 to-orange-500/5' :
@@ -4599,7 +4632,6 @@
                                             } leading-none">${appUsePct}%</div>
                                         </div>
                                     </div>
-                                    ${Calc.getAppUseTooltipHtml(linkedTId)}
                                 </div>
                             </div>
                         </div>
