@@ -16,8 +16,6 @@ function jsonResponse(data, status = 200) {
     });
 }
 
-// Global connection pool that is reused across requests
-let globalPool;
 let isDbInitialized = false;
 
 export async function onRequest(context) {
@@ -34,23 +32,16 @@ export async function onRequest(context) {
         return new Response(null, { headers: corsHeaders });
     }
     
+    let pool;
     try {
         if (!env.DATABASE_URL) {
             throw new Error("DATABASE_URL environment variable is missing in Cloudflare Pages.");
         }
 
-        // Only create the pool once, then reuse it for all future requests
-        if (!globalPool) {
-            globalPool = new Pool({ 
-                connectionString: env.DATABASE_URL,
-                connectionTimeoutMillis: 30000,
-                idleTimeoutMillis: 5000,
-            });
-            globalPool.on('error', (err) => {
-                console.error('Unexpected error on idle client', err);
-            });
-        }
-        const pool = globalPool;
+        pool = new Pool({ 
+            connectionString: env.DATABASE_URL,
+            connectionTimeoutMillis: 30000,
+        });
 
         // Auto-initialize system_settings table if it doesn't exist
         if (!isDbInitialized) {
@@ -232,5 +223,9 @@ export async function onRequest(context) {
     } catch (error) {
         console.error('API Error:', error);
         return jsonResponse({ error: error.message }, 500);
+    } finally {
+        if (pool) {
+            context.waitUntil(pool.end());
+        }
     }
 }
