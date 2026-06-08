@@ -395,7 +395,7 @@
         <div
             class="glass-panel px-8 py-6 rounded-2xl shadow-2xl flex flex-col items-center transform scale-100 transition-transform duration-300">
             <div class="loader-spinner mb-3"></div>
-            <p class="text-xs font-bold text-brand-600 dark:text-brand-400 tracking-widest uppercase animate-pulse">
+            <p id="loader-text" class="text-xs font-bold text-brand-600 dark:text-brand-400 tracking-widest uppercase animate-pulse">
                 Processing</p>
         </div>
     </div>
@@ -854,13 +854,24 @@
             },
 
             async init() {
+                let waitTimeout;
                 try {
+                    const loaderText = document.getElementById('loader-text');
+                    if (loaderText) {
+                        loaderText.innerText = "Connecting...";
+                        waitTimeout = setTimeout(() => {
+                            if (loaderText) loaderText.innerText = "Waking up database... this may take a few seconds";
+                        }, 2000);
+                    }
+
                     const res = await fetch(`${this.apiUrl}/db`);
+                    if (waitTimeout) clearTimeout(waitTimeout);
+                    if (loaderText) loaderText.innerText = "Processing";
+
                     const data = await res.json();
 
                     if (data.error) {
                         console.error("Backend Error:", data.error);
-                        alert("Database error: " + data.error + "\nMake sure the database schema is initialized.");
                         return null;
                     }
 
@@ -1006,8 +1017,9 @@
 
                     return data;
                 } catch (err) {
+                    if (typeof waitTimeout !== 'undefined') clearTimeout(waitTimeout);
                     console.error("Failed to connect to Backend:", err);
-                    alert("Unable to connect to the server. Please check your internet connection and try again.");
+                    return null;
                 }
             },
 
@@ -8224,7 +8236,28 @@
             }
 
             // Load data from backend
-            await Store.init();
+            const dbState = await Store.init();
+            if (dbState === null) {
+                UI.toggleLoader(false);
+                const loginView = document.getElementById('login-view');
+                loginView.innerHTML = `
+                    <div class="relative z-10 w-full max-w-[450px] px-4 sm:p-6 animate-entry">
+                        <div class="bg-white dark:bg-[#202124] sm:border sm:border-slate-200 sm:dark:border-[#3c4043] rounded-2xl p-8 sm:shadow-md text-center">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-500">
+                                <i class="fas fa-exclamation-triangle text-2xl"></i>
+                            </div>
+                            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Connection Failed</h2>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Unable to connect to the server. This may happen if the database is asleep or your connection is unstable.</p>
+                            <button onclick="location.reload()" class="w-full bg-brand-600 hover:bg-brand-700 text-white rounded-xl py-3 font-medium transition-colors">
+                                Retry Connection
+                            </button>
+                        </div>
+                    </div>
+                `;
+                loginView.classList.remove('hidden');
+                loginView.classList.add('flex');
+                return;
+            }
 
             // Validate session and init UI
             const loggedIn = await Auth.checkSession();
