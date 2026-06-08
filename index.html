@@ -1254,16 +1254,17 @@
             },
 
             getAppUsePercentage(territoryId) {
-                if (!territoryId) return 0;
+                if (!territoryId) return { pct: 0, log: [] };
                 
                 const db = Store.get();
-                if (!db || !db.projections || !db.collections) return 0;
+                if (!db || !db.projections || !db.collections) return { pct: 0, log: [] };
                 
                 const activeMonth = Utils.getActiveMonth();
                 const bounds = Utils.getMonthBounds();
                 const startOfMonth = bounds.startOfMonth;
                 const endOfMonth = bounds.endOfMonth;
                 const today = Utils.getLocalDate();
+                const currentHour = new Date().getHours();
                 
                 const calcEndDate = (today < startOfMonth) ? startOfMonth : (today > endOfMonth ? endOfMonth : today);
                 
@@ -1272,44 +1273,62 @@
                 const [endYear, endMonth, endDay] = calcEndDate.split('-').map(Number);
                 let curr = new Date(year, month - 1, 1);
                 const endD = new Date(endYear, endMonth - 1, endDay);
-                while (curr <= endD) {
-                    const yStr = curr.getFullYear();
-                    const mStr = String(curr.getMonth() + 1).padStart(2, '0');
-                    const dStr = String(curr.getDate()).padStart(2, '0');
-                    dates.push(`${yStr}-${mStr}-${dStr}`);
-                    curr.setDate(curr.getDate() + 1);
-                }
-                
-                if (dates.length === 0) return 100;
                 
                 const ids = String(territoryId).split(',').filter(Boolean);
                 const territoryProjs = db.projections.filter(p => ids.includes(p.territoryId || p.territory_id) && (p.activeMonth || p.active_month) === activeMonth);
                 const territoryColls = db.collections.filter(c => ids.includes(c.territoryId || c.territory_id) && (c.activeMonth || c.active_month) === activeMonth);
+
+                while (curr <= endD) {
+                    if (curr.getDay() !== 5) { // Skip Fridays
+                        const yStr = curr.getFullYear();
+                        const mStr = String(curr.getMonth() + 1).padStart(2, '0');
+                        const dStr = String(curr.getDate()).padStart(2, '0');
+                        const dStrFull = `${yStr}-${mStr}-${dStr}`;
+                        
+                        // Smart today logic: If today is early morning and no activity, skip penalizing
+                        if (dStrFull === today && currentHour < 10) {
+                            const hasActivity = territoryProjs.some(p => p.date === dStrFull) || territoryColls.some(c => c.date === dStrFull);
+                            if (!hasActivity) {
+                                curr.setDate(curr.getDate() + 1);
+                                continue;
+                            }
+                        }
+                        
+                        dates.push(dStrFull);
+                    }
+                    curr.setDate(curr.getDate() + 1);
+                }
+                
+                if (dates.length === 0) return { pct: 100, log: [] };
                 
                 let totalScore = 0;
+                const log = [];
                 
                 dates.forEach(d => {
                     const projs = territoryProjs.filter(p => p.date === d);
                     const hasColl = territoryColls.some(c => c.date === d);
                     
                     let dayScore = 0;
+                    let hasProj = false;
+                    let onTime = false;
+                    
                     if (projs.length > 0) {
+                        hasProj = true;
                         dayScore += 40;
                         
-                        let isOnTime = false;
                         for (const proj of projs) {
                             if (proj.timestamp) {
                                 const pTime = new Date(Number(proj.timestamp));
                                 if (pTime.getHours() < 10) {
-                                    isOnTime = true;
+                                    onTime = true;
                                     break;
                                 }
                             } else {
-                                isOnTime = true;
+                                onTime = true;
                                 break;
                             }
                         }
-                        if (isOnTime) {
+                        if (onTime) {
                             dayScore += 20;
                         }
                     }
@@ -1319,9 +1338,10 @@
                     }
                     
                     totalScore += dayScore;
+                    log.push({ date: d, score: dayScore, hasProj, onTime, hasColl });
                 });
                 
-                return Number((totalScore / dates.length).toFixed(1));
+                return { pct: Number((totalScore / dates.length).toFixed(1)), log };
             }
         };
 
@@ -2923,8 +2943,8 @@
                     // Calculate Last Day Achievement for the new column
                     const ldAch = m.yestProjAmt > 0 ? ((m.yestCollAmt / m.yestProjAmt) * 100).toFixed(1) : '0.0';
                     const tdAch = m.todayProj > 0 ? ((m.todayColl / m.todayProj) * 100).toFixed(1) : (m.todayColl > 0 ? '100+' : '0.0');
-                    const appUsePct = Calc.getAppUsePercentage(t.id);
-                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch, appUsePct };
+                    const appUseData = Calc.getAppUsePercentage(t.id);
+                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch, appUsePct: appUseData.pct, appUseLog: appUseData.log };
                 });
 
                 // Helper to calculate totals
@@ -3069,15 +3089,39 @@
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center ${!isTotal ? 'text-rose-800 bg-rose-50 dark:bg-rose-900/20' : ''}">${t.lmNpTargetFiles}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-rose-600' : ''}">${parseInt(t.mtdLmNpColl).toLocaleString()}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center font-bold ${!isTotal ? 'text-rose-600' : ''}">${t.mtdLmNpFiles}</td>` : ''}
-                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold border-l-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black ${
-                                t.appUsePct >= 90 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
-                                t.appUsePct >= 70 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
-                                'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold border-l-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40 relative">
+                            <div class="relative inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black cursor-pointer group ${
+                                t.appUsePct >= 90 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/30' :
+                                t.appUsePct >= 70 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/30' :
+                                'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/30'
                             }">
                                 <i class="fa-solid ${t.appUsePct >= 90 ? 'fa-circle-check' : t.appUsePct >= 70 ? 'fa-triangle-exclamation' : 'fa-circle-xmark'} mr-1 opacity-80"></i>
                                 ${t.appUsePct}%
-                            </span>
+                                
+                                ${t.appUseLog && t.appUseLog.length > 0 ? `
+                                <!-- Glassmorphism Heatmap Tooltip -->
+                                <div class="absolute z-[100] right-full mr-2 top-1/2 -translate-y-1/2 w-64 p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 origin-right scale-95 group-hover:scale-100 cursor-default">
+                                    <div class="text-[10px] font-bold text-slate-800 dark:text-white mb-2 pb-1 border-b border-slate-100 dark:border-slate-700/50 uppercase tracking-wider flex justify-between">
+                                        <span>Daily App Use</span>
+                                        <span class="${t.appUsePct >= 90 ? 'text-emerald-500' : t.appUsePct >= 70 ? 'text-amber-500' : 'text-rose-500'}">${t.appUsePct}%</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1 mb-2">
+                                        ${t.appUseLog.map(day => {
+                                            const color = day.score === 100 ? 'bg-emerald-500' : 
+                                                          day.score >= 60 ? 'bg-amber-500' : 
+                                                          day.score > 0 ? 'bg-orange-500' : 'bg-slate-200 dark:bg-slate-700';
+                                            const details = \`\${day.date}: \${day.score} pts&#10;Proj: \${day.hasProj ? (day.onTime ? 'Yes (On Time)' : 'Yes (Late)') : 'No'}&#10;Coll: \${day.hasColl ? 'Yes' : 'No'}\`;
+                                            return \`<div class="w-3.5 h-3.5 rounded-[3px] \${color} cursor-help hover:ring-2 hover:ring-brand-500 transition-all" title="\${details}"></div>\`;
+                                        }).join('')}
+                                    </div>
+                                    <div class="flex justify-between items-center text-[9px] text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                        <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-[2px] bg-emerald-500"></div>Perfect</div>
+                                        <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-[2px] bg-amber-500"></div>Partial</div>
+                                        <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-[2px] bg-slate-200 dark:bg-slate-700"></div>Missed</div>
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
                         </td>
                     </tr>`;
                 };
@@ -4421,7 +4465,9 @@
                 // Calculate File Touch Percentage
                 const fileTouchPct = metrics.targetFiles > 0 ? ((metrics.uniquePaidCodes / metrics.targetFiles) * 100).toFixed(1) : 0;
 
-                const appUsePct = Calc.getAppUsePercentage(linkedTId);
+                const appUseData = Calc.getAppUsePercentage(linkedTId);
+                const appUsePct = appUseData.pct;
+                const appUseLog = appUseData.log;
 
                 document.getElementById('views-container').innerHTML = `
             <div id="officer-dashboard-panel" class="animate-entry mb-4 sm:mb-6" >
@@ -4461,6 +4507,30 @@
                                             } leading-none">${appUsePct}%</div>
                                         </div>
                                     </div>
+
+                                    ${appUseLog && appUseLog.length > 0 ? `
+                                    <!-- Glassmorphism Heatmap Tooltip -->
+                                    <div class="absolute z-[100] right-full mr-4 top-1/2 -translate-y-1/2 w-64 p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 origin-right scale-95 group-hover:scale-100 cursor-default">
+                                        <div class="text-[10px] font-bold text-slate-800 dark:text-white mb-2 pb-1 border-b border-slate-100 dark:border-slate-700/50 uppercase tracking-wider flex justify-between">
+                                            <span>Daily App Use</span>
+                                            <span class="${appUsePct >= 90 ? 'text-emerald-500' : appUsePct >= 70 ? 'text-amber-500' : 'text-rose-500'}">${appUsePct}%</span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-1 mb-2">
+                                            ${appUseLog.map(day => {
+                                                const color = day.score === 100 ? 'bg-emerald-500' : 
+                                                              day.score >= 60 ? 'bg-amber-500' : 
+                                                              day.score > 0 ? 'bg-orange-500' : 'bg-slate-200 dark:bg-slate-700';
+                                                const details = \`\${day.date}: \${day.score} pts&#10;Proj: \${day.hasProj ? (day.onTime ? 'Yes (On Time)' : 'Yes (Late)') : 'No'}&#10;Coll: \${day.hasColl ? 'Yes' : 'No'}\`;
+                                                return \`<div class="w-3.5 h-3.5 rounded-[3px] \${color} cursor-help hover:ring-2 hover:ring-brand-500 transition-all" title="\${details}"></div>\`;
+                                            }).join('')}
+                                        </div>
+                                        <div class="flex justify-between items-center text-[9px] text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                            <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-[2px] bg-emerald-500"></div>Perfect</div>
+                                            <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-[2px] bg-amber-500"></div>Partial</div>
+                                            <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-[2px] bg-slate-200 dark:bg-slate-700"></div>Missed</div>
+                                        </div>
+                                    </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
