@@ -1254,17 +1254,16 @@
             },
 
             getAppUsePercentage(territoryId) {
-                if (!territoryId) return { pct: 0, log: [] };
+                if (!territoryId) return 0;
                 
                 const db = Store.get();
-                if (!db || !db.projections || !db.collections) return { pct: 0, log: [] };
+                if (!db || !db.projections || !db.collections) return 0;
                 
                 const activeMonth = Utils.getActiveMonth();
                 const bounds = Utils.getMonthBounds();
                 const startOfMonth = bounds.startOfMonth;
                 const endOfMonth = bounds.endOfMonth;
                 const today = Utils.getLocalDate();
-                const currentHour = new Date().getHours();
                 
                 const calcEndDate = (today < startOfMonth) ? startOfMonth : (today > endOfMonth ? endOfMonth : today);
                 
@@ -1273,63 +1272,44 @@
                 const [endYear, endMonth, endDay] = calcEndDate.split('-').map(Number);
                 let curr = new Date(year, month - 1, 1);
                 const endD = new Date(endYear, endMonth - 1, endDay);
-                
-                const ids = String(territoryId).split(',').filter(Boolean);
-                
                 while (curr <= endD) {
-                    if (curr.getDay() !== 5) { // Skip Friday
-                        const yStr = curr.getFullYear();
-                        const mStr = String(curr.getMonth() + 1).padStart(2, '0');
-                        const dStr = String(curr.getDate()).padStart(2, '0');
-                        const dStrFull = `${yStr}-${mStr}-${dStr}`;
-                        
-                        // Smart today logic
-                        if (dStrFull === today && currentHour < 10) {
-                            const hasActivity = db.projections.some(p => ids.includes(p.territoryId || p.territory_id) && p.date === dStrFull) || 
-                                                db.collections.some(c => ids.includes(c.territoryId || c.territory_id) && c.date === dStrFull);
-                            if (!hasActivity) {
-                                curr.setDate(curr.getDate() + 1);
-                                continue;
-                            }
-                        }
-                        dates.push(dStrFull);
-                    }
+                    const yStr = curr.getFullYear();
+                    const mStr = String(curr.getMonth() + 1).padStart(2, '0');
+                    const dStr = String(curr.getDate()).padStart(2, '0');
+                    dates.push(`${yStr}-${mStr}-${dStr}`);
                     curr.setDate(curr.getDate() + 1);
                 }
                 
-                if (dates.length === 0) return { pct: 100, log: [] };
+                if (dates.length === 0) return 100;
                 
+                const ids = String(territoryId).split(',').filter(Boolean);
                 const territoryProjs = db.projections.filter(p => ids.includes(p.territoryId || p.territory_id) && (p.activeMonth || p.active_month) === activeMonth);
                 const territoryColls = db.collections.filter(c => ids.includes(c.territoryId || c.territory_id) && (c.activeMonth || c.active_month) === activeMonth);
                 
                 let totalScore = 0;
-                const log = [];
                 
                 dates.forEach(d => {
                     const projs = territoryProjs.filter(p => p.date === d);
                     const hasColl = territoryColls.some(c => c.date === d);
                     
                     let dayScore = 0;
-                    let hasProj = false;
-                    let onTime = false;
-                    
                     if (projs.length > 0) {
-                        hasProj = true;
                         dayScore += 40;
                         
+                        let isOnTime = false;
                         for (const proj of projs) {
                             if (proj.timestamp) {
                                 const pTime = new Date(Number(proj.timestamp));
                                 if (pTime.getHours() < 10) {
-                                    onTime = true;
+                                    isOnTime = true;
                                     break;
                                 }
                             } else {
-                                onTime = true;
+                                isOnTime = true;
                                 break;
                             }
                         }
-                        if (onTime) {
+                        if (isOnTime) {
                             dayScore += 20;
                         }
                     }
@@ -1338,11 +1318,10 @@
                         dayScore += 40;
                     }
                     
-                    log.push({ date: d, score: dayScore, hasProj, onTime, hasColl });
                     totalScore += dayScore;
                 });
                 
-                return { pct: Number((totalScore / dates.length).toFixed(1)), log };
+                return Number((totalScore / dates.length).toFixed(1));
             }
         };
 
@@ -2944,8 +2923,8 @@
                     // Calculate Last Day Achievement for the new column
                     const ldAch = m.yestProjAmt > 0 ? ((m.yestCollAmt / m.yestProjAmt) * 100).toFixed(1) : '0.0';
                     const tdAch = m.todayProj > 0 ? ((m.todayColl / m.todayProj) * 100).toFixed(1) : (m.todayColl > 0 ? '100+' : '0.0');
-                    const appUseData = Calc.getAppUsePercentage(t.id);
-                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch, appUsePct: appUseData.pct, appUseLog: appUseData.log };
+                    const appUsePct = Calc.getAppUsePercentage(t.id);
+                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch, appUsePct };
                 });
 
                 // Helper to calculate totals
@@ -3091,37 +3070,14 @@
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-rose-600' : ''}">${parseInt(t.mtdLmNpColl).toLocaleString()}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center font-bold ${!isTotal ? 'text-rose-600' : ''}">${t.mtdLmNpFiles}</td>` : ''}
                         <td class="p-1.5 border dark:border-slate-600 text-center font-bold border-l-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40">
-                            <div class="relative group inline-block">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black cursor-pointer ${
-                                    t.appUsePct >= 90 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
-                                    t.appUsePct >= 70 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
-                                    'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                                }">
-                                    <i class="fa-solid ${t.appUsePct >= 90 ? 'fa-circle-check' : t.appUsePct >= 70 ? 'fa-triangle-exclamation' : 'fa-circle-xmark'} mr-1 opacity-80"></i>
-                                    ${t.appUsePct}%
-                                </span>
-                                ${t.appUseLog ? `
-                                <!-- Glassmorphism Heatmap Tooltip -->
-                                <div class="absolute right-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 dark:border-slate-700/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] pointer-events-none transform translate-y-2 group-hover:translate-y-0 text-left">
-                                    <div class="text-xs font-bold text-slate-800 dark:text-white mb-2 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-1">
-                                        <span>App Use Heatmap</span>
-                                        <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">${t.appUsePct}%</span>
-                                    </div>
-                                    <div class="flex flex-wrap gap-1 mb-2">
-                                        ${t.appUseLog.map(day => {
-                                            let color = day.score === 100 ? 'bg-emerald-500' : day.score >= 60 ? 'bg-amber-400' : day.score > 0 ? 'bg-orange-500' : 'bg-rose-500/30 dark:bg-rose-500/20';
-                                            let border = day.score === 0 ? 'border border-rose-200 dark:border-rose-900/50' : '';
-                                            return \`<div class="w-3.5 h-3.5 rounded-sm \${color} \${border} pointer-events-auto cursor-help" title="\${day.date}: \${day.score}%\\nProj: \${day.hasProj ? (day.onTime ? 'On Time' : 'Late') : 'Missing'}\\nColl: \${day.hasColl ? 'Logged' : 'Missing'}"></div>\`;
-                                        }).join('')}
-                                    </div>
-                                    <div class="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">
-                                        <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-sm bg-emerald-500"></div> Perfect</div>
-                                        <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-sm bg-amber-400"></div> Partial</div>
-                                        <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-sm bg-rose-500/30 border border-rose-200 dark:border-rose-900/50"></div> Missed</div>
-                                    </div>
-                                </div>
-                                ` : ''}
-                            </div>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black ${
+                                t.appUsePct >= 90 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+                                t.appUsePct >= 70 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
+                                'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                            }">
+                                <i class="fa-solid ${t.appUsePct >= 90 ? 'fa-circle-check' : t.appUsePct >= 70 ? 'fa-triangle-exclamation' : 'fa-circle-xmark'} mr-1 opacity-80"></i>
+                                ${t.appUsePct}%
+                            </span>
                         </td>
                     </tr>`;
                 };
@@ -4465,9 +4421,7 @@
                 // Calculate File Touch Percentage
                 const fileTouchPct = metrics.targetFiles > 0 ? ((metrics.uniquePaidCodes / metrics.targetFiles) * 100).toFixed(1) : 0;
 
-                const appUseData = Calc.getAppUsePercentage(linkedTId);
-                const appUsePct = appUseData.pct;
-                const appUseLog = appUseData.log;
+                const appUsePct = Calc.getAppUsePercentage(linkedTId);
 
                 document.getElementById('views-container').innerHTML = `
             <div id="officer-dashboard-panel" class="animate-entry mb-4 sm:mb-6" >
@@ -4507,26 +4461,6 @@
                                             } leading-none">${appUsePct}%</div>
                                         </div>
                                     </div>
-                                    ${appUseLog ? `
-                                    <div class="absolute right-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-3 w-64 p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 dark:border-slate-700/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] pointer-events-none transform translate-y-2 group-hover:translate-y-0 text-left">
-                                        <div class="text-xs font-bold text-slate-800 dark:text-white mb-2 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-1">
-                                            <span>App Use Heatmap</span>
-                                            <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">${appUsePct}%</span>
-                                        </div>
-                                        <div class="flex flex-wrap gap-1 mb-2">
-                                            ${appUseLog.map(day => {
-                                                let color = day.score === 100 ? 'bg-emerald-500' : day.score >= 60 ? 'bg-amber-400' : day.score > 0 ? 'bg-orange-500' : 'bg-rose-500/30 dark:bg-rose-500/20';
-                                                let border = day.score === 0 ? 'border border-rose-200 dark:border-rose-900/50' : '';
-                                                return \`<div class="w-3.5 h-3.5 rounded-sm \${color} \${border} pointer-events-auto cursor-help" title="\${day.date}: \${day.score}%\\nProj: \${day.hasProj ? (day.onTime ? 'On Time' : 'Late') : 'Missing'}\\nColl: \${day.hasColl ? 'Logged' : 'Missing'}"></div>\`;
-                                            }).join('')}
-                                        </div>
-                                        <div class="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">
-                                            <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-sm bg-emerald-500"></div> Perfect</div>
-                                            <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-sm bg-amber-400"></div> Partial</div>
-                                            <div class="flex items-center gap-1"><div class="w-2 h-2 rounded-sm bg-rose-500/30 border border-rose-200 dark:border-rose-900/50"></div> Missed</div>
-                                        </div>
-                                    </div>
-                                    ` : ''}
                                 </div>
                             </div>
                         </div>
