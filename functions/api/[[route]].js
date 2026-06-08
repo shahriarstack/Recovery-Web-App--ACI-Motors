@@ -43,11 +43,16 @@ export async function onRequest(context) {
         if (!globalPool) {
             globalPool = new Pool({ 
                 connectionString: env.DATABASE_URL,
-                connectionTimeoutMillis: 30000,
-                idleTimeoutMillis: 5000,
+                connectionTimeoutMillis: 5000, // Error out after 5s instead of hanging indefinitely
+                idleTimeoutMillis: 30000, // Aggressively close idle connections before they silently drop
+                max: 10 // Prevent exhausting Neon's connection limit per worker
             });
+            
+            // Auto-recovery: If the pool enters a broken state (network drop, database restart),
+            // destroy the reference so the next request automatically recreates a fresh, healthy pool.
             globalPool.on('error', (err) => {
                 console.error('Unexpected error on idle client', err);
+                globalPool = null;
             });
         }
         const pool = globalPool;
@@ -55,9 +60,6 @@ export async function onRequest(context) {
         // Auto-initialize system_settings table if it doesn't exist
         if (!isDbInitialized) {
             await pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error("Table Init Error:", err));
-            await pool.query('ALTER TABLE collections ADD COLUMN IF NOT EXISTS active_month VARCHAR(7)').catch(err => console.error("Migration Error collections active_month:", err));
-            await pool.query('ALTER TABLE projections ADD COLUMN IF NOT EXISTS active_month VARCHAR(7)').catch(err => console.error("Migration Error projections active_month:", err));
-            await pool.query('ALTER TABLE projections ADD COLUMN IF NOT EXISTS timestamp BIGINT').catch(err => console.error("Migration Error projections timestamp:", err));
             isDbInitialized = true;
         }
         
