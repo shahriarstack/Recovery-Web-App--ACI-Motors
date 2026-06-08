@@ -394,7 +394,7 @@
         <div
             class="glass-panel px-8 py-6 rounded-2xl shadow-2xl flex flex-col items-center transform scale-100 transition-transform duration-300">
             <div class="loader-spinner mb-3"></div>
-            <p class="text-xs font-bold text-brand-600 dark:text-brand-400 tracking-widest uppercase animate-pulse">
+            <p id="loader-text" class="text-xs font-bold text-brand-600 dark:text-brand-400 tracking-widest uppercase animate-pulse">
                 Processing</p>
         </div>
     </div>
@@ -694,35 +694,41 @@
 
     <!-- SCRIPT SECTION -->
     <script>
-        // GLOBAL FETCH INTERCEPTOR: Generic Retry Mechanism
+        // GLOBAL FETCH INTERCEPTOR: Permanent fix for Neon DB Serverless Cold Starts and Cloudflare Timeouts
         const originalFetch = window.fetch;
         window.fetch = async function(url, options) {
-            let retries = 5;
+            let retries = 3;
             let lastError = null;
             for (let i = 0; i < retries; i++) {
                 try {
                     const res = await originalFetch(url, options);
                     
+                    // If this is an API call, verify we actually got JSON back, not a Cloudflare 500 HTML error page
                     if (typeof url === 'string' && url.includes('/api')) {
-                        if (!res.ok) {
+                        const contentType = res.headers.get("content-type");
+                        if (contentType && contentType.includes("text/html")) {
+                            throw new Error("Received HTML error page from Cloudflare. Backend might be cold-starting or timed out.");
+                        }
+                        if (res.status >= 500) {
                             throw new Error("Server error " + res.status);
                         }
                     }
-                    return res;
+                    return res; // Success! Return the response to the caller
                 } catch (err) {
                     lastError = err;
                     console.warn(`Fetch attempt ${i + 1} failed for ${url}:`, err.message);
                     if (i < retries - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+                        // Exponential backoff: Wait 1s, then 2s before retrying
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
                     }
                 }
             }
-            throw lastError;
+            throw lastError; // Exhausted all retries, bubble the error up
         };
 
         window.filterPerformanceAnalytics = function() {
-            const searchVal = (document.getElementById('perf-search')?.value || '').toLowerCase();
-            const minAch = parseFloat(document.getElementById('perf-min-ach')?.value || 0);
+            const searchVal = ((document.getElementById('perf-search') ? document.getElementById('perf-search').value : '') || '').toLowerCase();
+            const minAch = parseFloat((document.getElementById('perf-min-ach') ? document.getElementById('perf-min-ach').value : 0) || 0);
             
             const minAchValSpan = document.getElementById('perf-min-ach-val');
             if (minAchValSpan) minAchValSpan.innerText = minAch + '%';
@@ -807,20 +813,6 @@
                     if (setting && setting.value) return setting.value;
                 }
                 return this.getLocalDate().slice(0, 7);
-            },
-            getMonthBounds() {
-                const activeMonth = this.getActiveMonth();
-                const [year, month] = activeMonth.split('-');
-                const lastDay = new Date(year, month, 0);
-                const lastDayStr = new Date(lastDay.getTime() - lastDay.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-                
-                // UX Optimization: If physically in next month but active month hasn't changed (extended month),
-                // dynamically extend the endOfMonth boundary to today's date so collections display in history forms.
-                const realToday = new Date();
-                const realTodayStr = new Date(realToday.getTime() - realToday.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-                const end = realTodayStr > lastDayStr && realTodayStr.startsWith(activeMonth.slice(0, 4)) ? realTodayStr : lastDayStr;
-                
-                return { startOfMonth: `${activeMonth}-01`, endOfMonth: end };
             }
         };
 
@@ -852,13 +844,18 @@
                 });
             },
 
-            async init() {
+            async init(retries = 3) {
                 try {
                     const res = await fetch(`${this.apiUrl}/db`);
                     const data = await res.json();
 
                     if (data.error) {
                         console.error("Backend Error:", data.error);
+                        if (retries > 0) {
+                            UI.setLoaderText("Waking up Database Server... Please wait");
+                            await new Promise(r => setTimeout(r, 2000));
+                            return await this.init(retries - 1);
+                        }
                         alert("Database error: " + data.error + "\nMake sure the database schema is initialized.");
                         return null;
                     }
@@ -867,7 +864,7 @@
                     if (data.territories && data.territories.length === 0) {
                         console.log("Database empty, seeding initial data...");
                         await this.seed();
-                        return await this.init();
+                        return await this.init(retries);
                     }
 
                     // Bridge database snake_case keys to UI camelCase dynamically
@@ -876,137 +873,16 @@
                     });
 
                     this.cache = data;
-
-                    // Auto-migration for entries submitted today physically but saved as May 31st under old date-capping rules,
-                    // and for entries submitted on extended days that are missing an active_month field:
-                    (async () => {
-                        try {
-                            const activeMonth = data.system_settings?.find(s => s.key === 'active_month')?.value;
-                            if (activeMonth === '2026-05') {
-                                // Today is June 1st physically, which starts at 1780250400000 ms local epoch
-                                const startOfTodayLocal = new Date();
-                                startOfTodayLocal.setHours(0,0,0,0);
-                                const startOfTodayTimestamp = startOfTodayLocal.getTime();
-
-                                let migrated = false;
-
-                                // 1. Migrate collections entered physically today that got saved as May 31st
-                                if (data.collections) {
-                                    for (const c of data.collections) {
-                                        if (c.timestamp >= startOfTodayTimestamp && c.date === '2026-05-31') {
-                                            c.date = '2026-06-01';
-                                            c.active_month = '2026-05';
-                                            c.activeMonth = '2026-05';
-                                            console.log("Auto-migrating collection date:", c.receipt);
-                                            await fetch(`${this.apiUrl}/update`, {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ collection: 'collections', item: {
-                                                    id: c.id,
-                                                    date: '2026-06-01',
-                                                    active_month: '2026-05'
-                                                }})
-                                            });
-                                            migrated = true;
-                                        }
-                                    }
-                                }
-
-                                // 2. Migrate existing collections saved on June 1st/2nd physically without active_month
-                                if (data.collections) {
-                                    for (const c of data.collections) {
-                                        if (c.date.startsWith('2026-06') && !c.active_month && !c.activeMonth) {
-                                            c.active_month = '2026-05';
-                                            c.activeMonth = '2026-05';
-                                            console.log("Auto-migrating collection active_month:", c.receipt);
-                                            await fetch(`${this.apiUrl}/update`, {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ collection: 'collections', item: {
-                                                    id: c.id,
-                                                    active_month: '2026-05'
-                                                }})
-                                            });
-                                            migrated = true;
-                                        }
-                                    }
-                                }
-
-                                // 3. Migrate existing projections saved on June 1st/2nd physically without active_month
-                                if (data.projections) {
-                                    for (const p of data.projections) {
-                                        if (p.date.startsWith('2026-06') && !p.active_month && !p.activeMonth) {
-                                            p.active_month = '2026-05';
-                                            p.activeMonth = '2026-05';
-                                            console.log("Auto-migrating projection active_month for territory:", p.territoryId || p.territory_id);
-                                            await fetch(`${this.apiUrl}/update`, {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ collection: 'projections', item: {
-                                                    id: p.id,
-                                                    active_month: '2026-05'
-                                                }})
-                                            });
-                                            migrated = true;
-                                        }
-                                    }
-                                }
-
-                                // 4. If a territory has collections on June 1st but projection is on May 31st:
-                                if (data.projections && data.collections) {
-                                    const activeTIds = new Set(data.collections.filter(c => c.date === '2026-06-01').map(c => c.territoryId || c.territory_id));
-                                    for (const tId of activeTIds) {
-                                        const projJune1 = data.projections.find(p => (p.territoryId === tId || p.territory_id === tId) && p.date === '2026-06-01');
-                                        if (!projJune1) {
-                                            const projMay31 = data.projections.find(p => (p.territoryId === tId || p.territory_id === tId) && p.date === '2026-05-31');
-                                            if (projMay31) {
-                                                console.log("Auto-migrating projection for territory:", tId);
-                                                await fetch(`${this.apiUrl}/update`, {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({ collection: 'projections', item: {
-                                                        territory_id: tId,
-                                                        date: '2026-06-01',
-                                                        regular_amount: projMay31.regularAmount || projMay31.amount || 0,
-                                                        advance_amount: projMay31.advanceAmount || 0,
-                                                        amount: projMay31.amount || 0,
-                                                        file_count: projMay31.fileCount || 0,
-                                                        active_month: '2026-05'
-                                                    }})
-                                                });
-                                                migrated = true;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if (migrated) {
-                                    console.log("Auto-migration complete. Refreshing UI cache...");
-                                    const refreshRes = await fetch(`${this.apiUrl}/db`);
-                                    const refreshData = await refreshRes.json();
-                                    ['users', 'targets', 'projections', 'collections', 'offroad_vehicles', 'settlements', 'vehicle_performance'].forEach(collection => {
-                                        if (refreshData[collection]) this.convertKeys(refreshData[collection]);
-                                    });
-                                    this.cache = refreshData;
-                                    
-                                    setTimeout(() => {
-                                        if (document.getElementById('officer-dashboard-panel')) {
-                                            UI.renderOfficerDashboard();
-                                        } else if (document.getElementById('views-container').innerHTML.includes('Admin Intelligence Dashboard')) {
-                                            UI.renderAdminDashboard();
-                                        }
-                                    }, 100);
-                                }
-                            }
-                        } catch (err) {
-                            console.error("Auto-migration error:", err);
-                        }
-                    })();
-
                     return data;
                 } catch (err) {
                     console.error("Failed to connect to Backend:", err);
-                    alert("Unable to connect to the server. Please check your internet connection and try again.");
+                    if (retries > 0) {
+                        UI.setLoaderText("Waking up Database Server... Please wait");
+                        await new Promise(r => setTimeout(r, 2000));
+                        return await this.init(retries - 1);
+                    }
+                    // We don't alert here anymore to let window.onload handle the global UI fallback gracefully
+                    return null;
                 }
             },
 
@@ -1107,17 +983,16 @@
         const Calc = {
             getMetrics(territoryId = null) {
                 const db = Store.get();
-                const todayStr = Utils.getLocalDate();
+                const today = new Date();
+                const todayStr = Utils.getLocalDate(today);
                 const currentMonth = Utils.getActiveMonth();
-                const todayParts = todayStr.split('-');
-                const todayDateObj = new Date(parseInt(todayParts[0]), parseInt(todayParts[1]) - 1, parseInt(todayParts[2]));
-                const yesterdayDateObj = new Date(todayDateObj);
-                yesterdayDateObj.setDate(yesterdayDateObj.getDate() - 1);
-                const yesterdayStr = Utils.getLocalDate(yesterdayDateObj);
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = Utils.getLocalDate(yesterday);
 
-                let collections = db.collections.filter(c => (c.activeMonth || c.active_month || c.date.slice(0, 7)) === currentMonth);
+                let collections = db.collections.filter(c => c.date.startsWith(currentMonth));
                 let targets = db.targets.filter(t => t.month === currentMonth);
-                let projections = db.projections.filter(p => (p.activeMonth || p.active_month || p.date.slice(0, 7)) === currentMonth);
+                let projections = db.projections.filter(p => p.date.startsWith(currentMonth));
 
                 if (territoryId) {
                     if (Array.isArray(territoryId)) {
@@ -1184,24 +1059,11 @@
                     projAcc = 100;
                 }
 
-                // Rigorous Days Left & Run Rate math for both standard and extended months
-                const [activeYear, activeMonthNum] = currentMonth.split('-').map(Number);
-                const realToday = new Date();
-                const realTodayStr = new Date(realToday.getTime() - realToday.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-                
-                let daysLeft = 0;
-                if (realTodayStr.slice(0, 7) === currentMonth) {
-                    const daysInMonth = new Date(activeYear, activeMonthNum, 0).getDate();
-                    const dayOfMonth = todayDateObj.getDate();
-                    daysLeft = daysInMonth - dayOfMonth;
-                } else if (realTodayStr.slice(0, 7) < currentMonth) {
-                    const daysInMonth = new Date(activeYear, activeMonthNum, 0).getDate();
-                    daysLeft = daysInMonth;
-                } else {
-                    daysLeft = 0; // Exceeded the active month, treat as final/extended days
-                }
-
+                const now = new Date();
+                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                const dayOfMonth = now.getDate();
                 const remainingAmt = Math.max(0, presetProjTotal - mtdColl);
+                const daysLeft = daysInMonth - dayOfMonth;
                 const rdrr = daysLeft > 0 ? remainingAmt / daysLeft : remainingAmt;
 
                 const rpi = (achievement * 0.4) + (projAcc * 0.2) + (lmNpRecPct * 0.2) + (cureRate * 0.2);
@@ -1238,77 +1100,6 @@
                 if (score >= 90) return 'bg-green-100 dark:bg-green-900/30 border-green-200';
                 if (score >= 70) return 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200';
                 return 'bg-red-100 dark:bg-red-900/30 border-red-200';
-            },
-
-            getAppUsePercentage(territoryId) {
-                if (!territoryId) return 0;
-                
-                const db = Store.get();
-                if (!db || !db.projections || !db.collections) return 0;
-                
-                const activeMonth = Utils.getActiveMonth();
-                const bounds = Utils.getMonthBounds();
-                const startOfMonth = bounds.startOfMonth;
-                const endOfMonth = bounds.endOfMonth;
-                const today = Utils.getLocalDate();
-                
-                const calcEndDate = (today < startOfMonth) ? startOfMonth : (today > endOfMonth ? endOfMonth : today);
-                
-                const dates = [];
-                const [year, month] = activeMonth.split('-').map(Number);
-                const [endYear, endMonth, endDay] = calcEndDate.split('-').map(Number);
-                let curr = new Date(year, month - 1, 1);
-                const endD = new Date(endYear, endMonth - 1, endDay);
-                while (curr <= endD) {
-                    const yStr = curr.getFullYear();
-                    const mStr = String(curr.getMonth() + 1).padStart(2, '0');
-                    const dStr = String(curr.getDate()).padStart(2, '0');
-                    dates.push(`${yStr}-${mStr}-${dStr}`);
-                    curr.setDate(curr.getDate() + 1);
-                }
-                
-                if (dates.length === 0) return 100;
-                
-                const ids = String(territoryId).split(',').filter(Boolean);
-                const territoryProjs = db.projections.filter(p => ids.includes(p.territoryId || p.territory_id) && (p.activeMonth || p.active_month) === activeMonth);
-                const territoryColls = db.collections.filter(c => ids.includes(c.territoryId || c.territory_id) && (c.activeMonth || c.active_month) === activeMonth);
-                
-                let totalScore = 0;
-                
-                dates.forEach(d => {
-                    const projs = territoryProjs.filter(p => p.date === d);
-                    const hasColl = territoryColls.some(c => c.date === d);
-                    
-                    let dayScore = 0;
-                    if (projs.length > 0) {
-                        dayScore += 40;
-                        
-                        let isOnTime = false;
-                        for (const proj of projs) {
-                            if (proj.timestamp) {
-                                const pTime = new Date(Number(proj.timestamp));
-                                if (pTime.getHours() < 10) {
-                                    isOnTime = true;
-                                    break;
-                                }
-                            } else {
-                                isOnTime = true;
-                                break;
-                            }
-                        }
-                        if (isOnTime) {
-                            dayScore += 20;
-                        }
-                    }
-                    
-                    if (hasColl) {
-                        dayScore += 40;
-                    }
-                    
-                    totalScore += dayScore;
-                });
-                
-                return Number((totalScore / dates.length).toFixed(1));
             }
         };
 
@@ -1404,6 +1195,36 @@
             currentLoginRole: 'officer',
 
             // --- LOADER ---
+            setLoaderText(text) {
+                const textEl = document.getElementById('loader-text');
+                if (textEl) textEl.innerText = text;
+            },
+
+            showConnectionError() {
+                const existing = document.getElementById('connection-error-view');
+                if (existing) existing.remove();
+
+                const errorDiv = document.createElement('div');
+                errorDiv.id = 'connection-error-view';
+                errorDiv.className = 'fixed inset-0 z-[110] flex items-center justify-center bg-slate-50 dark:bg-[#202124] p-4 animate-fade-in';
+                errorDiv.innerHTML = `
+                    <div class="glass-panel max-w-md w-full p-8 rounded-2xl shadow-2xl text-center border border-red-100 dark:border-red-900/30 bg-white dark:bg-[#303134]">
+                        <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fa-solid fa-server text-3xl"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Server Connection Failed</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                            We are unable to connect to the database server. This might be due to a temporary network issue or the server taking too long to wake up.
+                        </p>
+                        <button type="button" onclick="window.location.reload()" 
+                            class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center">
+                            <i class="fa-solid fa-arrows-rotate mr-2"></i> Retry Connection
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(errorDiv);
+            },
+
             toggleLoader(show) {
                 const loader = document.getElementById('global-loader');
                 if (show) {
@@ -1414,6 +1235,7 @@
                     loader.classList.add('opacity-0');
                     setTimeout(() => {
                         loader.classList.add('hidden');
+                        this.setLoaderText("Processing");
                     }, 300);
                 }
             },
@@ -1472,8 +1294,8 @@
 
             openSystemSettingsModal() {
                 const db = Store.get();
-                let activeMonth = db.system_settings?.find(s => s.key === 'active_month')?.value || Utils.getLocalDate().slice(0, 7);
-                let cutoffHours = parseInt(db.system_settings?.find(s => s.key === 'cutoff_extension_hours')?.value || 0);
+                let activeMonth = ((db.system_settings && db.system_settings.find(s => s.key === 'active_month')) ? db.system_settings.find(s => s.key === 'active_month').value : null) || Utils.getLocalDate().slice(0, 7);
+                let cutoffHours = parseInt(((db.system_settings && db.system_settings.find(s => s.key === 'cutoff_extension_hours')) ? db.system_settings.find(s => s.key === 'cutoff_extension_hours').value : null) || 0);
 
                 const getCutoffLabel = (h) => {
                     if (h === 0) return "Midnight (12:00 AM)";
@@ -1612,9 +1434,9 @@
 
             updateMomentumChart() {
                 const db = Store.get();
-                const tid = document.getElementById('momentum-territory')?.value || '';
-                const startDateVal = document.getElementById('momentum-start')?.value;
-                const endDateVal = document.getElementById('momentum-end')?.value;
+                const tid = (document.getElementById('momentum-territory') ? document.getElementById('momentum-territory').value : '') || '';
+                const startDateVal = (document.getElementById('momentum-start') ? document.getElementById('momentum-start').value : '');
+                const endDateVal = (document.getElementById('momentum-end') ? document.getElementById('momentum-end').value : '');
 
                 const start = startDateVal ? new Date(startDateVal) : new Date(Date.now() - 29 * 24 * 60 * 60 * 1000);
                 const end = endDateVal ? new Date(endDateVal) : new Date(Date.now());
@@ -2882,9 +2704,9 @@
             renderAdminDashboard(tableMode = 'compact') {
                 const metrics = Calc.getMetrics();
                 const db = Store.get();
-                const cutoffSetting = db.system_settings?.find(s => s.key === 'cutoff_extension_hours');
-                const cutoffHours = parseInt(cutoffSetting?.value || 0);
-                const activeMonth = db.system_settings?.find(s => s.key === 'active_month')?.value || 'N/A';
+                const cutoffSetting = db.system_settings ? db.system_settings.find(s => s.key === 'cutoff_extension_hours') : null;
+                const cutoffHours = parseInt(cutoffSetting ? cutoffSetting.value : 0) || 0;
+                const activeMonth = ((db.system_settings && db.system_settings.find(s => s.key === 'active_month')) ? db.system_settings.find(s => s.key === 'active_month').value : null) || 'N/A';
 
                 // Calculate dynamic expected target achievement for the current day of the month
                 const todayDate = new Date();
@@ -2910,8 +2732,7 @@
                     // Calculate Last Day Achievement for the new column
                     const ldAch = m.yestProjAmt > 0 ? ((m.yestCollAmt / m.yestProjAmt) * 100).toFixed(1) : '0.0';
                     const tdAch = m.todayProj > 0 ? ((m.todayColl / m.todayProj) * 100).toFixed(1) : (m.todayColl > 0 ? '100+' : '0.0');
-                    const appUsePct = Calc.getAppUsePercentage(t.id);
-                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch, appUsePct };
+                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch };
                 });
 
                 // Helper to calculate totals
@@ -2922,7 +2743,7 @@
                         presetProjReg: 0, presetProjAdv: 0, presetProjTotal: 0,
                         yestProjAmt: 0, yestProjFiles: 0, yestCollAmt: 0, yestCollFiles: 0,
                         lmNpTargetAmt: 0, lmNpTargetFiles: 0, mtdLmNpColl: 0, mtdLmNpFiles: 0,
-                        todayProj: 0, todayColl: 0, appUsePct: 0
+                        todayProj: 0, todayColl: 0
                     };
 
                     data.forEach(t => {
@@ -2972,9 +2793,6 @@
 
                     // Weighted RPI for Group
                     sums.rpi = ((parseFloat(sums.achievement) * 0.4) + (projAcc * 0.2) + (lmNpRecPct * 0.2) + (cureRate * 0.2)).toFixed(1);
-                    
-                    // App Use Group Average
-                    sums.appUsePct = data.length > 0 ? Number((data.reduce((sum, item) => sum + (parseFloat(item.appUsePct) || 0), 0) / data.length).toFixed(1)) : 0;
 
                     return sums;
                 };
@@ -3056,16 +2874,6 @@
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center ${!isTotal ? 'text-rose-800 bg-rose-50 dark:bg-rose-900/20' : ''}">${t.lmNpTargetFiles}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-right font-bold ${!isTotal ? 'text-rose-600' : ''}">${parseInt(t.mtdLmNpColl).toLocaleString()}</td>` : ''}
                         ${!isCompact ? `<td class="p-1.5 border dark:border-slate-600 text-center font-bold ${!isTotal ? 'text-rose-600' : ''}">${t.mtdLmNpFiles}</td>` : ''}
-                        <td class="p-1.5 border dark:border-slate-600 text-center font-bold border-l-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/40">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-black ${
-                                t.appUsePct >= 90 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
-                                t.appUsePct >= 70 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
-                                'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                            }">
-                                <i class="fa-solid ${t.appUsePct >= 90 ? 'fa-circle-check' : t.appUsePct >= 70 ? 'fa-triangle-exclamation' : 'fa-circle-xmark'} mr-1 opacity-80"></i>
-                                ${t.appUsePct}%
-                            </span>
-                        </td>
                     </tr>`;
                 };
 
@@ -3075,7 +2883,7 @@
                 const today = new Date();
 
                 const modes = ['Bank Transfer', 'bKash', 'Cheque', 'Cash'];
-                const modeData = modes.map(m => db.collections.filter(c => (c.activeMonth || c.active_month || c.date.slice(0, 7)) === Utils.getActiveMonth() && c.mode === m).reduce((s, c) => s + parseFloat(c.amount), 0));
+                const modeData = modes.map(m => db.collections.filter(c => c.date.startsWith(Utils.getActiveMonth()) && c.mode === m).reduce((s, c) => s + parseFloat(c.amount), 0));
 
                 const container = document.getElementById('views-container');
                 const isCompact = tableMode === 'compact';
@@ -3358,41 +3166,40 @@
                                 </div>
                             </div>
                             
-                            <div class="overflow-auto max-h-[600px] border border-slate-200 dark:border-slate-700 rounded-xl relative shadow-inner scrollbar-thin">
+                            <div class="overflow-x-auto pb-4">
                                 <table class="w-full text-xs text-left border-collapse whitespace-nowrap">
-                                    <thead class="text-slate-600 dark:text-slate-200 uppercase tracking-wider font-bold">
-                                        <tr class="bg-slate-100 dark:bg-slate-700">
-                                            <th class="p-2 border dark:border-slate-600 sticky top-0 left-0 bg-slate-100 dark:bg-slate-700 z-30 shadow-sm text-center">Part</th>
-                                            <th class="p-2 border dark:border-slate-600 sticky top-0 left-10 bg-slate-100 dark:bg-slate-700 z-30 shadow-sm">Territory</th>
-                                            <th class="p-2 border dark:border-slate-600 bg-blue-50 dark:bg-slate-800 sticky top-0 z-20">Total Files</th>
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-blue-50 dark:bg-slate-800 sticky top-0 z-20">Proj Files (MTD)</th>` : ''}
-                                            <th class="p-2 border dark:border-slate-600 bg-blue-50 dark:bg-slate-800 sticky top-0 z-20">Paid Files</th>
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-blue-50 dark:bg-slate-800 sticky top-0 z-20">Non-Pay Files</th>` : ''}
+                                    <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 uppercase tracking-wider font-bold">
+                                        <tr>
+                                            <th class="p-2 border dark:border-slate-600 sticky left-0 bg-slate-100 dark:bg-slate-700 z-10 shadow-sm text-center">Part</th>
+                                            <th class="p-2 border dark:border-slate-600 sticky left-10 bg-slate-100 dark:bg-slate-700 z-10 shadow-sm">Territory</th>
+                                            <th class="p-2 border dark:border-slate-600 bg-blue-50 dark:bg-slate-800/50">Total Files</th>
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-blue-50 dark:bg-slate-800/50">Proj Files (MTD)</th>` : ''}
+                                            <th class="p-2 border dark:border-slate-600 bg-blue-50 dark:bg-slate-800/50">Paid Files</th>
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-blue-50 dark:bg-slate-800/50">Non-Pay Files</th>` : ''}
                                             
-                                            <th class="p-2 border dark:border-slate-600 bg-slate-100 dark:bg-slate-700 sticky top-0 z-20">Total EMI</th>
+                                            <th class="p-2 border dark:border-slate-600">Total EMI</th>
                                             
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-slate-100 dark:bg-slate-700 sticky top-0 z-20">Target Proj (Reg)</th>` : ''}
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-slate-100 dark:bg-slate-700 sticky top-0 z-20">Target Proj (Adv)</th>` : ''}
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600">Target Proj (Reg)</th>` : ''}
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600">Target Proj (Adv)</th>` : ''}
                                             
-                                            <th class="p-2 border dark:border-slate-600 bg-slate-100 dark:bg-slate-700 sticky top-0 z-20 font-bold">Total Proj</th>
-                                            <th class="p-2 border dark:border-slate-600 bg-green-50 dark:bg-green-900 sticky top-0 z-20">Till Day Coll</th>
-                                            <th class="p-2 border dark:border-slate-600 bg-blue-50 dark:bg-blue-900 sticky top-0 z-20">Ach %</th>
+                                            <th class="p-2 border dark:border-slate-600 font-bold">Total Proj</th>
+                                            <th class="p-2 border dark:border-slate-600 bg-green-50 dark:bg-green-900/10">Till Day Coll</th>
+                                            <th class="p-2 border dark:border-slate-600 bg-blue-50 dark:bg-blue-900/20">Ach %</th>
                                             
-                                            <th class="p-2 border dark:border-slate-600 bg-slate-100 dark:bg-slate-700 sticky top-0 z-20">Today's Proj</th>
-                                            <th class="p-2 border dark:border-slate-600 bg-green-50 dark:bg-green-900 sticky top-0 z-20">Today's Coll</th>
-                                            <th class="p-2 border dark:border-slate-600 bg-fuchsia-100 dark:bg-fuchsia-900 text-fuchsia-700 font-bold sticky top-0 z-20">Today Ach %</th>
+                                            <th class="p-2 border dark:border-slate-600">Today's Proj</th>
+                                            <th class="p-2 border dark:border-slate-600 bg-green-50 dark:bg-green-900/10">Today's Coll</th>
+                                            <th class="p-2 border dark:border-slate-600 bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 font-bold">Today Ach %</th>
                                             
-                                            <th class="p-2 border dark:border-slate-600 bg-orange-50 dark:bg-orange-900 border-l-2 border-slate-200 dark:border-slate-600 sticky top-0 z-20">Last Day Proj Amt</th>
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-orange-50 dark:bg-orange-900 sticky top-0 z-20">Last Day Proj Files</th>` : ''}
-                                            <th class="p-2 border dark:border-slate-600 bg-orange-50 dark:bg-orange-900 sticky top-0 z-20">Last Day Coll Amt</th>
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-orange-50 dark:bg-orange-900 sticky top-0 z-20">Last Day Coll Files</th>` : ''}
-                                            <th class="p-2 border dark:border-slate-600 bg-orange-100 dark:bg-orange-900 font-bold text-orange-700 sticky top-0 z-20">Last Day Ach%</th>
+                                            <th class="p-2 border dark:border-slate-600 bg-orange-50 dark:bg-orange-900/10 border-l-2 border-slate-200 dark:border-slate-600">Last Day Proj Amt</th>
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-orange-50 dark:bg-orange-900/10">Last Day Proj Files</th>` : ''}
+                                            <th class="p-2 border dark:border-slate-600 bg-orange-50 dark:bg-orange-900/10">Last Day Coll Amt</th>
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-orange-50 dark:bg-orange-900/10">Last Day Coll Files</th>` : ''}
+                                            <th class="p-2 border dark:border-slate-600 bg-orange-100 dark:bg-orange-900/30 font-bold text-orange-700">Last Day Ach%</th>
  
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-rose-50 dark:bg-rose-900 border-l-2 border-slate-200 dark:border-slate-600 sticky top-0 z-20">LM NP Amount</th>` : ''}
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-rose-50 dark:bg-rose-900 sticky top-0 z-20">LM NP Files</th>` : ''}
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-rose-50 dark:bg-rose-900 sticky top-0 z-20">LM NP Rec (Amt)</th>` : ''}
-                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-rose-50 dark:bg-rose-900 sticky top-0 z-20">LM NP Rec (Files)</th>` : ''}
-                                            <th class="p-2 border dark:border-slate-600 bg-violet-100 dark:bg-violet-900 text-violet-700 font-bold border-l-2 border-slate-200 dark:border-slate-600 text-center sticky top-0 z-20">App Use %</th>
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-rose-50 dark:bg-rose-900/10 border-l-2 border-slate-200 dark:border-slate-600">LM NP Amount</th>` : ''}
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-rose-50 dark:bg-rose-900/10">LM NP Files</th>` : ''}
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-rose-50 dark:bg-rose-900/10">LM NP Rec (Amt)</th>` : ''}
+                                            ${!isCompact ? `<th class="p-2 border dark:border-slate-600 bg-rose-50 dark:bg-rose-900/10">LM NP Rec (Files)</th>` : ''}
                                         </tr>
                                     </thead>
                                     <tbody id="ranking-table-body"></tbody>
@@ -3594,9 +3401,9 @@
             renderAdminOffroadView(viewMode = 'active') {
                 const db = Store.get();
                 // Get filter values (handle potential nulls/undefined)
-                const fTerritory = document.getElementById('offroad-filter-territory')?.value || '';
-                const fMonth = document.getElementById('offroad-filter-month')?.value || '';
-                const fReason = document.getElementById('offroad-filter-reason')?.value || '';
+                const fTerritory = (document.getElementById('offroad-filter-territory') ? document.getElementById('offroad-filter-territory').value : '') || '';
+                const fMonth = (document.getElementById('offroad-filter-month') ? document.getElementById('offroad-filter-month').value : '') || '';
+                const fReason = (document.getElementById('offroad-filter-reason') ? document.getElementById('offroad-filter-reason').value : '') || '';
 
                 // Flatten data with territory names and apply filters
                 const allCases = db.offroad_vehicles.map(v => {
@@ -3868,9 +3675,7 @@
                                      ${submitted.length === 0 ?
                         `<div class="p-8 text-center text-slate-400 italic">No projections submitted yet.</div>` :
                         `<div class="divide-y divide-slate-100 dark:divide-slate-700">
-                                            ${submitted.map(item => {
-                            const isUnlocked = db.unlocks && db.unlocks[item.id] && db.unlocks[item.id] > Date.now();
-                            return `
+                                            ${submitted.map(item => `
                                                 <div class="p-4 flex items-center justify-between group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                                                     <div>
                                                         <p class="font-bold text-slate-700 dark:text-slate-200">${item.name}</p>
@@ -3882,14 +3687,6 @@
                                                     <div class="text-right flex flex-col items-end">
                                                         <span class="text-[10px] text-slate-400 block mb-1 font-bold">Files: ${item.proj.fileCount || item.proj.file_count || 0}</span>
                                                         <div class="flex items-center space-x-3 mt-1">
-                                                            ${isUnlocked ? `
-                                                                <span class="text-[10px] font-black text-green-600 bg-green-100 dark:bg-green-950/30 px-2.5 py-1 rounded-lg flex items-center shadow-sm border border-green-200" title="Unlocked for Editing">
-                                                                    <i class="fa-solid fa-lock-open mr-1"></i> UNLOCKED
-                                                                </span>` : `
-                                                                <button onclick="UI.unlockProjection('${item.id}')" class="text-[10px] bg-slate-800 hover:bg-slate-900 text-white font-bold px-2 py-1 rounded shadow transition transform active:scale-95 flex items-center" title="Unlock for 30m Editing">
-                                                                    <i class="fa-solid fa-key mr-1"></i> Unlock Edit
-                                                                </button>`
-                                                            }
                                                             <button onclick="UI.openCollectionModal(null, '${item.proj.territoryId || item.proj.territory_id}')" class="text-xs text-emerald-500 hover:text-emerald-700 font-bold flex items-center">
                                                                 <i class="fa-solid fa-plus mr-1"></i> Coll
                                                             </button>
@@ -3899,8 +3696,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            `;
-                        }).join('')}
+                                            `).join('')}
                                         </div>`
                     }
                                 </div>
@@ -3932,16 +3728,24 @@
 
             async unlockAllProjections() {
                 const db = Store.get();
-                const allTerritories = db.territories;
+                const today = Utils.getLocalDate();
+                const missing = db.territories.filter(t => {
+                    return !db.projections.some(p => (p.territoryId === t.id || p.territory_id === t.id) && p.date === today);
+                });
 
-                if (!confirm(`Are you sure you want to unlock editing and submission for all ${allTerritories.length} territories for 30 minutes?`)) return;
+                if (missing.length === 0) {
+                    UI.showSuccess('All territories already submitted');
+                    return;
+                }
+
+                if (!confirm(`Are you sure you want to unlock all ${missing.length} missing territories for 30 minutes?`)) return;
 
                 UI.toggleLoader(true);
                 const unlockUntil = Date.now() + (30 * 60 * 1000);
                 if (!db.unlocks) db.unlocks = {};
 
                 try {
-                    for (const t of allTerritories) {
+                    for (const t of missing) {
                         db.unlocks[t.id] = unlockUntil;
                         await fetch(`${Store.apiUrl}/unlock`, {
                             method: 'POST',
@@ -3949,7 +3753,7 @@
                             body: JSON.stringify({ territoryId: t.id, unlockUntil: unlockUntil })
                         });
                     }
-                    UI.showSuccess(`Successfully unlocked editing and submission for all ${allTerritories.length} territories`);
+                    UI.showSuccess(`Successfully unlocked ${missing.length} territories`);
                     this.renderAdminProjections();
                 } catch (err) {
                     console.error('Bulk unlock failed', err);
@@ -4028,9 +3832,7 @@
                     regular_amount: amount,
                     advance_amount: 0,
                     amount: amount,
-                    file_count: files,
-                    active_month: (existingProj && (existingProj.activeMonth || existingProj.active_month)) || (today === Utils.getLocalDate() ? Utils.getActiveMonth() : today.slice(0, 7)),
-                    timestamp: (existingProj && existingProj.timestamp) ? Number(existingProj.timestamp) : Date.now()
+                    file_count: files
                 };
 
                 if (existingProj && existingProj.id) {
@@ -4186,7 +3988,9 @@
             },
 
             renderAdminHistory() {
-                const { startOfMonth, endOfMonth } = Utils.getMonthBounds();
+                const today = new Date();
+                const startOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth(), 1));
+                const endOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
 
                 document.getElementById('views-container').innerHTML = `
             <div class="animate-entry max-w-6xl mx-auto" >
@@ -4408,48 +4212,11 @@
                 // Calculate File Touch Percentage
                 const fileTouchPct = metrics.targetFiles > 0 ? ((metrics.uniquePaidCodes / metrics.targetFiles) * 100).toFixed(1) : 0;
 
-                const appUsePct = Calc.getAppUsePercentage(linkedTId);
-
                 document.getElementById('views-container').innerHTML = `
             <div id="officer-dashboard-panel" class="animate-entry mb-4 sm:mb-6" >
-                        <div class="flex justify-between items-center mb-2">
-                            <div>
-                                <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h2>
-                                <p class="text-[10px] text-slate-400">Territory: ${linkedTId}</p>
-                            </div>
-                            
-                            <!-- Premium Glassmorphic App Use Gauge -->
-                            <div class="flex items-center gap-3">
-                                <div class="hidden sm:flex flex-col items-end">
-                                    <span class="text-[9px] uppercase tracking-widest font-black text-slate-400 dark:text-slate-500">System Engagement</span>
-                                    <span class="text-xs font-bold text-slate-600 dark:text-slate-300">App Use Rating</span>
-                                </div>
-                                <div class="relative flex items-center justify-center p-2.5 rounded-2xl bg-white/40 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover-lift group">
-                                    <div class="absolute inset-0 rounded-2xl bg-gradient-to-tr ${
-                                        appUsePct >= 90 ? 'from-emerald-500/10 to-teal-500/5' :
-                                        appUsePct >= 70 ? 'from-amber-500/10 to-orange-500/5' :
-                                        'from-rose-500/10 to-red-500/5'
-                                    } opacity-100 group-hover:scale-105 transition-transform duration-500"></div>
-                                    
-                                    <div class="flex items-center gap-2 relative z-10">
-                                        <div class="flex items-center justify-center w-8 h-8 rounded-xl ${
-                                            appUsePct >= 90 ? 'bg-emerald-500/10 text-emerald-500' :
-                                            appUsePct >= 70 ? 'bg-amber-500/10 text-amber-500' :
-                                            'bg-rose-500/10 text-rose-500'
-                                        } text-sm font-black transition-transform duration-300 group-hover:rotate-12">
-                                            <i class="fa-solid fa-gauge-high"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-[8px] uppercase tracking-widest font-black text-slate-400 leading-none mb-0.5">App Use</div>
-                                            <div class="text-sm font-black ${
-                                                appUsePct >= 90 ? 'text-emerald-500' :
-                                                appUsePct >= 70 ? 'text-amber-500' :
-                                                'text-rose-500'
-                                            } leading-none">${appUsePct}%</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="flex justify-between items-end mb-2">
+                            <h2 class="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h2>
+                            <p class="text-xs sm:text-sm text-slate-500 font-medium">${Auth.currentUser.officerName || Auth.currentUser.username}</p>
                         </div>
                     </div>
                     
@@ -4745,7 +4512,7 @@
                 }
 
                 // Get Filter
-                const fReason = document.getElementById('officer-offroad-filter-reason')?.value || '';
+                const fReason = (document.getElementById('officer-offroad-filter-reason') ? document.getElementById('officer-offroad-filter-reason').value : '') || '';
 
                 const offroadData = db.offroad_vehicles.filter(v => v.territoryId === linkedTId);
 
@@ -5414,27 +5181,10 @@
                 sums.todayAch = sums.todayProj > 0 ? ((sums.todayColl / sums.todayProj) * 100).toFixed(1) : (sums.todayColl > 0 ? '100+' : '0.0');
                 sums.lmNpRecPct = sums.lmNpTargetAmt > 0 ? ((sums.mtdLmNpColl / sums.lmNpTargetAmt) * 100).toFixed(1) : '0.0';
 
-                // Rigorous Days Left & Run Rate math for both standard and extended months
-                const todayStr = Utils.getLocalDate();
-                const todayParts = todayStr.split('-');
-                const todayDateObj = new Date(parseInt(todayParts[0]), parseInt(todayParts[1]) - 1, parseInt(todayParts[2]));
-                const [activeYear, activeMonthNum] = currentMonth.split('-').map(Number);
-                const realToday = new Date();
-                const realTodayStr = new Date(realToday.getTime() - realToday.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-                
-                let daysLeft = 0;
-                if (realTodayStr.slice(0, 7) === currentMonth) {
-                    const daysInMonth = new Date(activeYear, activeMonthNum, 0).getDate();
-                    const dayOfMonth = todayDateObj.getDate();
-                    daysLeft = daysInMonth - dayOfMonth;
-                } else if (realTodayStr.slice(0, 7) < currentMonth) {
-                    const daysInMonth = new Date(activeYear, activeMonthNum, 0).getDate();
-                    daysLeft = daysInMonth;
-                } else {
-                    daysLeft = 0; // Exceeded the active month, treat as final/extended days
-                }
-
+                const now = new Date();
+                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
                 const remainingAmt = Math.max(0, sums.presetProjTotal - sums.mtdColl);
+                const daysLeft = daysInMonth - now.getDate();
                 sums.rdrr = daysLeft > 0 ? remainingAmt / daysLeft : remainingAmt;
                 sums.remainingAmt = remainingAmt;
 
@@ -6115,9 +5865,7 @@
                             regular_amount: amount,
                             advance_amount: 0,
                             amount: amount,
-                            file_count: files,
-                            active_month: (existingProj && (existingProj.activeMonth || existingProj.active_month)) || (today === Utils.getLocalDate() ? Utils.getActiveMonth() : today.slice(0, 7)),
-                            timestamp: (existingProj && existingProj.timestamp) ? Number(existingProj.timestamp) : Date.now()
+                            file_count: files
                         };
 
                         if (existingProj && existingProj.id) {
@@ -6180,8 +5928,7 @@
                             advance_amount: advAmt,
                             mode: document.getElementById('coll-mode').value,
                             is_lm_np: document.getElementById('coll-lmnp').checked,
-                            timestamp: Date.now(),
-                            active_month: (todayStr === Utils.getLocalDate() ? Utils.getActiveMonth() : todayStr.slice(0, 7))
+                            timestamp: Date.now()
                         };
 
                         await Store.update('collections', entry);
@@ -6310,8 +6057,10 @@
 
             // --- HISTORY ---
             renderOfficerHistory() {
-                // Default to active month boundaries
-                const { startOfMonth, endOfMonth } = Utils.getMonthBounds();
+                const today = new Date();
+                // Default to current month
+                const startOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth(), 1));
+                const endOfMonth = Utils.getLocalDate(new Date(today.getFullYear(), today.getMonth() + 1, 0));
 
                 document.getElementById('views-container').innerHTML = `
             <div class="animate-entry max-w-5xl mx-auto" >
@@ -6453,7 +6202,7 @@
                 let csvContent = "data:text/csv;charset=utf-8,";
                 csvContent += "Date,Territory,CustomerCode,Receipt,Regular,Advance,TotalAmount,Mode,Type\n";
                 db.collections.forEach(c => {
-                    const tName = db.territories.find(t => t.id === c.territoryId)?.name || 'Unknown';
+                    const tName = (db.territories.find(t => t.id === c.territoryId) ? db.territories.find(t => t.id === c.territoryId).name : 'Unknown') || 'Unknown';
                     const reg = c.regularAmount || (c.advanceAmount ? 0 : c.amount); // Fallback for old data
                     const adv = c.advanceAmount || 0;
 
@@ -6587,9 +6336,7 @@
 
             getDailyTrendData(tId) {
                 const db = Store.get();
-                const todayStr = Utils.getLocalDate();
-                const todayParts = todayStr.split('-');
-                const today = new Date(parseInt(todayParts[0]), parseInt(todayParts[1]) - 1, parseInt(todayParts[2]));
+                const today = new Date();
                 const labels = [];
                 const data = [];
                 for (let i = 6; i >= 0; i--) {
@@ -6597,7 +6344,7 @@
                     d.setDate(today.getDate() - i);
                     const dateStr = Utils.getLocalDate(d);
                     labels.push(dateStr.slice(5));
-                    const sum = db.collections.filter(c => (c.territoryId === tId || c.territory_id === tId) && c.date === dateStr).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+                    const sum = db.collections.filter(c => c.territoryId === tId && c.date === dateStr).reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
                     data.push(sum);
                 }
                 return { labels, data };
@@ -7104,7 +6851,7 @@
                 const rows = document.querySelectorAll('#vehicle-perf-table tbody tr');
                 const data = [];
                 rows.forEach(row => {
-                    const getVal = (name) => row.querySelector(`input[name = "${name}"]`)?.value || '';
+                    const getVal = (name) => (row.querySelector(`input[name = "${name}"]`) ? row.querySelector(`input[name = "${name}"]`).value : '') || '';
                     const cid = getVal('customerId');
 
                     if (cid) {
@@ -7276,7 +7023,7 @@
                             ${isOfficer ? `
                             <div class="flex flex-col justify-end pb-1">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase">Territory</span>
-                                <span class="text-sm font-bold text-brand-600">${db.territories.find(t => t.id === currentTId)?.name || 'N/A'}</span>
+                                <span class="text-sm font-bold text-brand-600">${(db.territories.find(t => t.id === currentTId) ? db.territories.find(t => t.id === currentTId).name : 'N/A') || 'N/A'}</span>
                                 <input type="hidden" name="territoryId" value="${currentTId}">
                             </div>` : `
                             <div>
@@ -7377,7 +7124,7 @@
                             ${isOfficer ? `
                             <div class="flex flex-col justify-end pb-1 text-right">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase">Territory</span>
-                                <span class="text-sm font-bold text-brand-600">${db.territories.find(t => t.id === currentTId)?.name || 'N/A'}</span>
+                                <span class="text-sm font-bold text-brand-600">${(db.territories.find(t => t.id === currentTId) ? db.territories.find(t => t.id === currentTId).name : 'N/A') || 'N/A'}</span>
                                 <input type="hidden" name="territoryId" value="${currentTId}">
                             </div>` : `
                             <div>
@@ -7446,8 +7193,7 @@
                     amount: reg + adv,
                     mode: formData.get('mode'),
                     is_lm_np: formData.get('isLmNp') === 'true',
-                    timestamp: Date.now(),
-                    active_month: (formData.get('date') === Utils.getLocalDate() ? Utils.getActiveMonth() : formData.get('date').slice(0, 7))
+                    timestamp: Date.now()
                 };
 
                 const existingId = formData.get('id');
@@ -7645,7 +7391,7 @@
                         ${isOfficer ? `
                         <div class="mb-4 p-3 bg-brand-50 dark:bg-brand-900/10 rounded-lg border border-brand-100 dark:border-brand-900/20">
                             <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Managing Territory</span>
-                            <span class="text-sm font-bold text-brand-600">${db.territories.find(t => t.id === currentTId)?.name || 'N/A'}</span>
+                            <span class="text-sm font-bold text-brand-600">${(db.territories.find(t => t.id === currentTId) ? db.territories.find(t => t.id === currentTId).name : 'N/A') || 'N/A'}</span>
                             <input type="hidden" name="territoryId" value="${currentTId}">
                         </div>` : `
                         <div>
@@ -7711,26 +7457,22 @@
                     adv = 0;
                 }
 
-                const today = Utils.getLocalDate();
                 const payload = {
                     territory_id: formData.get('territoryId'),
                     regular_amount: reg,
                     advance_amount: adv,
                     amount: total,
                     file_count: parseInt(formData.get('fileCount')) || 0,
-                    date: today,
-                    active_month: Utils.getActiveMonth()
+                    date: Utils.getLocalDate()
                 };
 
                 const dataId = formData.get('id');
-                const db = Store.get();
-                const existing = dataId ? db.projections.find(p => String(p.id) === String(dataId)) : db.projections.find(p => (p.territoryId === payload.territory_id || p.territory_id === payload.territory_id) && p.date === today);
-                payload.timestamp = (existing && existing.timestamp) ? Number(existing.timestamp) : Date.now();
-
                 if (dataId) {
                     payload.id = dataId;
-                    if (!payload.territory_id && existing) {
-                        payload.territory_id = existing.territoryId || existing.territory_id;
+                    if (!payload.territory_id) {
+                        const db = Store.get();
+                        const existing = db.projections.find(p => String(p.id) === String(dataId));
+                        if (existing) payload.territory_id = existing.territoryId || existing.territory_id;
                     }
                 }
 
@@ -7872,7 +7614,7 @@
                 const getAchievement = (card) => {
                     if (!card) return 'N/A';
                     const target = Array.from(card.querySelectorAll('span')).find(s => s.innerText.includes('Achievement'));
-                    return target ? target.nextElementSibling?.innerText.trim() : 'N/A';
+                    return target ? (target.nextElementSibling ? target.nextElementSibling.innerText : '').trim() : 'N/A';
                 };
 
                 // 1. Data Gathering
@@ -7891,18 +7633,18 @@
                 };
 
                 // Sections
-                const partACard = Array.from(dashboard.querySelectorAll('h3')).find(h => h.innerText.includes('Part A'))?.closest('.rounded-2xl');
-                const partBCard = Array.from(dashboard.querySelectorAll('h3')).find(h => h.innerText.includes('Part B'))?.closest('.rounded-2xl');
+                const partACard = Array.from(dashboard.querySelectorAll('h3')).find(h => h.innerText.includes('Part A')) ? Array.from(dashboard.querySelectorAll('h3')).find(h => h.innerText.includes('Part A')).closest('.rounded-2xl') : null;
+                const partBCard = Array.from(dashboard.querySelectorAll('h3')).find(h => h.innerText.includes('Part B')) ? Array.from(dashboard.querySelectorAll('h3')).find(h => h.innerText.includes('Part B')).closest('.rounded-2xl') : null;
 
                 const summaryPartA = {
-                    rpi: partACard?.querySelector('.text-xl.font-black')?.innerText.trim() || 'N/A',
+                    rpi: (partACard && partACard.querySelector('.text-xl.font-black') ? partACard.querySelector('.text-xl.font-black').innerText : '').trim() || 'N/A',
                     target: findValueByLabel('Target Amt', partACard),
                     coll: findValueByLabel('Coll Amt', partACard),
                     ach: getAchievement(partACard)
                 };
 
                 const summaryPartB = {
-                    rpi: partBCard?.querySelector('.text-xl.font-black')?.innerText.trim() || 'N/A',
+                    rpi: (partBCard && partBCard.querySelector('.text-xl.font-black') ? partBCard.querySelector('.text-xl.font-black').innerText : '').trim() || 'N/A',
                     target: findValueByLabel('Target Amt', partBCard),
                     coll: findValueByLabel('Coll Amt', partBCard),
                     ach: getAchievement(partBCard)
@@ -7975,7 +7717,7 @@
                 `;
 
                 // Ranking Table Section
-                const rankingTable = dashboard.querySelector('#ranking-table-body')?.closest('table');
+                const rankingTable = (dashboard.querySelector('#ranking-table-body') ? dashboard.querySelector('#ranking-table-body').closest('table') : null);
                 if (rankingTable) {
                     html += `<div style="${sectionTitle}">3. Territory Performance Ranking Details</div>`;
                     const clone = rankingTable.cloneNode(true);
@@ -8222,19 +7964,34 @@
                 document.getElementById('login-view').classList.remove('hidden');
             }
 
-            // Load data from backend
-            await Store.init();
+            try {
+                // Load data from backend
+                const db = await Store.init();
+                
+                if (!db) {
+                    // Cache is empty/null, connection failed completely after retries.
+                    UI.toggleLoader(false);
+                    document.getElementById('login-view').classList.add('hidden');
+                    UI.showConnectionError();
+                    return;
+                }
 
-            // Validate session and init UI
-            const loggedIn = await Auth.checkSession();
+                // Validate session and init UI
+                const loggedIn = await Auth.checkSession();
 
-            if (!loggedIn) {
-                document.getElementById('login-view').classList.remove('hidden');
-                UI.setLoginTab('officer');
+                if (!loggedIn) {
+                    document.getElementById('login-view').classList.remove('hidden');
+                    UI.setLoginTab('officer');
+                }
+
+                ParticleEngine.init();
+                UI.toggleLoader(false);
+            } catch (err) {
+                console.error("Critical loading error:", err);
+                UI.toggleLoader(false);
+                document.getElementById('login-view').classList.add('hidden');
+                UI.showConnectionError();
             }
-
-            ParticleEngine.init();
-            UI.toggleLoader(false);
         };
 
     </script>
