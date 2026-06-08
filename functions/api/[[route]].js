@@ -41,19 +41,7 @@ export async function onRequest(context) {
 
         // Only create the pool once, then reuse it for all future requests
         if (!globalPool) {
-            globalPool = new Pool({ 
-                connectionString: env.DATABASE_URL,
-                connectionTimeoutMillis: 5000, // Error out after 5s instead of hanging indefinitely
-                idleTimeoutMillis: 30000, // Aggressively close idle connections before they silently drop
-                max: 10 // Prevent exhausting Neon's connection limit per worker
-            });
-            
-            // Auto-recovery: If the pool enters a broken state (network drop, database restart),
-            // destroy the reference so the next request automatically recreates a fresh, healthy pool.
-            globalPool.on('error', (err) => {
-                console.error('Unexpected error on idle client', err);
-                globalPool = null;
-            });
+            globalPool = new Pool({ connectionString: env.DATABASE_URL });
         }
         const pool = globalPool;
 
