@@ -3028,26 +3028,47 @@
                 
                 const allTerritoryData = db.territories.map(t => {
                     const m = Calc.getMetrics(t.id);
-                    return { ...t, ...m };
+                    const ldAch = m.yestProjAmt > 0 ? ((m.yestCollAmt / m.yestProjAmt) * 100).toFixed(1) : '0.0';
+                    const tdAch = m.todayProj > 0 ? ((m.todayColl / m.todayProj) * 100).toFixed(1) : (m.todayColl > 0 ? '100+' : '0.0');
+                    const appUsePct = Calc.getAppUsePercentage(t.id);
+                    return { ...t, ...m, lastDayAch: ldAch, todayAch: tdAch, appUsePct };
                 });
 
                 // Sort by ach% from high to low
                 allTerritoryData.sort((a, b) => parseFloat(b.tillDayAchievement || 0) - parseFloat(a.tillDayAchievement || 0));
 
-                let csvContent = "Rank,Part,Territory Name,Total Customer Count,Non-Pay Customer Count,Total Projection,Till Date Collection,Ach %,Remaining Amount\n";
+                let csvContent = "Rank,Part,Territory Name,Total Files,Proj Files (MTD),Paid Files,Non-Pay Files,Total EMI,Target Proj (Reg),Target Proj (Adv),Total Proj,Till Day Coll,Ach %,Today's Proj,Today's Coll,Today Ach %,Last Day Proj Amt,Last Day Proj Files,Last Day Coll Amt,Last Day Coll Files,Last Day Ach %,LM NP Amount,LM NP Files,LM NP Rec (Amt),LM NP Rec (Files),App Use %,Remaining Amount\n";
 
                 allTerritoryData.forEach((t, index) => {
                     const rank = index + 1;
                     const part = t.part || '';
                     const name = t.name || '';
-                    const totalCustomer = t.targetFiles || 0;
-                    const nonPayCustomer = t.tillDateNonPayFiles || 0;
-                    const totalProj = parseFloat(t.presetProjTotal) || 0;
-                    const tillDateColl = parseFloat(t.mtdColl) || 0;
-                    const achPct = parseFloat(t.tillDayAchievement) || 0;
-                    const remaining = Math.max(0, totalProj - tillDateColl);
+                    const targetFiles = t.targetFiles || 0;
+                    const mtdProjFiles = t.mtdProjFiles || 0;
+                    const uniquePaidCodes = t.uniquePaidCodes || 0;
+                    const tillDateNonPayFiles = t.tillDateNonPayFiles || 0;
+                    const targetAmt = parseFloat(t.targetAmt) || 0;
+                    const presetProjReg = parseFloat(t.presetProjReg) || 0;
+                    const presetProjAdv = parseFloat(t.presetProjAdv) || 0;
+                    const presetProjTotal = parseFloat(t.presetProjTotal) || 0;
+                    const mtdColl = parseFloat(t.mtdColl) || 0;
+                    const tillDayAchievement = parseFloat(t.tillDayAchievement) || 0;
+                    const todayProj = parseFloat(t.todayProj) || 0;
+                    const todayColl = parseFloat(t.todayColl) || 0;
+                    const todayAch = t.todayAch || '0.0';
+                    const yestProjAmt = parseFloat(t.yestProjAmt) || 0;
+                    const yestProjFiles = t.yestProjFiles || 0;
+                    const yestCollAmt = parseFloat(t.yestCollAmt) || 0;
+                    const yestCollFiles = t.yestCollFiles || 0;
+                    const lastDayAch = t.lastDayAch || '0.0';
+                    const lmNpTargetAmt = parseFloat(t.lmNpTargetAmt) || 0;
+                    const lmNpTargetFiles = t.lmNpTargetFiles || 0;
+                    const mtdLmNpColl = parseFloat(t.mtdLmNpColl) || 0;
+                    const mtdLmNpFiles = t.mtdLmNpFiles || 0;
+                    const appUsePct = t.appUsePct || 0;
+                    const remaining = Math.max(0, presetProjTotal - mtdColl);
 
-                    csvContent += `${rank},${part},"${name}",${totalCustomer},${nonPayCustomer},${totalProj},${tillDateColl},${achPct}%,${remaining}\n`;
+                    csvContent += `${rank},${part},"${name}",${targetFiles},${mtdProjFiles},${uniquePaidCodes},${tillDateNonPayFiles},${targetAmt},${presetProjReg},${presetProjAdv},${presetProjTotal},${mtdColl},${tillDayAchievement}%,${todayProj},${todayColl},${todayAch}%,${yestProjAmt},${yestProjFiles},${yestCollAmt},${yestCollFiles},${lastDayAch}%,${lmNpTargetAmt},${lmNpTargetFiles},${mtdLmNpColl},${mtdLmNpFiles},${appUsePct}%,${remaining}\n`;
                 });
 
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
