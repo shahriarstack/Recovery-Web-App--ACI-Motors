@@ -1479,6 +1479,10 @@
          */
         const Router = {
             navigate(viewId) {
+                if (Auth.currentUser?.role) {
+                    localStorage.setItem('currentView_' + Auth.currentUser.role, viewId);
+                }
+
                 const container = document.getElementById('views-container');
                 container.innerHTML = '';
 
@@ -2060,19 +2064,22 @@
                     const ahNav = document.getElementById('areahead-nav');
                     if (ahNav) ahNav.classList.add('hidden');
                     document.getElementById('officer-nav').classList.add('hidden');
-                    Router.navigate('admin-dashboard');
+                    const saved = localStorage.getItem('currentView_admin');
+                    Router.navigate(saved || 'admin-dashboard');
                 } else if (Auth.currentUser.role === 'area_head') {
                     const ahNav = document.getElementById('areahead-nav');
                     if (ahNav) ahNav.classList.remove('hidden');
                     document.getElementById('admin-nav').classList.add('hidden');
                     document.getElementById('officer-nav').classList.add('hidden');
-                    Router.navigate('area-head-dashboard');
+                    const saved = localStorage.getItem('currentView_area_head');
+                    Router.navigate(saved || 'area-head-dashboard');
                 } else {
                     document.getElementById('officer-nav').classList.remove('hidden');
                     document.getElementById('admin-nav').classList.add('hidden');
                     const ahNav = document.getElementById('areahead-nav');
                     if (ahNav) ahNav.classList.add('hidden');
-                    Router.navigate('officer-dashboard');
+                    const saved = localStorage.getItem('currentView_officer');
+                    Router.navigate(saved || 'officer-dashboard');
                 }
 
                 this.loadDarkMode();
