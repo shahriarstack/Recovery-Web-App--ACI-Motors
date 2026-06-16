@@ -6667,7 +6667,7 @@
                 
                 // Auto-detect earliest collection date globally for the active month
                 const globalCollectionsThisMonth = db.collections.filter(c => 
-                    (c.activeMonth === activeMonth || c.active_month === activeMonth || c.date.startsWith(activeMonth))
+                    (c.activeMonth || c.active_month || c.date.slice(0, 7)) === activeMonth
                 );
                 
                 let defaultStartDate = startOfMonth;
