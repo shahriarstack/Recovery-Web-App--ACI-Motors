@@ -1258,6 +1258,9 @@
                 
                 const db = Store.get();
                 if (!db || !db.projections || !db.collections) return 0;
+
+                const holidaysStr = db.system_settings?.find(s => s.key === 'holidays')?.value || '';
+                const holidays = holidaysStr.split(',').map(s => s.trim()).filter(Boolean);
                 
                 const activeMonth = Utils.getActiveMonth();
                 const bounds = Utils.getMonthBounds();
@@ -1273,11 +1276,13 @@
                 let curr = new Date(year, month - 1, 1);
                 const endD = new Date(endYear, endMonth - 1, endDay);
                 while (curr <= endD) {
-                    if (curr.getDay() !== 5) { // 5 is Friday - skip it as a weekend
-                        const yStr = curr.getFullYear();
-                        const mStr = String(curr.getMonth() + 1).padStart(2, '0');
-                        const dStr = String(curr.getDate()).padStart(2, '0');
-                        dates.push(`${yStr}-${mStr}-${dStr}`);
+                    const yStr = curr.getFullYear();
+                    const mStr = String(curr.getMonth() + 1).padStart(2, '0');
+                    const dStr = String(curr.getDate()).padStart(2, '0');
+                    const dateString = `${yStr}-${mStr}-${dStr}`;
+
+                    if (curr.getDay() !== 5 && !holidays.includes(dateString)) { // Skip Friday and Holidays
+                        dates.push(dateString);
                     }
                     curr.setDate(curr.getDate() + 1);
                 }
@@ -1331,6 +1336,9 @@
                 
                 const db = Store.get();
                 if (!db || !db.projections || !db.collections) return { pct: 0, details: [] };
+
+                const holidaysStr = db.system_settings?.find(s => s.key === 'holidays')?.value || '';
+                const holidays = holidaysStr.split(',').map(s => s.trim()).filter(Boolean);
                 
                 const activeMonth = Utils.getActiveMonth();
                 const bounds = Utils.getMonthBounds();
@@ -1346,11 +1354,13 @@
                 let curr = new Date(year, month - 1, 1);
                 const endD = new Date(endYear, endMonth - 1, endDay);
                 while (curr <= endD) {
-                    if (curr.getDay() !== 5) { // Skip Friday
-                        const yStr = curr.getFullYear();
-                        const mStr = String(curr.getMonth() + 1).padStart(2, '0');
-                        const dStr = String(curr.getDate()).padStart(2, '0');
-                        dates.push(`${yStr}-${mStr}-${dStr}`);
+                    const yStr = curr.getFullYear();
+                    const mStr = String(curr.getMonth() + 1).padStart(2, '0');
+                    const dStr = String(curr.getDate()).padStart(2, '0');
+                    const dateString = `${yStr}-${mStr}-${dStr}`;
+
+                    if (curr.getDay() !== 5 && !holidays.includes(dateString)) { // Skip Friday and Holidays
+                        dates.push(dateString);
                     }
                     curr.setDate(curr.getDate() + 1);
                 }
@@ -1658,6 +1668,7 @@
                 const db = Store.get();
                 let activeMonth = db.system_settings?.find(s => s.key === 'active_month')?.value || Utils.getLocalDate().slice(0, 7);
                 let cutoffHours = parseInt(db.system_settings?.find(s => s.key === 'cutoff_extension_hours')?.value || 0);
+                let holidays = db.system_settings?.find(s => s.key === 'holidays')?.value || '';
 
                 const getCutoffLabel = (h) => {
                     if (h === 0) return "Midnight (12:00 AM)";
@@ -1708,6 +1719,12 @@
                             <p class="text-[10px] text-slate-400 mt-2 italic font-medium"><i class="fa-solid fa-circle-info mr-1"></i> Dashboard and reporting will strictly follow this month.</p>
                         </div>
 
+                        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Holidays (Skip App Use)</label>
+                            <input type="text" name="holidays" value="${holidays}" placeholder="e.g. 2026-06-15, 2026-06-16" class="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm shadow-sm">
+                            <p class="text-[10px] text-slate-400 mt-2 italic font-medium"><i class="fa-solid fa-circle-info mr-1"></i> Enter comma-separated dates (YYYY-MM-DD). These days will be skipped in App Use % calculation.</p>
+                        </div>
+
                         <div class="p-4 bg-brand-50/50 dark:bg-brand-900/10 rounded-2xl border border-brand-100 dark:border-brand-900/20">
                             <div class="flex justify-between items-center mb-4">
                                 <label class="block text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-widest">Cutoff Extension</label>
@@ -1749,6 +1766,7 @@
             async saveSystemSettings(form) {
                 const active_month = form.active_month.value;
                 const cutoff_extension_hours = form.cutoff_extension_hours.value;
+                const holidays = form.holidays.value;
 
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalBtnHtml = submitBtn.innerHTML;
@@ -1772,6 +1790,15 @@
                     });
                     const out2 = await res2.json();
                     if (!res2.ok) throw new Error(out2.error || 'Cutoff save failed');
+
+                    // Save Holidays
+                    const res3 = await fetch(Store.apiUrl + '/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: 'holidays', value: holidays })
+                    });
+                    const out3 = await res3.json();
+                    if (!res3.ok) throw new Error(out3.error || 'Holidays save failed');
 
                     await Store.init();
 
