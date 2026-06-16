@@ -6747,10 +6747,11 @@
                     end = endOverride;
                 }
 
+                const db = Store.get();
                 const linkedTId = this.getCurrentTerritoryId();
-                const metrics = Calc.getMetrics(linkedTId);
 
-                const filtered = metrics.rawCollections.filter(c =>
+                const filtered = db.collections.filter(c =>
+                    c.territoryId === linkedTId &&
                     c.date >= start &&
                     c.date <= end
                 ).sort((a, b) => new Date(b.date) - new Date(a.date));
