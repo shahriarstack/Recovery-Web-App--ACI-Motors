@@ -6707,8 +6707,8 @@
                             <!-- Injected by JS -->
                         </div>
 
-                        <!--Table (Desktop)-->
-            <div class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700 hidden md:block">
+                        <!--Table-->
+            <div class="glass-panel rounded-xl shadow-lg dark:bg-dark-card overflow-hidden border border-slate-200 dark:border-slate-700">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left">
                         <thead class="bg-slate-50 dark:bg-slate-800 text-xs text-slate-500 uppercase font-bold">
@@ -6727,11 +6727,6 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-                        
-                        <!-- Cards (Mobile) -->
-            <div id="history-cards-body" class="md:hidden space-y-4">
-                <!-- Injected by JS -->
             </div>
                     </div>
             `;
@@ -6770,100 +6765,59 @@
 
                 // Update Summary
                 document.getElementById('history-summary').innerHTML = `
-            <div class="p-5 rounded-2xl bg-gradient-to-br from-brand-500 to-emerald-600 text-white shadow-lg relative overflow-hidden group" >
-                         <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <i class="fa-solid fa-sack-dollar text-6xl"></i>
+            <div class="p-4 rounded-2xl bg-gradient-to-br from-brand-500 to-emerald-600 text-white shadow-lg relative overflow-hidden group" >
+                         <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <i class="fa-solid fa-sack-dollar text-5xl"></i>
                         </div>
                         <p class="text-xs font-bold opacity-80 uppercase tracking-wider mb-1">Total Collected</p>
-                        <p class="text-3xl font-bold">${totalAmt.toLocaleString()}</p>
+                        <p class="text-2xl font-bold">${totalAmt.toLocaleString()}</p>
                         <p class="text-xs opacity-70 mt-1">${start} to ${end}</p>
                     </div>
-                    <div class="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
-                         <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <i class="fa-solid fa-receipt text-6xl text-slate-400"></i>
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+                         <div class="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <i class="fa-solid fa-receipt text-5xl text-slate-400"></i>
                         </div>
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Transactions</p>
-                        <p class="text-3xl font-bold text-slate-800 dark:text-white">${count}</p>
+                        <p class="text-2xl font-bold text-slate-800 dark:text-white">${count}</p>
                     </div>
-                     <div class="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hidden md:block relative overflow-hidden group">
-                        <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <i class="fa-solid fa-building-columns text-6xl text-blue-500"></i>
+                     <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hidden md:block relative overflow-hidden group">
+                        <div class="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <i class="fa-solid fa-building-columns text-5xl text-blue-500"></i>
                         </div>
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Via Bank</p>
-                        <p class="text-3xl font-bold text-blue-600">${bankAmt.toLocaleString()}</p>
+                        <p class="text-2xl font-bold text-blue-600">${bankAmt.toLocaleString()}</p>
                     </div>
         `;
 
-                // Update Table & Cards
+                // Update Table
                 const tbody = document.getElementById('history-table-body');
-                const cardsBody = document.getElementById('history-cards-body');
                 
                 if (filtered.length === 0) {
-                    const emptyHtml = `<div class="px-6 py-12 text-center text-slate-400 italic bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">No collections found for this period.</div>`;
                     tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400 italic">No collections found for this period.</td></tr>`;
-                    cardsBody.innerHTML = emptyHtml;
                 } else {
                     let tableHtml = '';
-                    let cardsHtml = '';
                     
                     filtered.forEach(c => {
                         const reg = c.regularAmount || (c.advanceAmount ? 0 : c.amount); // Fallback for old data
                         const adv = c.advanceAmount || 0;
                         const total = parseFloat(c.amount);
                         
-                        // Table Row (Desktop)
                         tableHtml += `
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                            <td class="px-6 py-3 font-mono text-slate-600 dark:text-slate-400 text-xs">${c.date}</td>
-                            <td class="px-6 py-3 font-medium text-slate-800 dark:text-white">#${c.receipt}</td>
-                            <td class="px-6 py-3 font-bold text-brand-600">${c.customerCode || 'N/A'}</td>
+                            <td class="px-6 py-3 font-mono text-slate-600 dark:text-slate-400 text-xs whitespace-nowrap">${c.date}</td>
+                            <td class="px-6 py-3 font-medium text-slate-800 dark:text-white whitespace-nowrap">#${c.receipt}</td>
+                            <td class="px-6 py-3 font-bold text-brand-600 whitespace-nowrap">${c.customerCode || 'N/A'}</td>
                             <td class="px-6 py-3">
-                                <span class="px-2 py-1 rounded text-[10px] font-bold uppercase bg-slate-100 dark:bg-slate-700 text-slate-500 border border-slate-200 dark:border-slate-600">${c.mode}</span>
+                                <span class="px-2 py-1 rounded text-[10px] font-bold uppercase bg-slate-100 dark:bg-slate-700 text-slate-500 border border-slate-200 dark:border-slate-600 whitespace-nowrap">${c.mode}</span>
                             </td>
                             <td class="px-6 py-3 text-right font-mono text-slate-500 text-xs">${parseFloat(reg).toLocaleString()}</td>
                             <td class="px-6 py-3 text-right font-mono text-brand-500 text-xs">${parseFloat(adv).toLocaleString()}</td>
                             <td class="px-6 py-3 text-right font-mono font-bold text-slate-800 dark:text-white">${total.toLocaleString()}</td>
                         </tr>
             `;
-
-                        // Card (Mobile)
-                        cardsHtml += `
-            <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col relative overflow-hidden group hover:-translate-y-1 transition-transform">
-                <div class="flex justify-between items-start mb-3 border-b border-slate-100 dark:border-slate-700 pb-2">
-                    <div>
-                        <p class="text-[10px] text-slate-400 font-mono mb-0.5"><i class="fa-regular fa-calendar-check mr-1"></i>${c.date}</p>
-                        <p class="font-black text-brand-600 text-sm">${c.customerCode || 'N/A'}</p>
-                    </div>
-                    <div class="text-right">
-                        <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${c.mode === 'Bank Transfer' ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-emerald-100 text-emerald-600 border-emerald-200'} border">${c.mode}</span>
-                        <p class="text-xs font-bold text-slate-500 mt-1.5">#${c.receipt}</p>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-2 mb-3">
-                    <div class="bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg flex flex-col items-center justify-center border border-slate-100 dark:border-slate-700">
-                        <p class="text-[9px] uppercase tracking-wider text-slate-400 font-black mb-0.5">Regular</p>
-                        <p class="text-sm font-mono text-slate-700 dark:text-slate-300 font-bold">${parseFloat(reg).toLocaleString()}</p>
-                    </div>
-                    <div class="bg-brand-50 dark:bg-brand-900/10 p-2 rounded-lg flex flex-col items-center justify-center border border-brand-100 dark:border-brand-800">
-                        <p class="text-[9px] uppercase tracking-wider text-brand-500 font-black mb-0.5">Advance</p>
-                        <p class="text-sm font-mono text-brand-600 font-bold">${parseFloat(adv).toLocaleString()}</p>
-                    </div>
-                </div>
-                
-                <div class="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 dark:border-slate-700">
-                    <p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Total Amount</p>
-                    <p class="text-xl font-black text-slate-800 dark:text-white flex items-center">
-                        <span class="text-xs text-slate-400 mr-1 font-normal">৳</span>
-                        ${total.toLocaleString()}
-                    </p>
-                </div>
-            </div>
-            `;
                     });
                     
                     tbody.innerHTML = tableHtml;
-                    cardsBody.innerHTML = cardsHtml;
                 }
             },
 
