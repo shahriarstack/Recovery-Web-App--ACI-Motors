@@ -1668,7 +1668,9 @@
                 const db = Store.get();
                 let activeMonth = db.system_settings?.find(s => s.key === 'active_month')?.value || Utils.getLocalDate().slice(0, 7);
                 let cutoffHours = parseInt(db.system_settings?.find(s => s.key === 'cutoff_extension_hours')?.value || 0);
-                let holidays = db.system_settings?.find(s => s.key === 'holidays')?.value || '';
+                let holidaysStr = db.system_settings?.find(s => s.key === 'holidays')?.value || '';
+                
+                window.tempHolidays = holidaysStr ? holidaysStr.split(',').map(s=>s.trim()).filter(Boolean) : [];
 
                 const getCutoffLabel = (h) => {
                     if (h === 0) return "Midnight (12:00 AM)";
@@ -1676,97 +1678,128 @@
                 };
 
                 const content = `
-                    <div class="mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
+                    <div class="mb-4 border-b border-slate-100 dark:border-slate-700 pb-4">
                         <h2 class="text-xl font-bold text-slate-800 dark:text-white flex items-center">
                             <i class="fa-solid fa-gears mr-2 text-brand-500"></i> System Control Panel
                         </h2>
-                        <p class="text-xs text-slate-500 font-medium">Global operations & cutoff configurations</p>
+                        <p class="text-xs text-slate-500 font-medium">Manage global operations and calendars</p>
                     </div>
 
-                    <!-- CURRENT STATUS CARD -->
-                    <div class="mb-6 p-4 bg-slate-900 text-white rounded-2xl shadow-xl border border-slate-800 overflow-hidden relative group">
-                        <div class="absolute -right-4 -top-4 opacity-10 group-hover:opacity-20 transition-opacity transform rotate-12">
-                            <i class="fa-solid fa-microchip text-7xl"></i>
-                        </div>
-                        <div class="relative z-10">
-                            <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 flex items-center">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> 
-                                Current Live Configuration
-                            </p>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Cutoff Rule</p>
-                                    <p class="text-sm font-black ${cutoffHours > 0 ? 'text-amber-400' : 'text-emerald-400'} flex items-center">
-                                        <i class="fa-solid ${cutoffHours > 0 ? 'fa-clock-rotate-left' : 'fa-check-circle'} mr-2"></i>
-                                        ${cutoffHours > 0 ? `Extended (+${cutoffHours}H)` : 'Standard (12AM)'}
-                                    </p>
-                                </div>
-                                <div class="border-l border-slate-800 pl-4">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Active Month</p>
-                                    <p class="text-sm font-black text-brand-400 flex items-center">
-                                        <i class="fa-solid fa-calendar-check mr-2"></i>
-                                        ${activeMonth}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- TABS HEADER -->
+                    <div class="flex space-x-2 mb-6 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                        <button type="button" onclick="UI.switchSettingsTab('general')" id="tab-btn-general" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white dark:bg-slate-700 shadow-sm text-brand-600 transition-all">General Settings</button>
+                        <button type="button" onclick="UI.switchSettingsTab('holidays')" id="tab-btn-holidays" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all">Holiday Manager</button>
                     </div>
 
-                    <form onsubmit="event.preventDefault(); UI.saveSystemSettings(this);" class="space-y-6">
-                        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Active Operational Month</label>
-                            <input type="month" name="active_month" value="${activeMonth}" required class="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-bold shadow-sm">
-                            <p class="text-[10px] text-slate-400 mt-2 italic font-medium"><i class="fa-solid fa-circle-info mr-1"></i> Dashboard and reporting will strictly follow this month.</p>
-                        </div>
-
-                        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
-                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Holidays (Skip App Use)</label>
-                            <input type="text" name="holidays" value="${holidays}" placeholder="e.g. 2026-06-15, 2026-06-16" class="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm shadow-sm">
-                            <p class="text-[10px] text-slate-400 mt-2 italic font-medium"><i class="fa-solid fa-circle-info mr-1"></i> Enter comma-separated dates (YYYY-MM-DD). These days will be skipped in App Use % calculation.</p>
-                        </div>
-
-                        <div class="p-4 bg-brand-50/50 dark:bg-brand-900/10 rounded-2xl border border-brand-100 dark:border-brand-900/20">
-                            <div class="flex justify-between items-center mb-4">
-                                <label class="block text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-widest">Cutoff Extension</label>
-                                <span id="cutoff-time-display" class="px-3 py-1 bg-brand-600 text-white text-[10px] font-black rounded-full shadow-lg shadow-brand-500/30">${getCutoffLabel(cutoffHours)}</span>
+                    <!-- TAB: GENERAL SETTINGS -->
+                    <div id="tab-content-general" class="block animate-entry">
+                        <!-- CURRENT STATUS CARD -->
+                        <div class="mb-6 p-4 bg-slate-900 text-white rounded-2xl shadow-xl border border-slate-800 overflow-hidden relative group">
+                            <div class="absolute -right-4 -top-4 opacity-10 group-hover:opacity-20 transition-opacity transform rotate-12">
+                                <i class="fa-solid fa-microchip text-7xl"></i>
                             </div>
-                            
-                            <div class="px-2">
-                                <input type="range" name="cutoff_extension_hours" value="${cutoffHours}" min="0" max="12" step="1" 
-                                    oninput="const val = parseInt(this.value); document.getElementById('cutoff-time-display').innerText = val === 0 ? 'Midnight (12:00 AM)' : (val < 10 ? '0' + val : val) + ':00 AM';" 
-                                    class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-600">
-                                <div class="flex justify-between mt-2 text-[9px] font-bold text-slate-400 px-1">
-                                    <span>STANDARD (0H)</span>
-                                    <span>+6 HOURS</span>
-                                    <span>MAX (+12H)</span>
+                            <div class="relative z-10">
+                                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 flex items-center">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse"></span> 
+                                    Current Live Configuration
+                                </p>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Cutoff Rule</p>
+                                        <p class="text-sm font-black ${cutoffHours > 0 ? 'text-amber-400' : 'text-emerald-400'} flex items-center">
+                                            <i class="fa-solid ${cutoffHours > 0 ? 'fa-clock-rotate-left' : 'fa-check-circle'} mr-2"></i>
+                                            ${cutoffHours > 0 ? `Extended (+${cutoffHours}H)` : 'Standard (12AM)'}
+                                        </p>
+                                    </div>
+                                    <div class="border-l border-slate-800 pl-4">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Active Month</p>
+                                        <p class="text-sm font-black text-brand-400 flex items-center">
+                                            <i class="fa-solid fa-calendar-check mr-2"></i>
+                                            ${activeMonth}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <p class="text-[10px] text-slate-500 mt-4 leading-relaxed">
-                                <span class="font-bold text-brand-600 dark:text-brand-400">Pro Tip:</span> 
-                                Collection entries made before this time will be recorded as part of the <span class="underline">previous calendar day</span>.
-                            </p>
                         </div>
 
-                        <div class="flex justify-end space-x-3 pt-2">
+                        <form onsubmit="event.preventDefault(); UI.saveSystemSettings(this);" class="space-y-6">
+                            <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Active Operational Month</label>
+                                <input type="month" name="active_month" value="${activeMonth}" required class="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-bold shadow-sm">
+                                <p class="text-[10px] text-slate-400 mt-2 italic font-medium"><i class="fa-solid fa-circle-info mr-1"></i> Dashboard and reporting will strictly follow this month.</p>
+                            </div>
+
+                            <div class="p-4 bg-brand-50/50 dark:bg-brand-900/10 rounded-2xl border border-brand-100 dark:border-brand-900/20">
+                                <div class="flex justify-between items-center mb-4">
+                                    <label class="block text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-widest">Cutoff Extension</label>
+                                    <span id="cutoff-time-display" class="px-3 py-1 bg-brand-600 text-white text-[10px] font-black rounded-full shadow-lg shadow-brand-500/30">${getCutoffLabel(cutoffHours)}</span>
+                                </div>
+                                
+                                <div class="px-2">
+                                    <input type="range" name="cutoff_extension_hours" value="${cutoffHours}" min="0" max="12" step="1" 
+                                        oninput="const val = parseInt(this.value); document.getElementById('cutoff-time-display').innerText = val === 0 ? 'Midnight (12:00 AM)' : (val < 10 ? '0' + val : val) + ':00 AM';" 
+                                        class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-600">
+                                    <div class="flex justify-between mt-2 text-[9px] font-bold text-slate-400 px-1">
+                                        <span>STANDARD (0H)</span>
+                                        <span>+6 HOURS</span>
+                                        <span>MAX (+12H)</span>
+                                    </div>
+                                </div>
+                                
+                                <p class="text-[10px] text-slate-500 mt-4 leading-relaxed">
+                                    <span class="font-bold text-brand-600 dark:text-brand-400">Pro Tip:</span> 
+                                    Collection entries made before this time will be recorded as part of the <span class="underline">previous calendar day</span>.
+                                </p>
+                            </div>
+
+                            <div class="flex justify-end space-x-3 pt-2">
+                                <button type="button" onclick="UI.closeModal('generic-modal')" class="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">Cancel</button>
+                                <button type="submit" class="px-8 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-brand-500/25 hover-lift">
+                                    <i class="fa-solid fa-floppy-disk mr-2"></i> Save General Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- TAB: HOLIDAYS -->
+                    <div id="tab-content-holidays" class="hidden animate-entry">
+                        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 mb-6">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Add New Holiday</label>
+                            <div class="flex space-x-2">
+                                <input type="date" id="holiday-input-date" class="flex-1 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-bold shadow-sm">
+                                <button type="button" onclick="UI.addHolidayToList()" class="bg-brand-100 hover:bg-brand-200 text-brand-700 dark:bg-brand-900/30 dark:hover:bg-brand-900/50 dark:text-brand-400 px-4 rounded-xl font-bold text-sm transition-colors">
+                                    <i class="fa-solid fa-plus"></i> Add
+                                </button>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-2 italic font-medium"><i class="fa-solid fa-circle-info mr-1"></i> Added dates will automatically be skipped in App Use % calculation.</p>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 dark:border-slate-700 pb-2">Active Holidays</h3>
+                            <div id="holiday-badges-container" class="flex flex-wrap gap-2">
+                                <!-- Injected by JS -->
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 pt-2 border-t border-slate-100 dark:border-slate-700 mt-4">
                             <button type="button" onclick="UI.closeModal('generic-modal')" class="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">Cancel</button>
-                            <button type="submit" class="px-8 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-brand-500/25 hover-lift">
-                                <i class="fa-solid fa-floppy-disk mr-2"></i> Save Changes
+                            <button type="button" onclick="UI.saveHolidaySettings(this)" class="px-8 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-brand-500/25 hover-lift">
+                                <i class="fa-solid fa-floppy-disk mr-2"></i> Save Holidays
                             </button>
                         </div>
-                    </form>
+                    </div>
                 `;
                 document.getElementById('modal-content').innerHTML = content;
                 document.getElementById('generic-modal').classList.remove('hidden');
                 setTimeout(() => {
                     document.getElementById('generic-modal').classList.remove('opacity-0');
                     document.getElementById('modal-content').classList.remove('scale-95', 'opacity-0');
+                    UI.renderHolidayBadges();
                 }, 10);
             },
             async saveSystemSettings(form) {
                 const active_month = form.active_month.value;
                 const cutoff_extension_hours = form.cutoff_extension_hours.value;
-                const holidays = form.holidays.value;
 
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalBtnHtml = submitBtn.innerHTML;
@@ -1791,15 +1824,6 @@
                     const out2 = await res2.json();
                     if (!res2.ok) throw new Error(out2.error || 'Cutoff save failed');
 
-                    // Save Holidays
-                    const res3 = await fetch(Store.apiUrl + '/settings', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ key: 'holidays', value: holidays })
-                    });
-                    const out3 = await res3.json();
-                    if (!res3.ok) throw new Error(out3.error || 'Holidays save failed');
-
                     await Store.init();
 
                     // Creative Feedback
@@ -1820,6 +1844,99 @@
                     UI.toggleLoader(false);
                 }
             },
+
+            switchSettingsTab(tabId) {
+                const btnGen = document.getElementById('tab-btn-general');
+                const btnHol = document.getElementById('tab-btn-holidays');
+                const contentGen = document.getElementById('tab-content-general');
+                const contentHol = document.getElementById('tab-content-holidays');
+                
+                if (tabId === 'general') {
+                    btnGen.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white dark:bg-slate-700 shadow-sm text-brand-600 transition-all";
+                    btnHol.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all";
+                    contentGen.classList.remove('hidden');
+                    contentGen.classList.add('block');
+                    contentHol.classList.remove('block');
+                    contentHol.classList.add('hidden');
+                } else {
+                    btnHol.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white dark:bg-slate-700 shadow-sm text-brand-600 transition-all";
+                    btnGen.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all";
+                    contentHol.classList.remove('hidden');
+                    contentHol.classList.add('block');
+                    contentGen.classList.remove('block');
+                    contentGen.classList.add('hidden');
+                }
+            },
+
+            renderHolidayBadges() {
+                const container = document.getElementById('holiday-badges-container');
+                if (!window.tempHolidays || window.tempHolidays.length === 0) {
+                    container.innerHTML = `<span class="text-xs text-slate-400 italic font-medium p-2">No holidays configured yet.</span>`;
+                    return;
+                }
+                
+                window.tempHolidays.sort();
+                
+                container.innerHTML = window.tempHolidays.map(date => `
+                    <div class="flex items-center bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm animate-entry">
+                        <i class="fa-solid fa-umbrella-beach mr-2 opacity-70"></i>
+                        ${date}
+                        <button type="button" onclick="UI.removeHolidayFromList('${date}')" class="ml-2 hover:text-red-500 transition-colors focus:outline-none">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `).join('');
+            },
+            
+            addHolidayToList() {
+                const input = document.getElementById('holiday-input-date');
+                const date = input.value;
+                if (!date) return;
+                
+                if (!window.tempHolidays.includes(date)) {
+                    window.tempHolidays.push(date);
+                    UI.renderHolidayBadges();
+                }
+                input.value = '';
+            },
+            
+            removeHolidayFromList(date) {
+                window.tempHolidays = window.tempHolidays.filter(d => d !== date);
+                UI.renderHolidayBadges();
+            },
+            
+            async saveHolidaySettings(btn) {
+                const holidaysStr = window.tempHolidays.join(',');
+                const originalHtml = btn.innerHTML;
+                
+                UI.toggleLoader(true);
+                try {
+                    const res = await fetch(Store.apiUrl + '/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: 'holidays', value: holidaysStr })
+                    });
+                    const out = await res.json();
+                    if (!res.ok) throw new Error(out.error || 'Holidays save failed');
+                    
+                    await Store.init();
+                    
+                    btn.innerHTML = '<i class="fa-solid fa-check-double mr-2"></i> Saved Successfully!';
+                    btn.className = btn.className.replace('bg-brand-600', 'bg-emerald-600');
+                    
+                    setTimeout(() => {
+                        UI.closeModal('generic-modal');
+                    }, 800);
+                } catch (e) {
+                    console.error(e);
+                    alert('Error saving holidays: ' + e.message);
+                    btn.innerHTML = originalHtml;
+                    btn.className = btn.className.replace('bg-emerald-600', 'bg-brand-600');
+                } finally {
+                    UI.toggleLoader(false);
+                }
+            },
+
 
             updateMomentumChart() {
                 const db = Store.get();
