@@ -414,34 +414,7 @@
             </div>
         </div>
     </div>
-    <script>
-        (function() {
-            const isLocal = window.location.hostname === 'localhost' || 
-                            window.location.hostname === '127.0.0.1' || 
-                            window.location.hostname.startsWith('192.168.') || 
-                            window.location.protocol === 'file:';
-            const isNewDomain = window.location.hostname === 'recovery.cv-acimotors.com';
-            
-            if (!isNewDomain && !isLocal) {
-                const overlay = document.getElementById('redirect-overlay');
-                if (overlay) {
-                    overlay.classList.remove('hidden');
-                    document.body.classList.add('overflow-hidden');
-                    
-                    let seconds = 5;
-                    const countdownEl = document.getElementById('redirect-countdown');
-                    const interval = setInterval(() => {
-                        seconds--;
-                        if (countdownEl) countdownEl.textContent = seconds;
-                        if (seconds <= 0) {
-                            clearInterval(interval);
-                            window.location.href = 'http://recovery.cv-acimotors.com/#';
-                        }
-                    }, 1000);
-                }
-            }
-        })();
-    </script>
+
 
     <!-- PARTICLES BACKGROUND -->
     <div class="particles-bg" id="particles-bg"></div>
@@ -8667,6 +8640,32 @@
         });
 
         window.onload = async () => {
+            const isLocal = window.location.hostname === 'localhost' || 
+                            window.location.hostname === '127.0.0.1' || 
+                            window.location.hostname.startsWith('192.168.') || 
+                            window.location.protocol === 'file:';
+            const isNewDomain = window.location.hostname === 'recovery.cv-acimotors.com';
+            
+            if (!isNewDomain && !isLocal) {
+                const overlay = document.getElementById('redirect-overlay');
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
+                    
+                    let seconds = 5;
+                    const countdownEl = document.getElementById('redirect-countdown');
+                    const interval = setInterval(() => {
+                        seconds--;
+                        if (countdownEl) countdownEl.textContent = seconds;
+                        if (seconds <= 0) {
+                            clearInterval(interval);
+                            window.location.href = 'http://recovery.cv-acimotors.com/#';
+                        }
+                    }, 1000);
+                }
+                return;
+            }
+
             const hasSession = !!localStorage.getItem('currentUser');
             if (hasSession) {
                 // If we have a session, keep login hidden and show generic loader
