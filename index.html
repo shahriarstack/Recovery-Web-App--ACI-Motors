@@ -1,53 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Link Updated | Recovery Intelligence Platform</title>
+    <title>লিংক আপডেট করা হয়েছে | Recovery Intelligence Platform</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
+        .font-bengali {
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+        .font-sans-inter {
             font-family: 'Inter', sans-serif;
+        }
+        /* Custom animated glass background */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(1deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-    <!-- background decorative animated blobs -->
-    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] animate-pulse"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-emerald-600/10 rounded-full blur-[120px] animate-pulse" style="animation-delay: 3s;"></div>
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 relative overflow-hidden font-sans-inter">
+    <!-- Decorative Ambient Glows -->
+    <div class="absolute -top-40 -left-40 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse"></div>
+    <div class="absolute -bottom-40 -right-40 w-[600px] h-[600px] bg-teal-600/10 rounded-full blur-[140px] animate-pulse" style="animation-delay: 2s;"></div>
+    
+    <!-- Fine grid overlay for technical aesthetic -->
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30"></div>
 
-    <div class="relative w-full max-w-xl bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-8 md:p-12 shadow-2xl text-center flex flex-col items-center">
-        <!-- Brand Logo Icon -->
-        <div class="relative mb-8">
-            <div class="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl animate-ping scale-75"></div>
-            <div class="relative w-20 h-20 bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 text-emerald-400 rounded-2xl flex items-center justify-center text-3xl shadow-[0_0_30px_rgba(16,185,129,0.15)] transform rotate-6 hover:rotate-0 transition-transform duration-300">
-                <i class="fa-solid fa-compass-drafting animate-pulse"></i>
+    <div class="relative w-full max-w-xl bg-slate-900/40 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-8 md:p-12 shadow-2xl text-center flex flex-col items-center animate-float">
+        
+        <!-- Interactive Migration Graphic -->
+        <div class="relative w-full flex justify-center items-center gap-4 mb-8">
+            <!-- Old node -->
+            <div class="w-14 h-14 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-center text-slate-500 text-lg shadow-inner">
+                <i class="fa-solid fa-network-wired"></i>
+            </div>
+            
+            <!-- Connection Line with traveling dot -->
+            <div class="relative flex-1 h-0.5 bg-slate-800 max-w-[80px]">
+                <div class="absolute top-0 bottom-0 left-0 w-3 bg-emerald-500 rounded-full animate-ping" style="animation-duration: 2s; animation-iteration-count: infinite;"></div>
+                <div class="absolute -top-1 w-2.5 h-2.5 bg-emerald-400 rounded-full shadow-[0_0_10px_#10b981] animate-bounce"></div>
+            </div>
+
+            <!-- Arrow Icon -->
+            <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-sm border border-emerald-500/20">
+                <i class="fa-solid fa-arrow-right-long animate-pulse"></i>
+            </div>
+
+            <!-- Connection Line 2 -->
+            <div class="relative flex-1 h-0.5 bg-slate-800 max-w-[80px]">
+                <div class="absolute -top-1 w-2.5 h-2.5 bg-emerald-400 rounded-full shadow-[0_0_10px_#10b981] animate-bounce" style="animation-delay: 0.5s;"></div>
+            </div>
+
+            <!-- New active node -->
+            <div class="relative">
+                <div class="absolute inset-0 bg-emerald-500/20 rounded-2xl blur-lg animate-pulse"></div>
+                <div class="relative w-14 h-14 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/40 text-emerald-400 rounded-2xl flex items-center justify-center text-xl shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                    <i class="fa-solid fa-circle-check animate-bounce"></i>
+                </div>
             </div>
         </div>
 
-        <h1 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200 mb-4 tracking-tight leading-tight uppercase">
-            LINK UPDATE KORA HOYECHE
+        <!-- Heading in Bangla -->
+        <h1 class="font-bengali text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-300 mb-4 tracking-tight leading-tight">
+            লিংক আপডেট করা হয়েছে।
         </h1>
 
-        <p class="text-slate-300 text-base md:text-lg mb-8 leading-relaxed max-w-md font-medium">
+        <!-- Subheading in Bangla -->
+        <p class="font-bengali text-slate-300 text-base md:text-lg mb-8 leading-relaxed max-w-md">
             Recovery Intelligent App-এর জন্য এখন থেকে নিচের লিংকটি ব্যবহার করবেন:
         </p>
 
-        <!-- CTA Button -->
-        <a href="http://recovery.cv-acimotors.com/#" class="group relative w-full flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-lg rounded-2xl shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]">
-            <span>Go to New App</span>
-            <i class="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1"></i>
-        </a>
-
-        <!-- Display URL -->
-        <div class="mt-6 text-xs text-slate-500 select-all font-mono">
-            http://recovery.cv-acimotors.com/#
+        <!-- Premium Link Card with Copy Action -->
+        <div class="w-full bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4 mb-8 flex flex-col md:flex-row justify-between items-center gap-4 transition-all duration-300 hover:border-emerald-500/30">
+            <div class="flex items-center gap-3">
+                <span class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-link"></i>
+                </span>
+                <div class="text-left">
+                    <div class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">New Domain URL</div>
+                    <span id="url-text" class="text-emerald-400 font-mono text-sm md:text-base select-all font-medium">
+                        recovery.cv-acimotors.com
+                    </span>
+                </div>
+            </div>
+            <!-- Copy Button -->
+            <button onclick="copyToClipboard()" class="w-full md:w-auto px-4 py-2 bg-slate-900 border border-slate-800 hover:border-emerald-500/30 text-xs font-semibold text-slate-400 hover:text-emerald-400 rounded-xl transition-all duration-200 flex items-center justify-center gap-2">
+                <span id="copy-btn-text">Copy Link</span>
+                <i id="copy-btn-icon" class="fa-regular fa-copy"></i>
+            </button>
         </div>
+
+        <!-- Call to Action Button -->
+        <a href="http://recovery.cv-acimotors.com/#" class="group relative w-full flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-lg rounded-2xl shadow-lg hover:shadow-emerald-500/20 transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] font-bengali">
+            <span>নতুন লিংকে প্রবেশ করুন</span>
+            <i class="fa-solid fa-arrow-right-to-bracket transition-transform group-hover:translate-x-1"></i>
+        </a>
     </div>
+
+    <script>
+        function copyToClipboard() {
+            const urlText = document.getElementById('url-text').innerText;
+            navigator.clipboard.writeText('http://' + urlText + '/#').then(() => {
+                const btnText = document.getElementById('copy-btn-text');
+                const btnIcon = document.getElementById('copy-btn-icon');
+                btnText.innerText = 'Copied!';
+                btnText.classList.add('text-emerald-400');
+                btnIcon.className = 'fa-solid fa-check text-emerald-400';
+                
+                setTimeout(() => {
+                    btnText.innerText = 'Copy Link';
+                    btnText.classList.remove('text-emerald-400');
+                    btnIcon.className = 'fa-regular fa-copy';
+                }, 2000);
+            });
+        }
+    </script>
 </body>
 </html>
