@@ -8,6 +8,6 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2"
+    "mysql2": "^3.9.2"
   }
 }

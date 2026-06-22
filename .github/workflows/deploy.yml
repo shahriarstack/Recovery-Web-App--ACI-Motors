@@ -1,0 +1,36 @@
+name: Deploy Web App to cPanel
+
+on:
+  push:
+    branches:
+      - main  # Runs whenever you push code to the main branch
+
+jobs:
+  web-deploy:
+    name: 🎉 Deploy to sitechai cPanel
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v3
+
+    - name: 📂 Sync Files to cPanel
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        server-dir: ${{ secrets.FTP_TARGET_DIR }} # e.g., /recovery.cv-acimotors.com/
+        exclude: |
+          **/.git*
+          **/.git*/**
+          node_modules/**
+          .env
+          neon_database_backup.json
+          export-neon.js
+          import-mysql.js
+          mysql_schema.sql
+          functions/**
+          check_syntax.py
+          fix_html.py
+          README.md
+          *.code-workspace

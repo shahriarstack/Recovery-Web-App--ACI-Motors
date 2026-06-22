@@ -1,5 +1,5 @@
 const express = require('express');
-const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -10,29 +10,43 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Increase limit for bulk operations
 app.use(express.static(__dirname));
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    connectionTimeoutMillis: 30000,
-    idleTimeoutMillis: 5000,
+// Create MySQL database connection pool
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: parseInt(process.env.DB_PORT || '3306', 10),
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-pool.on('error', (err, client) => {
-    console.error('Unexpected error on idle client', err);
-});
-
-// Ensure territory_id can hold multiple comma-separated IDs for Area Heads
-pool.query('ALTER TABLE users ALTER COLUMN territory_id TYPE VARCHAR(1000)').catch(err => console.error("Migration Error:", err));
-pool.query('CREATE TABLE IF NOT EXISTS system_settings ("key" VARCHAR(255) PRIMARY KEY, "value" VARCHAR(255))').catch(err => console.error(err));
-pool.query('ALTER TABLE collections ADD COLUMN IF NOT EXISTS active_month VARCHAR(7)').catch(err => console.error("Migration Error collections active_month:", err));
-pool.query('ALTER TABLE projections ADD COLUMN IF NOT EXISTS active_month VARCHAR(7)').catch(err => console.error("Migration Error projections active_month:", err));
-pool.query('ALTER TABLE projections ADD COLUMN IF NOT EXISTS timestamp BIGINT').catch(err => console.error("Migration Error projections timestamp:", err));
+// Run database migrations on startup
+async function runMigrations() {
+    try {
+        console.log("Running MySQL startup migrations...");
+        // Ensure territory_id can hold multiple comma-separated IDs for Area Heads
+        await pool.query('ALTER TABLE users MODIFY COLUMN territory_id VARCHAR(1000)').catch(err => console.log("Migration Notice (users):", err.message));
+        // Create system_settings if not exists
+        await pool.query('CREATE TABLE IF NOT EXISTS system_settings (`key` VARCHAR(255) PRIMARY KEY, `value` TEXT)').catch(err => console.log("Migration Notice (system_settings):", err.message));
+        // Safe column additions (catch and ignore if column already exists)
+        await pool.query('ALTER TABLE collections ADD COLUMN active_month VARCHAR(7)').catch(() => {});
+        await pool.query('ALTER TABLE projections ADD COLUMN active_month VARCHAR(7)').catch(() => {});
+        await pool.query('ALTER TABLE projections ADD COLUMN timestamp BIGINT').catch(() => {});
+        console.log("Migrations check completed.");
+    } catch (err) {
+        console.error("Migration Error during startup:", err);
+    }
+}
+runMigrations();
 
 // GET complete database state (mirrors Store.get())
 app.get('/api/db', async (req, res) => {
     try {
         const [
-            users, territories, targets, projections, collections,
-            offroad_vehicles, settlements, unlocksResult, vehicle_performance, system_settings
+            [users], [territories], [targets], [projections], [collections],
+            [offroad_vehicles], [settlements], [unlocksResult], [vehicle_performance], [system_settings]
         ] = await Promise.all([
             pool.query('SELECT * FROM users'),
             pool.query('SELECT * FROM territories'),
@@ -43,28 +57,28 @@ app.get('/api/db', async (req, res) => {
             pool.query('SELECT * FROM settlements'),
             pool.query('SELECT * FROM admin_unlocks'),
             pool.query('SELECT * FROM vehicle_performance'),
-            pool.query('SELECT * FROM system_settings').catch(() => ({ rows: [] }))
+            pool.query('SELECT * FROM system_settings').catch(() => [[]])
         ]);
 
         const unlocks = {};
-        unlocksResult.rows.forEach(row => {
+        unlocksResult.forEach(row => {
             unlocks[row.territory_id] = row.unlock_until;
         });
 
         res.json({
-            users: users.rows,
-            territories: territories.rows,
-            targets: targets.rows,
-            projections: projections.rows,
-            collections: collections.rows,
-            offroad_vehicles: offroad_vehicles.rows,
-            settlements: settlements.rows,
+            users: users,
+            territories: territories,
+            targets: targets,
+            projections: projections,
+            collections: collections,
+            offroad_vehicles: offroad_vehicles,
+            settlements: settlements,
             unlocks: unlocks,
-            vehicle_performance: vehicle_performance.rows,
-            system_settings: system_settings.rows
+            vehicle_performance: vehicle_performance,
+            system_settings: system_settings
         });
     } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch database state:", err);
         res.status(500).json({ error: 'Failed to fetch database state' });
     }
 });
@@ -74,25 +88,44 @@ app.post('/api/update', async (req, res) => {
     const { collection, item } = req.body;
     const table = collection; // mapping collection name to table name
 
+    // Prevent SQL injection by validating the collection name against known tables
+    const validTables = ['collections', 'projections', 'offroad_vehicles', 'settlements', 'territories', 'users'];
+    if (!validTables.includes(table)) {
+        return res.status(400).json({ error: "Invalid collection specified for update" });
+    }
+
     try {
         const keys = Object.keys(item).filter(k => k !== 'id');
-        const values = keys.map(k => item[k]);
+        const values = keys.map(k => {
+            let val = item[k];
+            // Format JS Dates or ISO Strings to MySQL Date format (YYYY-MM-DD)
+            const dateColumns = {
+                'projections': ['date'],
+                'collections': ['date'],
+                'offroad_vehicles': ['in_date', 'solve_date'],
+                'settlements': ['date']
+            };
+            if (dateColumns[table] && dateColumns[table].includes(k) && typeof val === 'string') {
+                return val.split('T')[0];
+            }
+            return val;
+        });
 
         if (item.id && !String(item.id).startsWith('new_')) {
             // UPDATE
-            const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
-            await pool.query(`UPDATE ${table} SET ${setClause} WHERE id = $${keys.length + 1}`, [...values, item.id]);
+            const setClause = keys.map(k => `\`${k}\` = ?`).join(', ');
+            await pool.query(`UPDATE \`${table}\` SET ${setClause} WHERE id = ?`, [...values, item.id]);
             res.json(item);
         } else {
             // INSERT
-            const columns = keys.join(', ');
-            const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
-            const result = await pool.query(`INSERT INTO ${table} (${columns}) VALUES (${placeholders}) RETURNING id`, values);
-            item.id = result.rows[0].id;
+            const columns = keys.map(k => `\`${k}\``).join(', ');
+            const placeholders = keys.map(() => '?').join(', ');
+            const [result] = await pool.query(`INSERT INTO \`${table}\` (${columns}) VALUES (${placeholders})`, values);
+            item.id = result.insertId;
             res.json(item);
         }
     } catch (err) {
-        console.error(err);
+        console.error("Update error:", err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -100,11 +133,16 @@ app.post('/api/update', async (req, res) => {
 // Delete an item
 app.delete('/api/delete', async (req, res) => {
     const { collection, id } = req.body;
+    const validTables = ['collections', 'projections', 'offroad_vehicles', 'settlements', 'territories', 'users'];
+    if (!validTables.includes(collection)) {
+        return res.status(400).json({ error: "Invalid collection specified for deletion" });
+    }
+
     try {
-        await pool.query(`DELETE FROM ${collection} WHERE id = $1`, [id]);
+        await pool.query(`DELETE FROM \`${collection}\` WHERE id = ?`, [id]);
         res.json({ success: true });
     } catch (err) {
-        console.error(err);
+        console.error("Delete error:", err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -112,129 +150,119 @@ app.delete('/api/delete', async (req, res) => {
 // Bulk Save for Targets/Territories (from Setup Page)
 app.post('/api/sync-targets', async (req, res) => {
     const { territories, targets, deletedTerritoryIds } = req.body;
-    const client = await pool.connect();
+    const connection = await pool.getConnection();
     try {
-        await client.query('BEGIN');
+        await connection.beginTransaction();
 
         if (deletedTerritoryIds && deletedTerritoryIds.length > 0) {
-            await client.query('DELETE FROM territories WHERE id = ANY($1)', [deletedTerritoryIds]);
+            await connection.query('DELETE FROM territories WHERE id IN (?)', [deletedTerritoryIds]);
         }
 
         if (territories && territories.length > 0) {
-            const values = [];
-            const params = [];
-            let pIdx = 1;
-            for (const t of territories) {
-                values.push(`($${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++})`);
-                params.push(t.id, t.name, t.part, t.officer);
-            }
-            await client.query(`
+            const values = territories.map(t => [t.id, t.name, t.part, t.officer]);
+            await connection.query(`
                 INSERT INTO territories (id, name, part, officer) 
-                VALUES ${values.join(', ')}
-                ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, part = EXCLUDED.part, officer = EXCLUDED.officer
-            `, params);
+                VALUES ?
+                ON DUPLICATE KEY UPDATE name = VALUES(name), part = VALUES(part), officer = VALUES(officer)
+            `, [values]);
         }
 
         if (targets && targets.length > 0) {
-            const values = [];
-            const params = [];
-            let pIdx = 1;
-            for (const t of targets) {
-                values.push(`($${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++})`);
-                params.push(t.territory_id, t.month, t.files, t.proj_files, t.amount, t.proj_reg, t.proj_adv, t.lm_np_target_amount, t.lm_np_target_files, t.total_od, t.od_growth_sply, t.per_file_od, t.six_plus_od_files, t.six_plus_od_growth_splm);
-            }
-            await client.query(`
-                INSERT INTO targets (territory_id, month, files, proj_files, amount, proj_reg, proj_adv, lm_np_target_amount, lm_np_target_files, total_od, od_growth_sply, per_file_od, six_plus_od_files, six_plus_od_growth_splm)
-                VALUES ${values.join(', ')}
-                ON CONFLICT (territory_id, month) DO UPDATE SET 
-                    files = EXCLUDED.files, proj_files = EXCLUDED.proj_files, amount = EXCLUDED.amount,
-                    proj_reg = EXCLUDED.proj_reg, proj_adv = EXCLUDED.proj_adv, lm_np_target_amount = EXCLUDED.lm_np_target_amount,
-                    lm_np_target_files = EXCLUDED.lm_np_target_files, total_od = EXCLUDED.total_od, od_growth_sply = EXCLUDED.od_growth_sply,
-                    per_file_od = EXCLUDED.per_file_od, six_plus_od_files = EXCLUDED.six_plus_od_files, six_plus_od_growth_splm = EXCLUDED.six_plus_od_growth_splm
-            `, params);
+            const values = targets.map(t => [
+                t.territory_id, t.month, t.files, t.proj_files, t.amount, t.proj_reg, t.proj_adv,
+                t.lm_np_target_amount, t.lm_np_target_files, t.total_od, t.od_growth_sply,
+                t.per_file_od, t.six_plus_od_files, t.six_plus_od_growth_splm
+            ]);
+            await connection.query(`
+                INSERT INTO targets (
+                    territory_id, month, files, proj_files, amount, proj_reg, proj_adv,
+                    lm_np_target_amount, lm_np_target_files, total_od, od_growth_sply,
+                    per_file_od, six_plus_od_files, six_plus_od_growth_splm
+                )
+                VALUES ?
+                ON DUPLICATE KEY UPDATE 
+                    files = VALUES(files), proj_files = VALUES(proj_files), amount = VALUES(amount),
+                    proj_reg = VALUES(proj_reg), proj_adv = VALUES(proj_adv),
+                    lm_np_target_amount = VALUES(lm_np_target_amount), lm_np_target_files = VALUES(lm_np_target_files),
+                    total_od = VALUES(total_od), od_growth_sply = VALUES(od_growth_sply),
+                    per_file_od = VALUES(per_file_od), six_plus_od_files = VALUES(six_plus_od_files),
+                    six_plus_od_growth_splm = VALUES(six_plus_od_growth_splm)
+            `, [values]);
         }
 
-        await client.query('COMMIT');
+        await connection.commit();
         res.json({ success: true });
     } catch (err) {
-        await client.query('ROLLBACK');
+        await connection.rollback();
+        console.error("Sync Targets Error:", err);
         res.status(500).json({ error: err.message });
     } finally {
-        client.release();
+        connection.release();
     }
 });
 
 // Bulk Save for Users
 app.post('/api/sync-users', async (req, res) => {
     const { users } = req.body;
-    const client = await pool.connect();
+    const connection = await pool.getConnection();
     try {
-        await client.query('BEGIN');
-        // Delete all officers first (simple approach for this app's user sync)
-        await client.query("DELETE FROM users WHERE role = 'officer'");
+        await connection.beginTransaction();
+        
+        // Delete all officers first
+        await connection.query("DELETE FROM users WHERE role = 'officer'");
         
         const officerUsers = users.filter(u => u.role === 'officer');
         if (officerUsers.length > 0) {
-            const values = [];
-            const params = [];
-            let paramIdx = 1;
-            
-            for (const u of officerUsers) {
-                values.push(`($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++})`);
-                params.push(u.username, u.officerName, u.role, u.password, u.territoryId);
-            }
-            
-            const query = `
+            const values = officerUsers.map(u => [u.username, u.officerName, u.role, u.password, u.territoryId]);
+            await connection.query(`
                 INSERT INTO users (username, officer_name, role, password, territory_id) 
-                VALUES ${values.join(', ')}
-            `;
-            await client.query(query, params);
+                VALUES ?
+            `, [values]);
         }
         
-        await client.query('COMMIT');
+        await connection.commit();
         res.json({ success: true });
     } catch (err) {
-        await client.query('ROLLBACK');
+        await connection.rollback();
+        console.error("Sync Users Error:", err);
         res.status(500).json({ error: err.message });
     } finally {
-        client.release();
+        connection.release();
     }
 });
 
 // Bulk Save for Vehicle Performance
 app.post('/api/sync-vehicle-perf', async (req, res) => {
     const { data } = req.body;
-    const client = await pool.connect();
+    const connection = await pool.getConnection();
     try {
-        await client.query('BEGIN');
-        await client.query("DELETE FROM vehicle_performance");
+        await connection.beginTransaction();
+        await connection.query("DELETE FROM vehicle_performance");
         if (data && data.length > 0) {
-            const values = [];
-            const params = [];
-            let pIdx = 1;
-            for (const v of data) {
-                values.push(`($${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++}, $${pIdx++})`);
-                params.push(v.customerId, v.customerName, v.model, v.km1, v.km2, v.earning, v.overdueNo, v.overdueAmt, v.extra1, v.extra2);
-            }
-            await client.query(`
+            const values = data.map(v => [
+                v.customerId, v.customerName, v.model, v.km1, v.km2, v.earning, v.overdueNo, v.overdueAmt, v.extra1, v.extra2
+            ]);
+            await connection.query(`
                 INSERT INTO vehicle_performance (customer_id, customer_name, model, km1, km2, earning, overdue_no, overdue_amt, extra1, extra2)
-                VALUES ${values.join(', ')}
-            `, params);
+                VALUES ?
+            `, [values]);
         }
-        await client.query('COMMIT');
+        await connection.commit();
         res.json({ success: true });
     } catch (err) {
-        await client.query('ROLLBACK');
+        await connection.rollback();
+        console.error("Sync Vehicle Perf Error:", err);
         res.status(500).json({ error: err.message });
     } finally {
-        client.release();
+        connection.release();
     }
 });
 
+// Save System Settings
 app.post('/api/settings', async (req, res) => {
     const { key, value } = req.body;
     try {
-        await pool.query('INSERT INTO system_settings ("key", "value") VALUES ($1, $2) ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value"', [key, value]);
+        await pool.query('INSERT INTO system_settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)', [key, value]);
         res.json({ success: true });
     } catch (err) {
         console.error("Settings Save Error:", err);
@@ -247,32 +275,16 @@ app.post('/api/unlock', async (req, res) => {
     const { territoryId, unlockUntil } = req.body;
     try {
         await pool.query(`
-            INSERT INTO admin_unlocks (territory_id, unlock_until) VALUES ($1, $2)
-            ON CONFLICT (territory_id) DO UPDATE SET unlock_until = EXCLUDED.unlock_until
+            INSERT INTO admin_unlocks (territory_id, unlock_until) VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE unlock_until = VALUES(unlock_until)
         `, [territoryId, unlockUntil]);
         res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.delete('/api/delete', async (req, res) => {
-    const { collection, id } = req.body;
-    
-    // Prevent SQL injection by validating the collection name against known tables
-    const validTables = ['collections', 'projections', 'offroad_vehicles', 'settlements', 'territories', 'users'];
-    if (!validTables.includes(collection)) {
-        return res.status(400).json({ error: "Invalid collection specified for deletion" });
-    }
-
-    try {
-        await pool.query(`DELETE FROM ${collection} WHERE id = $1`, [id]);
-        res.json({ success: true });
-    } catch (err) {
+        console.error("Unlock save error:", err);
         res.status(500).json({ error: err.message });
     }
 });
 
 app.listen(port, () => {
-    console.log(`Neon Backend running on port ${port}`);
+    console.log(`MySQL Backend running on port ${port}`);
 });
