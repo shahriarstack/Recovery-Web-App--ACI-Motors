@@ -4,6 +4,7 @@
   "description": "Redirection portal for Recovery Intelligence WebApp",
   "main": "server.js",
   "scripts": {
+    "build": "echo 'No build required'",
     "start": "node server.js"
   },
   "dependencies": {
