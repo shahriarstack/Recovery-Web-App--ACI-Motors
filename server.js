@@ -10,8 +10,9 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Increase limit for bulk operations
 app.use(express.static(__dirname));
 
-// Create MySQL database connection pool
-const pool = mysql.createPool({
+// Create MySQL database connection pool if configuration is present
+const hasDbConfig = !!process.env.DB_HOST;
+const pool = hasDbConfig ? mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
@@ -20,10 +21,22 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
+}) : null;
+
+// Middleware to verify database configuration for API requests
+app.use('/api', (req, res, next) => {
+    if (!pool) {
+        return res.status(503).json({ error: "Database not configured on this host." });
+    }
+    next();
 });
 
 // Run database migrations on startup
 async function runMigrations() {
+    if (!pool) {
+        console.log("No database configuration found (DB_HOST missing). Running in database-less mode. Startup migrations skipped.");
+        return;
+    }
     try {
         console.log("Running MySQL startup migrations...");
         // Ensure territory_id can hold multiple comma-separated IDs for Area Heads
